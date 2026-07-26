@@ -81,12 +81,16 @@ after mod init is undefined behaviour.
 
 ### 1.4 Parts, upgrades, rendering
 
-- Custom cable parts: implement `IPartItem`; extend `AEBasePart`. Part models are declared
-  in JSON at `assets/<namespace>/ae2/parts/<item_id>.json` — recommend datagen.
-  `StaticPartModel.Unbaked`, `CompositePartModel.Unbaked`, or a custom `PartModel` +
-  `MAP_CODEC` registered via `RegisterPartModelsEvent`. Fully dynamic rendering goes
-  through `PartRenderer` + `RegisterPartRendererEvent` (two-phase: capture world state on
-  main thread, submit render calls separately).
+- Custom cable parts: implement `IPartItem`; extend `AEBasePart`. **On the 19.2.x (1.21.1)
+  target, part models are static:** register every model `ResourceLocation` up front via
+  the `PartModels` registry, and the part reports its currently-active set through
+  `IPart.getStaticModels()` returning an `IPartModel` — state toggling is returning a
+  different set (AE2's own parts collect theirs with the `@PartModels` annotation).
+  Reference: `StorageLevelEmitterPart`. *Correction note: an earlier draft described
+  `RegisterPartModelsEvent`, `StaticPartModel.Unbaked`, `PartRenderer` +
+  `RegisterPartRendererEvent`, and JSON at `assets/<ns>/ae2/parts/<id>.json` — that is the
+  26.x-line API, verified absent from 19.2.x. It becomes relevant only when porting past
+  1.21.1.*
 - Upgrade cards: `Upgrades#createUpgradeCardItem` produces a card that behaves natively
   (network tool toolbelt insertion, tooltips, right-click insertion). Associate cards to
   machines with `Upgrades.add`, optionally grouping machines under a `tooltipGroup`
@@ -204,8 +208,8 @@ Proposed set (v1):
 | **Constant** | Writes a fixed value; the way you set setpoints. |
 
 **API surface.**
-- `IPartItem` + `AEBasePart`; part model JSON via datagen; `LevelEmitterPartModel` is the
-  reference implementation for a state-toggled model.
+- `IPartItem` + `AEBasePart`; static models via the `PartModels` registry;
+  `StorageLevelEmitterPart` is the reference implementation for a state-toggled model.
 - `IGridTickable` node service. **Sleep by default; wake on storage watcher callback or
   neighbour change.** A 200-part logic graph that polls every tick is a TPS bug report.
 - Configuration via upgrade cards where it maps naturally (`Upgrades.add`), GUI otherwise.

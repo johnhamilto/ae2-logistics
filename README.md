@@ -35,7 +35,7 @@ minutes.
 
 ## Layout
 
-- `src/main/java/dev/jackhamilton/ae2logistics/` — mod sources. Package
+- `src/main/java/io/github/johnhamilto/ae2logistics/` — mod sources. Package
   discipline: `logic/` (pure Java, no Minecraft imports), `grid/` (AE2 grid
   services), `parts/` and `client/` (cable parts, models, UI — the most
   version-sensitive layer), `datagen/`.
