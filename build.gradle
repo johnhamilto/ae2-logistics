@@ -1,0 +1,77 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.78'
+}
+
+group = project.mod_group
+version = "${project.minecraft_version}-${project.mod_version}"
+
+base {
+    archivesName = project.mod_id
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.appliedenergistics:appliedenergistics2:${project.ae2_version}"
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir 'src/generated/resources'
+        }
+    }
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+        data {
+            data()
+            programArguments.addAll(
+                    '--mod', project.mod_id,
+                    '--all',
+                    '--output', file('src/generated/resources/').absolutePath,
+                    '--existing', file('src/main/resources/').absolutePath)
+        }
+    }
+
+    mods {
+        ae2logistics {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(ProcessResources).configureEach {
+    def replaceProperties = [
+            version             : version,
+            loader_version_range: project.loader_version_range,
+            neo_version_range   : project.neo_version_range,
+            ae2_version_range   : project.ae2_version_range,
+    ]
+    inputs.properties(replaceProperties)
+
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+}

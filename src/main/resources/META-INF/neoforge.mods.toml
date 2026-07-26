@@ -1,0 +1,24 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "LGPL-3.0-or-later"
+
+[[mods]]
+modId = "ae2logistics"
+version = "${version}"
+displayName = "AE2 Logistics"
+description = "A control plane for your ME network: signals, logic, policy, and observability in AE2's own idiom."
+authors = "Jack Hamilton"
+
+[[dependencies.ae2logistics]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neo_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.ae2logistics]]
+modId = "ae2"
+type = "required"
+versionRange = "${ae2_version_range}"
+ordering = "AFTER"
+side = "BOTH"
