@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "ae2logistics:block/pattern_workbench_top",
+    "bottom": "ae2logistics:block/register_bank_top",
+    "side": "ae2logistics:part/logic_housing"
+  }
+}

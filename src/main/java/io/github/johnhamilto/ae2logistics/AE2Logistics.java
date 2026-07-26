@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import appeng.api.AECapabilities;
 import appeng.api.behaviors.ContainerItemStrategy;
+import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.networking.GridServices;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartItem;
@@ -39,13 +40,19 @@ import appeng.api.stacks.AEKeyTypes;
 import appeng.items.parts.PartItem;
 import appeng.items.parts.PartModelsHelper;
 
+import io.github.johnhamilto.ae2logistics.block.PatternWorkbenchBlock;
+import io.github.johnhamilto.ae2logistics.block.PatternWorkbenchBlockEntity;
 import io.github.johnhamilto.ae2logistics.block.RegisterBankBlock;
 import io.github.johnhamilto.ae2logistics.block.RegisterBankBlockEntity;
 import io.github.johnhamilto.ae2logistics.client.AE2LogisticsClient;
 import io.github.johnhamilto.ae2logistics.command.SignalCommands;
+import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
+import io.github.johnhamilto.ae2logistics.crafting.EncodedAdaptivePattern;
 import io.github.johnhamilto.ae2logistics.item.SignalCardItem;
 import io.github.johnhamilto.ae2logistics.menu.ConfigurePartPayload;
+import io.github.johnhamilto.ae2logistics.menu.CyclePatternSpecPayload;
 import io.github.johnhamilto.ae2logistics.menu.LogicPartMenu;
+import io.github.johnhamilto.ae2logistics.menu.PatternWorkbenchMenu;
 import io.github.johnhamilto.ae2logistics.parts.ArithmeticPart;
 import io.github.johnhamilto.ae2logistics.parts.BooleanPart;
 import io.github.johnhamilto.ae2logistics.parts.ConstantPart;
@@ -91,6 +98,27 @@ public class AE2Logistics {
     public static final DeferredItem<SignalCardItem> SIGNAL_CARD = ITEMS.register("signal_card",
             () -> new SignalCardItem(new Item.Properties().stacksTo(1)));
 
+    public static final Supplier<DataComponentType<EncodedAdaptivePattern>> ENCODED_ADAPTIVE_PATTERN = DATA_COMPONENTS
+            .register("encoded_adaptive_pattern", () -> DataComponentType.<EncodedAdaptivePattern>builder()
+                    .persistent(EncodedAdaptivePattern.CODEC)
+                    .networkSynchronized(EncodedAdaptivePattern.STREAM_CODEC)
+                    .build());
+
+    public static final DeferredItem<Item> ADAPTIVE_PATTERN = ITEMS.register("adaptive_processing_pattern",
+            () -> PatternDetailsHelper.encodedPatternItemBuilder(AdaptivePattern::new).build());
+
+    public static final DeferredBlock<PatternWorkbenchBlock> PATTERN_WORKBENCH = BLOCKS.register(
+            "pattern_workbench",
+            () -> new PatternWorkbenchBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
+    public static final DeferredItem<BlockItem> PATTERN_WORKBENCH_ITEM = ITEMS
+            .registerSimpleBlockItem(PATTERN_WORKBENCH);
+    public static final Supplier<BlockEntityType<PatternWorkbenchBlockEntity>> PATTERN_WORKBENCH_BE = BLOCK_ENTITIES
+            .register("pattern_workbench", () -> BlockEntityType.Builder
+                    .of(PatternWorkbenchBlockEntity::new, PATTERN_WORKBENCH.get()).build(null));
+
+    public static final Supplier<MenuType<PatternWorkbenchMenu>> PATTERN_WORKBENCH_MENU = MENUS.register(
+            "pattern_workbench", () -> IMenuTypeExtension.create(PatternWorkbenchMenu::new));
+
     public static final DeferredItem<PartItem<ConstantPart>> CONSTANT_PART = part(
             "constant", ConstantPart.class, ConstantPart::new);
     public static final DeferredItem<PartItem<ThresholdPart>> THRESHOLD_PART = part(
@@ -113,6 +141,7 @@ public class AE2Logistics {
                     .icon(() -> REGISTER_BANK_ITEM.get().getDefaultInstance())
                     .displayItems((params, output) -> {
                         output.accept(REGISTER_BANK_ITEM.get());
+                        output.accept(PATTERN_WORKBENCH_ITEM.get());
                         output.accept(SIGNAL_CARD.get());
                         output.accept(CONSTANT_PART.get());
                         output.accept(THRESHOLD_PART.get());
@@ -150,9 +179,13 @@ public class AE2Logistics {
         modBus.addListener((RegisterCapabilitiesEvent event) -> event.registerBlockEntity(
                 AECapabilities.IN_WORLD_GRID_NODE_HOST, REGISTER_BANK_BE.get(), (be, context) -> be));
 
-        modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
-                .playToServer(ConfigurePartPayload.TYPE, ConfigurePartPayload.STREAM_CODEC,
-                        ConfigurePartPayload::handle));
+        modBus.addListener((RegisterPayloadHandlersEvent event) -> {
+            var registrar = event.registrar("1");
+            registrar.playToServer(ConfigurePartPayload.TYPE, ConfigurePartPayload.STREAM_CODEC,
+                    ConfigurePartPayload::handle);
+            registrar.playToServer(CyclePatternSpecPayload.TYPE, CyclePatternSpecPayload.STREAM_CODEC,
+                    CyclePatternSpecPayload::handle);
+        });
 
         ContainerItemStrategy.register(SignalKeyType.TYPE, SignalKey.class, new SignalCardContainerStrategy());
 

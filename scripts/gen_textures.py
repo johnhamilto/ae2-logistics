@@ -311,6 +311,48 @@ PART_REDSTONE_PORT = """
 ################
 """
 
+PATTERN_WORKBENCH_TOP = """
+################
+#DDDDDDDDDDDDDD#
+#DMMMMMMMMMMMMD#
+#DM..........MD#
+#DM.CC.CC.CC.MD#
+#DM.CC.CC.CC.MD#
+#DM..........MD#
+#DM.CC.rr.CC.MD#
+#DM.CC.rr.CC.MD#
+#DM..........MD#
+#DM.CC.CC.CC.MD#
+#DM.CC.CC.CC.MD#
+#DM..........MD#
+#DMMMMMMMMMMMMD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+ADAPTIVE_PATTERN_ITEM = """
+................
+.OOOOOOOOOOOOOO.
+.OFFFFFFFFFFFSO.
+.OFFFFFFFFFFFSO.
+.OFF.FF.FF.FFSO.
+.OFFFFFFFFFFFSO.
+.OFF.FF.rr.FFSO.
+.OFFFFFFFFFFFSO.
+.OFF.FF.FF.FFSO.
+.OFFFFFFFFFFFSO.
+.OFFrFFrFFrFFSO.
+.OFFFrFrFrFFFSO.
+.OFFFFrFrFFFFSO.
+.OSSSSSSSSSSSSO.
+.OOOOOOOOOOOOOO.
+................
+"""
+
+write_png(OUT / "block" / "pattern_workbench_top.png", PATTERN_WORKBENCH_TOP, PART)
+write_png(OUT / "item" / "adaptive_processing_pattern.png", ADAPTIVE_PATTERN_ITEM, PART | CARD)
+write_panel(OUT / "gui" / "workbench_panel.png", 176, 166)
+
 write_png(OUT / "part" / "logic_housing.png", LOGIC_HOUSING, PART)
 write_png(OUT / "part" / "constant.png", PART_CONSTANT, PART)
 write_png(OUT / "part" / "threshold.png", PART_THRESHOLD, PART)

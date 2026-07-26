@@ -1,5 +1,7 @@
 {
   "block.ae2logistics.register_bank": "ME Register Bank",
+  "block.ae2logistics.pattern_workbench": "Pattern Workbench",
+  "item.ae2logistics.adaptive_processing_pattern": "Adaptive Processing Pattern",
   "item.ae2logistics.signal_card": "Signal Card",
   "item.ae2logistics.constant": "Signal Constant",
   "item.ae2logistics.threshold": "Signal Threshold",
