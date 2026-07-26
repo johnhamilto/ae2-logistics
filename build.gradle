@@ -49,6 +49,12 @@ neoForge {
                     '--output', file('src/generated/resources/').absolutePath,
                     '--existing', file('src/main/resources/').absolutePath)
         }
+        gametest {
+            type = 'gameTestServer'
+            gameDirectory = project.file('build/gametest')
+            systemProperty('ae2logistics.tests', 'true')
+            systemProperty('neoforge.enabledGameTestNamespaces', project.mod_id)
+        }
     }
 
     mods {

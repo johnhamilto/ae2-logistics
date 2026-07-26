@@ -10,7 +10,7 @@ GRADLE := ./gradlew
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build check client server data textures clean refresh
+.PHONY: help build check test client server data textures clean refresh
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-10s %s\n", $$1, $$2}'
@@ -20,6 +20,9 @@ build: ## Compile, run checks, and produce the mod jar (build/libs/)
 
 check: ## Compile and run verification tasks without assembling jars
 	$(GRADLE) check
+
+test: ## Run in-game gametests on a headless server
+	$(GRADLE) runGametest
 
 client: ## Launch a Minecraft client with the mod + AE2 loaded
 	$(GRADLE) runClient
