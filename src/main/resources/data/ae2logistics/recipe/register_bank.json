@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IQI",
+    "RLR",
+    "IQI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "Q": {
+      "item": "ae2:certus_quartz_crystal"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "L": {
+      "item": "ae2:logic_processor"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:register_bank"
+  }
+}

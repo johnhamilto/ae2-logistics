@@ -1,8 +1,36 @@
 # AE2 Logistics
 
 A control plane for Applied Energistics 2: signals, logic parts, job policy, and
-observability, built in AE2's own idiom. Pre-alpha; nothing is playable yet. The
-full design rationale lives in [DESIGN.md](DESIGN.md).
+observability, built in AE2's own idiom. The full design rationale lives in
+[DESIGN.md](DESIGN.md).
+
+**Status: Phase 0 spike.** Signals exist as a first-class AE2 key type — a named
+channel whose stored amount is its value. An ME Register Bank holds them on the
+grid, a Signal Card carries a channel into device config slots, and debug
+commands write and read values. Everything visible in an ME Terminal today is a
+number some machine can react to tomorrow.
+
+## Trying it
+
+`make client`, create a world, then:
+
+```
+/give @p ae2logistics:register_bank
+/ae2logistics signal set factory:iron_rate 500     (looking at a placed bank)
+/ae2logistics signal card factory:iron_rate        (get a bound Signal Card)
+```
+
+Wire the bank into a powered ME network and the channel appears in the terminal
+with its value as the amount. The Signal Card fills config slots — set a Level
+Emitter's filter with it and the emitter thresholds on a computed value instead
+of an item count.
+
+Commands (`/ae2logistics signal ...`, permission level 2): `set <channel> <value>`,
+`get <channel>`, `list` (all target the bank you are looking at), and
+`card <channel>`.
+
+Both items are craftable in survival: the bank from iron, certus quartz, redstone,
+and a logic processor; the Signal Card from AE2's basic card plus a redstone torch.
 
 ## Building
 
@@ -20,7 +48,7 @@ alone to list targets:
 | `make clean` | Delete build outputs |
 
 The first build downloads Gradle, NeoForge, and all dependencies; expect a few
-minutes.
+minutes. CI builds every push via GitHub Actions.
 
 ## Version targets and branches
 
@@ -35,11 +63,13 @@ minutes.
 
 ## Layout
 
-- `src/main/java/io/github/johnhamilto/ae2logistics/` — mod sources. Package
-  discipline: `logic/` (pure Java, no Minecraft imports), `grid/` (AE2 grid
-  services), `parts/` and `client/` (cable parts, models, UI — the most
-  version-sensitive layer), `datagen/`.
-- `src/generated/resources/` — datagen output, committed.
+- `src/main/java/io/github/johnhamilto/ae2logistics/` — mod sources: `signal/`
+  (key type and storage), `block/`, `item/`, `command/`, `client/`. Planned
+  discipline as the mod grows: pure logic separated from AE2 grid services,
+  with the version-sensitive client/parts layer quarantined.
+- `src/main/resources/` — assets and data; textures are generated pixel art
+  (see `DESIGN.md` for the visual language: dark steel, cyan indicators,
+  signal-red accents).
 - Reference checkouts (AE2 source at the target branch, Applied Mekanistics,
   version-matched javadoc) live outside the repo in `../ae2-reference/`.
 

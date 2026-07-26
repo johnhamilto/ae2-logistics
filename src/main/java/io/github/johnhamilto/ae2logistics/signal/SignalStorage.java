@@ -1,5 +1,6 @@
 package io.github.johnhamilto.ae2logistics.signal;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,6 +31,10 @@ public final class SignalStorage implements MEStorage {
 
     public long get(SignalKey key) {
         return values.getOrDefault(key, 0L);
+    }
+
+    public Map<SignalKey, Long> view() {
+        return Collections.unmodifiableMap(values);
     }
 
     @Override

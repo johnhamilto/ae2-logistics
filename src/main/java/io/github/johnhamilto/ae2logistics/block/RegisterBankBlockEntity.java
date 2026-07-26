@@ -93,6 +93,10 @@ public class RegisterBankBlockEntity extends BlockEntity implements IInWorldGrid
         storageMounts.mount(storage);
     }
 
+    public java.util.Map<SignalKey, Long> signals() {
+        return storage.view();
+    }
+
     public long getSignal(SignalKey key) {
         return storage.get(key);
     }

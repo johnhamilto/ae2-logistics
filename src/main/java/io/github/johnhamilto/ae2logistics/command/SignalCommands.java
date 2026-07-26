@@ -14,6 +14,7 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import io.github.johnhamilto.ae2logistics.block.RegisterBankBlockEntity;
+import io.github.johnhamilto.ae2logistics.item.SignalCardItem;
 import io.github.johnhamilto.ae2logistics.signal.SignalKey;
 
 public final class SignalCommands {
@@ -34,7 +35,34 @@ public final class SignalCommands {
                                                 .executes(SignalCommands::setSignal))))
                         .then(Commands.literal("get")
                                 .then(Commands.argument("channel", ResourceLocationArgument.id())
-                                        .executes(SignalCommands::getSignal)))));
+                                        .executes(SignalCommands::getSignal)))
+                        .then(Commands.literal("list")
+                                .executes(SignalCommands::listSignals))
+                        .then(Commands.literal("card")
+                                .then(Commands.argument("channel", ResourceLocationArgument.id())
+                                        .executes(SignalCommands::giveCard)))));
+    }
+
+    private static int listSignals(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        var bank = targetedBank(context.getSource());
+        var signals = bank.signals();
+        if (signals.isEmpty()) {
+            context.getSource().sendSuccess(() -> Component.literal("No signals set on this bank"), false);
+            return 0;
+        }
+        for (var entry : signals.entrySet()) {
+            context.getSource().sendSuccess(
+                    () -> Component.literal(entry.getKey().channel() + " = " + entry.getValue()), false);
+        }
+        return signals.size();
+    }
+
+    private static int giveCard(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        var player = context.getSource().getPlayerOrException();
+        var channel = ResourceLocationArgument.getId(context, "channel");
+        player.getInventory().placeItemBackInInventory(SignalCardItem.bound(channel));
+        context.getSource().sendSuccess(() -> Component.literal("Signal Card bound to " + channel), false);
+        return 1;
     }
 
     private static int setSignal(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {

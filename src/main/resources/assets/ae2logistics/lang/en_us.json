@@ -1,3 +1,6 @@
 {
-  "block.ae2logistics.register_bank": "ME Register Bank"
+  "block.ae2logistics.register_bank": "ME Register Bank",
+  "item.ae2logistics.signal_card": "Signal Card",
+  "itemGroup.ae2logistics": "AE2 Logistics",
+  "tooltip.ae2logistics.signal_card.unbound": "Unbound - use /ae2logistics signal card <channel>"
 }

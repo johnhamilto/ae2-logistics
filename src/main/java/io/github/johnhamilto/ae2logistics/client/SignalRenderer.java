@@ -10,8 +10,6 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -19,12 +17,13 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import appeng.api.client.AEKeyRenderHandler;
 import appeng.api.client.AEKeyRendering;
 
+import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.signal.SignalKey;
 import io.github.johnhamilto.ae2logistics.signal.SignalKeyType;
 
 public final class SignalRenderer implements AEKeyRenderHandler<SignalKey> {
 
-    private static final ItemStack ICON = new ItemStack(Items.REDSTONE_TORCH);
+    private static final ResourceLocation ICON = AE2Logistics.id("textures/gui/signal.png");
     private static final ResourceLocation FACE_SPRITE = ResourceLocation.withDefaultNamespace("item/redstone");
 
     public static void initialize(IEventBus modBus) {
@@ -34,7 +33,7 @@ public final class SignalRenderer implements AEKeyRenderHandler<SignalKey> {
 
     @Override
     public void drawInGui(Minecraft minecraft, GuiGraphics guiGraphics, int x, int y, SignalKey what) {
-        guiGraphics.renderItem(ICON, x, y);
+        guiGraphics.blit(ICON, x, y, 0, 0, 16, 16, 16, 16);
     }
 
     @Override
