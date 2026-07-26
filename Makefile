@@ -10,7 +10,7 @@ GRADLE := ./gradlew
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build check client server data clean refresh
+.PHONY: help build check client server data textures clean refresh
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-10s %s\n", $$1, $$2}'
@@ -29,6 +29,9 @@ server: ## Launch a dedicated dev server with the mod + AE2 loaded
 
 data: ## Run datagen; output lands in src/generated/resources
 	$(GRADLE) runData
+
+textures: ## Regenerate all sprite PNGs from scripts/gen_textures.py
+	python3 scripts/gen_textures.py src/main/resources/assets/ae2logistics/textures
 
 clean: ## Delete build outputs
 	$(GRADLE) clean
