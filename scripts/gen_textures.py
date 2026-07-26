@@ -32,6 +32,45 @@ def write_png(path, grid, palette, scale=1):
     print(f"wrote {path}")
 
 
+def write_panel(path, width, height):
+    """AE2-flavored GUI panel: dark steel border, beveled edge, recessed body."""
+    border = (22, 26, 33, 255)
+    bevel = (88, 103, 122, 255)
+    body = (44, 51, 63, 255)
+    inset = (34, 40, 50, 255)
+
+    rows = []
+    for y in range(height):
+        row = []
+        for x in range(width):
+            if x < 2 or y < 2 or x >= width - 2 or y >= height - 2:
+                row.append(border)
+            elif x == 2 or y == 2:
+                row.append(bevel)
+            elif x >= width - 4 or y >= height - 4:
+                row.append(inset)
+            else:
+                row.append(body)
+        rows.append(row)
+
+    raw = b""
+    for row in rows:
+        raw += b"\x00" + b"".join(bytes(px) for px in row)
+
+    def chunk(tag, data):
+        c = tag + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c))
+
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    png = (b"\x89PNG\r\n\x1a\n"
+           + chunk(b"IHDR", ihdr)
+           + chunk(b"IDAT", zlib.compress(raw, 9))
+           + chunk(b"IEND", b""))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(png)
+    print(f"wrote {path}")
+
+
 STEEL = {
     "#": (22, 26, 33, 255),     # frame edge, near-black steel
     "D": (39, 46, 58, 255),     # dark steel
@@ -132,6 +171,154 @@ SIGNAL_ICON = """
 ................
 ................
 """
+
+PART = dict(STEEL)
+PART.update({
+    "r": (232, 58, 28, 255),    # signal red
+    "w": (110, 80, 48, 255),    # torch wood
+})
+
+LOGIC_HOUSING = """
+################
+#DDDDDDDDDDDDDD#
+#DMMMMMMMMMMMMD#
+#DMLMMMMMMMMLMD#
+#DMMMMMMMMMMMMD#
+#DMMMMMMMMMMMMD#
+#DMMMMMMMMMMMMD#
+#DMMMMMMMMMMMMD#
+#DMMMMMMMMMMMMD#
+#DMMMMMMMMMMMMD#
+#DMMMMMMMMMMMMD#
+#DMMMMMMMMMMMMD#
+#DMLMMMMMMMMLMD#
+#DMMMMMMMMMMMMD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_CONSTANT = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.....CC.....D#
+#D....CCC.....D#
+#D...CC.C.....D#
+#D......C.....D#
+#D......C.....D#
+#D......C.....D#
+#D......C.....D#
+#D......C.....D#
+#D....CCCCC...D#
+#D............D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_THRESHOLD = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D...CC.......D#
+#D....CC......D#
+#D.....CC.....D#
+#D......CC....D#
+#D.......CC...D#
+#D......CC....D#
+#D.....CC.....D#
+#D....CC......D#
+#D...CC.......D#
+#D............D#
+#D...cccccc...D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_HYSTERESIS = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D............D#
+#D......CCCCC.D#
+#D......C.....D#
+#D......C.....D#
+#D......C.....D#
+#D......C.....D#
+#D......C.....D#
+#D.CCCCCC.....D#
+#D............D#
+#D............D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_ARITHMETIC = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D............D#
+#D......CC....D#
+#D......CC....D#
+#D...CCCCCCCC.D#
+#D...CCCCCCCC.D#
+#D......CC....D#
+#D......CC....D#
+#D............D#
+#D............D#
+#D............D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_LOGIC_GATE = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D...CCCCCC...D#
+#D...CC...CC..D#
+#D...CC....CC.D#
+#D...CC....CC.D#
+#D...CC....CC.D#
+#D...CC....CC.D#
+#D...CC....CC.D#
+#D...CC...CC..D#
+#D...CCCCCC...D#
+#D............D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_REDSTONE_PORT = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.....rrr....D#
+#D....rrrrr...D#
+#D....rrrrr...D#
+#D.....rrr....D#
+#D......w.....D#
+#D......w.....D#
+#D......w.....D#
+#D......w.....D#
+#D......w.....D#
+#D.....www....D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "logic_housing.png", LOGIC_HOUSING, PART)
+write_png(OUT / "part" / "constant.png", PART_CONSTANT, PART)
+write_png(OUT / "part" / "threshold.png", PART_THRESHOLD, PART)
+write_png(OUT / "part" / "hysteresis.png", PART_HYSTERESIS, PART)
+write_png(OUT / "part" / "arithmetic.png", PART_ARITHMETIC, PART)
+write_png(OUT / "part" / "logic_gate.png", PART_LOGIC_GATE, PART)
+write_png(OUT / "part" / "redstone_port.png", PART_REDSTONE_PORT, PART)
+write_panel(OUT / "gui" / "logic_panel.png", 200, 166)
 
 write_png(OUT / "block" / "register_bank_side.png", REGISTER_BANK_SIDE, STEEL)
 write_png(OUT / "block" / "register_bank_top.png", REGISTER_BANK_TOP, STEEL)

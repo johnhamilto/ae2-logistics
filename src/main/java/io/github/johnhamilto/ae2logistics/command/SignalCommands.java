@@ -15,7 +15,6 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import io.github.johnhamilto.ae2logistics.block.RegisterBankBlockEntity;
 import io.github.johnhamilto.ae2logistics.item.SignalCardItem;
-import io.github.johnhamilto.ae2logistics.signal.SignalKey;
 
 public final class SignalCommands {
 
@@ -52,7 +51,7 @@ public final class SignalCommands {
         }
         for (var entry : signals.entrySet()) {
             context.getSource().sendSuccess(
-                    () -> Component.literal(entry.getKey().channel() + " = " + entry.getValue()), false);
+                    () -> Component.literal(entry.getKey() + " = " + entry.getValue()), false);
         }
         return signals.size();
     }
@@ -67,20 +66,20 @@ public final class SignalCommands {
 
     private static int setSignal(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         var bank = targetedBank(context.getSource());
-        var key = SignalKey.of(ResourceLocationArgument.getId(context, "channel"));
+        var channel = ResourceLocationArgument.getId(context, "channel");
         var value = LongArgumentType.getLong(context, "value");
-        bank.setSignal(key, value);
+        bank.setSignal(channel, value);
         context.getSource().sendSuccess(
-                () -> Component.literal(key.channel() + " = " + value), false);
+                () -> Component.literal(channel + " = " + value), false);
         return 1;
     }
 
     private static int getSignal(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         var bank = targetedBank(context.getSource());
-        var key = SignalKey.of(ResourceLocationArgument.getId(context, "channel"));
-        var value = bank.getSignal(key);
+        var channel = ResourceLocationArgument.getId(context, "channel");
+        var value = bank.getSignal(channel);
         context.getSource().sendSuccess(
-                () -> Component.literal(key.channel() + " = " + value), false);
+                () -> Component.literal(channel + " = " + value), false);
         return 1;
     }
 

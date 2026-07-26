@@ -1,11 +1,13 @@
 package io.github.johnhamilto.ae2logistics;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -18,6 +20,8 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -27,16 +31,32 @@ import org.slf4j.LoggerFactory;
 
 import appeng.api.AECapabilities;
 import appeng.api.behaviors.ContainerItemStrategy;
+import appeng.api.networking.GridServices;
+import appeng.api.parts.IPart;
+import appeng.api.parts.IPartItem;
+import appeng.api.parts.PartModels;
 import appeng.api.stacks.AEKeyTypes;
+import appeng.items.parts.PartItem;
+import appeng.items.parts.PartModelsHelper;
 
 import io.github.johnhamilto.ae2logistics.block.RegisterBankBlock;
 import io.github.johnhamilto.ae2logistics.block.RegisterBankBlockEntity;
-import io.github.johnhamilto.ae2logistics.client.SignalRenderer;
+import io.github.johnhamilto.ae2logistics.client.AE2LogisticsClient;
 import io.github.johnhamilto.ae2logistics.command.SignalCommands;
 import io.github.johnhamilto.ae2logistics.item.SignalCardItem;
+import io.github.johnhamilto.ae2logistics.menu.ConfigurePartPayload;
+import io.github.johnhamilto.ae2logistics.menu.LogicPartMenu;
+import io.github.johnhamilto.ae2logistics.parts.ArithmeticPart;
+import io.github.johnhamilto.ae2logistics.parts.BooleanPart;
+import io.github.johnhamilto.ae2logistics.parts.ConstantPart;
+import io.github.johnhamilto.ae2logistics.parts.HysteresisPart;
+import io.github.johnhamilto.ae2logistics.parts.RedstoneIOPart;
+import io.github.johnhamilto.ae2logistics.parts.ThresholdPart;
 import io.github.johnhamilto.ae2logistics.signal.SignalCardContainerStrategy;
+import io.github.johnhamilto.ae2logistics.signal.SignalGridService;
 import io.github.johnhamilto.ae2logistics.signal.SignalKey;
 import io.github.johnhamilto.ae2logistics.signal.SignalKeyType;
+import io.github.johnhamilto.ae2logistics.signal.SignalService;
 
 @Mod(AE2Logistics.MOD_ID)
 public class AE2Logistics {
@@ -52,6 +72,8 @@ public class AE2Logistics {
             .create(Registries.DATA_COMPONENT_TYPE, MOD_ID);
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS = DeferredRegister
             .create(Registries.CREATIVE_MODE_TAB, MOD_ID);
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister
+            .create(Registries.MENU, MOD_ID);
 
     public static final DeferredBlock<RegisterBankBlock> REGISTER_BANK = BLOCKS.register("register_bank",
             () -> new RegisterBankBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
@@ -69,6 +91,22 @@ public class AE2Logistics {
     public static final DeferredItem<SignalCardItem> SIGNAL_CARD = ITEMS.register("signal_card",
             () -> new SignalCardItem(new Item.Properties().stacksTo(1)));
 
+    public static final DeferredItem<PartItem<ConstantPart>> CONSTANT_PART = part(
+            "constant", ConstantPart.class, ConstantPart::new);
+    public static final DeferredItem<PartItem<ThresholdPart>> THRESHOLD_PART = part(
+            "threshold", ThresholdPart.class, ThresholdPart::new);
+    public static final DeferredItem<PartItem<HysteresisPart>> HYSTERESIS_PART = part(
+            "hysteresis", HysteresisPart.class, HysteresisPart::new);
+    public static final DeferredItem<PartItem<ArithmeticPart>> ARITHMETIC_PART = part(
+            "arithmetic", ArithmeticPart.class, ArithmeticPart::new);
+    public static final DeferredItem<PartItem<BooleanPart>> LOGIC_GATE_PART = part(
+            "logic_gate", BooleanPart.class, BooleanPart::new);
+    public static final DeferredItem<PartItem<RedstoneIOPart>> REDSTONE_IO_PART = part(
+            "redstone_port", RedstoneIOPart.class, RedstoneIOPart::new);
+
+    public static final Supplier<MenuType<LogicPartMenu>> LOGIC_PART_MENU = MENUS.register("logic_part",
+            () -> IMenuTypeExtension.create(LogicPartMenu::new));
+
     public static final Supplier<CreativeModeTab> MAIN_TAB = CREATIVE_TABS.register("main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.ae2logistics"))
@@ -76,8 +114,20 @@ public class AE2Logistics {
                     .displayItems((params, output) -> {
                         output.accept(REGISTER_BANK_ITEM.get());
                         output.accept(SIGNAL_CARD.get());
+                        output.accept(CONSTANT_PART.get());
+                        output.accept(THRESHOLD_PART.get());
+                        output.accept(HYSTERESIS_PART.get());
+                        output.accept(ARITHMETIC_PART.get());
+                        output.accept(LOGIC_GATE_PART.get());
+                        output.accept(REDSTONE_IO_PART.get());
                     })
                     .build());
+
+    private static <T extends IPart> DeferredItem<PartItem<T>> part(String id, Class<T> partClass,
+            Function<IPartItem<T>, T> factory) {
+        PartModels.registerModels(PartModelsHelper.createModels(partClass));
+        return ITEMS.register(id, () -> new PartItem<>(new Item.Properties(), partClass, factory));
+    }
 
     public static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
@@ -89,6 +139,7 @@ public class AE2Logistics {
         BLOCK_ENTITIES.register(modBus);
         DATA_COMPONENTS.register(modBus);
         CREATIVE_TABS.register(modBus);
+        MENUS.register(modBus);
 
         modBus.addListener((RegisterEvent event) -> {
             if (event.getRegistryKey().equals(Registries.BLOCK)) {
@@ -99,12 +150,18 @@ public class AE2Logistics {
         modBus.addListener((RegisterCapabilitiesEvent event) -> event.registerBlockEntity(
                 AECapabilities.IN_WORLD_GRID_NODE_HOST, REGISTER_BANK_BE.get(), (be, context) -> be));
 
+        modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
+                .playToServer(ConfigurePartPayload.TYPE, ConfigurePartPayload.STREAM_CODEC,
+                        ConfigurePartPayload::handle));
+
         ContainerItemStrategy.register(SignalKeyType.TYPE, SignalKey.class, new SignalCardContainerStrategy());
+
+        GridServices.register(SignalService.class, SignalGridService.class);
 
         NeoForge.EVENT_BUS.addListener(SignalCommands::register);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            SignalRenderer.initialize(modBus);
+            AE2LogisticsClient.initialize(modBus);
         }
 
         LOG.info("AE2 Logistics initialized");

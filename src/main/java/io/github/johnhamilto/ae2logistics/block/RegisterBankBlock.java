@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
 import io.github.johnhamilto.ae2logistics.item.SignalCardItem;
-import io.github.johnhamilto.ae2logistics.signal.SignalKey;
 
 public class RegisterBankBlock extends Block implements EntityBlock {
 
@@ -39,7 +38,7 @@ public class RegisterBankBlock extends Block implements EntityBlock {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof RegisterBankBlockEntity bank) {
-            var value = bank.getSignal(SignalKey.of(channel));
+            var value = bank.getSignal(channel);
             player.displayClientMessage(Component.literal(channel + " = " + value), true);
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
@@ -51,11 +50,11 @@ public class RegisterBankBlock extends Block implements EntityBlock {
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof RegisterBankBlockEntity bank) {
             var signals = bank.signals();
             if (signals.isEmpty()) {
-                player.displayClientMessage(Component.literal("No signals set on this bank"), false);
+                player.displayClientMessage(Component.literal("No signals on this network"), false);
             } else {
                 for (var entry : signals.entrySet()) {
                     player.displayClientMessage(
-                            Component.literal(entry.getKey().channel() + " = " + entry.getValue()), false);
+                            Component.literal(entry.getKey() + " = " + entry.getValue()), false);
                 }
             }
         }

@@ -1,6 +1,12 @@
 {
   "block.ae2logistics.register_bank": "ME Register Bank",
   "item.ae2logistics.signal_card": "Signal Card",
+  "item.ae2logistics.constant": "Signal Constant",
+  "item.ae2logistics.threshold": "Signal Threshold",
+  "item.ae2logistics.hysteresis": "Signal Hysteresis",
+  "item.ae2logistics.arithmetic": "Signal Arithmetic",
+  "item.ae2logistics.logic_gate": "Signal Logic Gate",
+  "item.ae2logistics.redstone_port": "Redstone Signal Port",
   "itemGroup.ae2logistics": "AE2 Logistics",
   "tooltip.ae2logistics.signal_card.unbound": "Unbound - use /ae2logistics signal card <channel>"
 }
