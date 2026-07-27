@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.7.0 (2026-07-27). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (55 tests, run
+Status as of v0.8.0 (2026-07-27). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (61 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -13,6 +13,8 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F5 | Stock Sensor, Rate Meter, ME Tracer Terminal (5-min sparklines) | 0.2.0 |
 | F5 | ME Job Monitor: CPU/job telemetry as signals (active/idle/stalled/pending + per-named-CPU) - F5 complete | 0.7.0 |
 | QoL | Memory cards carry all part settings; stock sensor GUI gained a player inventory | 0.7.0 |
+| F3 | Guarded Pattern Provider (plan-time hiding + toggleable push gate) + Guarded Pattern wrappers + priority channels - F3 complete | 0.8.0 |
+| Resource | Regulus Crystal: first themed resource, in-world transform (charged certus + redstone + glowstone in water) | 0.8.0 |
 | F9 | Adaptive processing patterns: fuzzy/bands/tag/any-of/catalyst + Pattern Workbench | 0.2.0-0.3.0 |
 | F11.1 | P2P Frequency Terminal (list, named frequencies, retune) | 0.3.0 |
 | F11.2-4 | Universal Mesh Endpoints: 5 transports, mesh + universal P2P + true provider P2P | 0.4.0-0.5.0 |
@@ -27,17 +29,14 @@ representation).
 ## Next session
 
 1. **Playtest feedback first** - every UI surface (part GUIs, workbench, tracer, P2P
-   terminal, mesh config, job monitor) is machine-verified but has never been touched
-   by human hands; friction fixes take priority over new systems.
-2. **F3 guarded patterns, design-first** - the next feature tier. Work out the
-   provider hook question (own provider block vs upstream ICraftingProvider
-   extra-requirements) before writing code.
+   terminal, mesh config, job monitor, guarded provider) is machine-verified but has
+   never been touched by human hands; friction fixes take priority over new systems.
+2. **F6 query language, design-first** - one expression engine (mod:/tag:/name:/count/
+   craftable + signals as terms), compiled to AEKey predicates, with named per-network
+   views. F7 (config terminal) builds on it afterward.
 
 ## Longer term
 
-- **F3 guarded patterns**: signals gating pattern availability. Needs either our own
-  provider block or the upstream `ICraftingProvider` extra-requirements hook (AE2
-  issue #1761); design before code.
 - **F6 query language** and **F7 config terminal**, in that order (F7 wants F6).
 - **F4 job scheduler/policy**: admission control is feasible today for jobs we
   originate (submitJob takes an explicit CPU); steering foreign jobs is the open part.
@@ -69,6 +68,13 @@ representation).
   (P2P names persist as data attachments on the tunnels' cable-bus block entities).
 - Localization is en_us only; art is programmatic 16x16 (see scripts/gen_textures.py -
   run from the repo root).
+- Guard flips re-index patterns on a ten-tick fingerprint: a plan computed while a
+  guard was open keeps its patterns (the push gate arbitrates after that), and guard
+  evaluation is snapshot-free by design. Provider priority orders pattern CHOICE at
+  plan time; AE2 round-robins pushes among providers holding IDENTICAL patterns, so
+  dynamic priority moves production between different recipes, not copies of one.
+- Guarded Pattern wrappers are inert in vanilla providers (documented + gametested);
+  enforcement requires the Guarded Pattern Provider.
 - One Job Monitor per network per prefix; two on the same prefix double every count
   (multi-writer channels sum by design). Stall detection is progress-freeze polling;
   19.2.x has no job event API for start/finish attribution.

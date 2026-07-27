@@ -351,7 +351,28 @@ ADAPTIVE_PATTERN_ITEM = """
 
 write_png(OUT / "block" / "pattern_workbench_top.png", PATTERN_WORKBENCH_TOP, PART)
 write_png(OUT / "item" / "adaptive_processing_pattern.png", ADAPTIVE_PATTERN_ITEM, PART | CARD)
-write_panel(OUT / "gui" / "workbench_panel.png", 176, 166)
+write_panel(OUT / "gui" / "workbench_panel.png", 176, 190)
+
+GUARDED_PATTERN_ITEM = """
+................
+.OOOOOOOOOOOOOO.
+.OFFFFFFFFFFFSO.
+.OFrrFFFFFFFFSO.
+.OFrrFF.FF.FFSO.
+.OFrrFFFFFFFFSO.
+.OFrrFF.rr.FFSO.
+.OFrrFFFFFFFFSO.
+.OFrrFF.FF.FFSO.
+.OFrrFFFFFFFFSO.
+.OFrrFFrFFrFFSO.
+.OFrrFrFrFFFFSO.
+.OFrrFFrFrFFFSO.
+.OSSSSSSSSSSSSO.
+.OOOOOOOOOOOOOO.
+................
+"""
+
+write_png(OUT / "item" / "guarded_pattern.png", GUARDED_PATTERN_ITEM, PART | CARD)
 
 write_png(OUT / "part" / "logic_housing.png", LOGIC_HOUSING, PART)
 write_png(OUT / "part" / "constant.png", PART_CONSTANT, PART)
@@ -542,6 +563,33 @@ PART_JOB_MONITOR = """
 
 write_png(OUT / "part" / "job_monitor.png", PART_JOB_MONITOR, PART)
 
+REGULUS = dict(PART)
+REGULUS.update({
+    "q": (255, 138, 122, 255),  # regulus glow
+    "W": (255, 236, 230, 255),  # facet highlight
+})
+
+ITEM_REGULUS_CRYSTAL = """
+................
+.......W........
+......Wq........
+.....Wqr........
+....Wqrr...W....
+....qrrr..Wq....
+...qrrrr.Wqr....
+..Wqrrr..qrr....
+..qrrr..Wqrr....
+.Wqrr...qrrr....
+.qrrr..Wqrr.....
+.rrr...qrrr.....
+..rr...rrr......
+...r....r.......
+................
+................
+"""
+
+write_png(OUT / "item" / "regulus_crystal.png", ITEM_REGULUS_CRYSTAL, REGULUS)
+
 write_png(OUT / "part" / "stock_sensor.png", PART_STOCK_SENSOR, PART)
 write_png(OUT / "part" / "rate.png", PART_RATE, PART)
 write_png(OUT / "part" / "counter.png", PART_COUNTER, PART)
@@ -551,6 +599,27 @@ write_panel(OUT / "gui" / "mesh_panel.png", 200, 222)
 
 write_png(OUT / "block" / "register_bank_side.png", REGISTER_BANK_SIDE, STEEL)
 write_png(OUT / "block" / "register_bank_top.png", REGISTER_BANK_TOP, STEEL)
+
+GUARDED_PROVIDER_SIDE = """
+################
+#DDDDDDDDDDDDDD#
+#DLMMMMMMMMMMLD#
+#DM..........MD#
+#DM.########.MD#
+#DM.#MMMMMM#.MD#
+#DM.#MrrrrM#.MD#
+#DM.#MrMMrM#.MD#
+#DM.#MrMMrM#.MD#
+#DM.#MrrrrM#.MD#
+#DM.#MMMMMM#.MD#
+#DM.########.MD#
+#DLMMMMMMMMMMLD#
+#DDDDDDDDDDDDDD#
+################
+################
+"""
+
+write_png(OUT / "block" / "guarded_pattern_provider.png", GUARDED_PROVIDER_SIDE, PART)
 write_png(OUT / "item" / "signal_card.png", SIGNAL_CARD, CARD)
 write_png(OUT / "gui" / "signal.png", SIGNAL_ICON, GUI)
 write_png(OUT.parent.parent.parent / "logo.png", SIGNAL_ICON, GUI, scale=4)

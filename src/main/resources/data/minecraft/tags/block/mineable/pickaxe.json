@@ -1,6 +1,7 @@
 {
   "values": [
     "ae2logistics:register_bank",
-    "ae2logistics:pattern_workbench"
+    "ae2logistics:pattern_workbench",
+    "ae2logistics:guarded_pattern_provider"
   ]
 }

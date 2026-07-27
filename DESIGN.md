@@ -26,20 +26,23 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-27, v0.7.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (55 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-27, v0.8.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (61 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
-> **F5 complete** - Stock Sensor / Rate Meter / ME Tracer Terminal with five-minute
-> history, and job telemetry via the ME Job Monitor (crafting CPU activity, stalls, and
-> per-named-CPU detail as signal channels); **F9** adaptive processing patterns (fuzzy,
-> damage bands, tags, any-of, catalyst) + Pattern Workbench (smithing/stonecutting
-> variants cut by decision); **F11.1** P2P Frequency Terminal with tunnel-resident
-> frequency names; **F11.2/3/4** as one Universal Mesh Endpoint part (five transports,
-> named frequencies, nine-slot whitelists, true provider-P2P with per-machine blocking
-> at range, mesh-ME grid bridging via a virtual quantum-bridge star, and status
-> diagnostics with cabled-loop detection). Memory cards carry every part's settings.
-> Current status, queue, and known debt live in ROADMAP.md; per-feature notes below are
-> marked "As built".
+> **F3 complete** - Guarded Pattern Provider (plan-time hiding + toggleable push
+> gating, both layers) and Guarded Pattern wrappers, with dynamic priority bound to
+> signal channels; **F5 complete** - Stock Sensor / Rate Meter / ME Tracer Terminal
+> with five-minute history, and job telemetry via the ME Job Monitor (crafting CPU
+> activity, stalls, and per-named-CPU detail as signal channels); **F9** adaptive
+> processing patterns (fuzzy, damage bands, tags, any-of, catalyst) + Pattern
+> Workbench (smithing/stonecutting variants cut by decision); **F11.1** P2P Frequency
+> Terminal with tunnel-resident frequency names; **F11.2/3/4** as one Universal Mesh
+> Endpoint part (five transports, named frequencies, nine-slot whitelists, true
+> provider-P2P with per-machine blocking at range, mesh-ME grid bridging via a virtual
+> quantum-bridge star, and status diagnostics with cabled-loop detection). Memory
+> cards carry every part's settings; **Regulus** is the mod's themed resource
+> (in-world transform, prices the control tier). Current status, queue, and known debt
+> live in ROADMAP.md; per-feature notes below are marked "As built".
 
 ---
 
@@ -306,6 +309,29 @@ strategy so guarded patterns degrade gracefully when the addon is removed.
 **Risk.** Highest of any feature. AE2's crafting planner is the most complex and most
 performance-sensitive code in the mod, and it is the thing players will blame when a job
 mysteriously fails. Ship F1/F2/F5 first and treat F3 as v2.
+
+> **As built (v0.8.0) - both layers, zero planner changes.** The load-bearing insight:
+> patterns cannot see their grid (no API path from IPatternDetails to a network), so
+> guards are evaluated by the grid-aware object - the provider. The **Guarded Pattern
+> Provider** subclasses AE2's own PatternProviderLogic (which registers itself as the
+> node's ICraftingProvider, making our overrides the grid's view of the machine):
+> getAvailablePatterns() returns nothing while the provider guard fails and filters
+> per-pattern guards individually; pushPattern() refuses while gated (toggleable
+> "plan + push" vs "plan only"); getPatternPriority() reads a signal channel live.
+> Guard flips re-index through the public updatePatterns() path on a ten-tick
+> fingerprint, so the doc's snapshot worry dissolves: plans hold their pattern set,
+> and the push gate arbitrates after that. **Guarded Patterns** are wrapper items
+> (component: inner pattern + channel/op/constant) that delegate every crafting
+> behavior to the wrapped pattern; our provider enforces their guards, a vanilla
+> provider crafts them unconditionally (documented, gametested). Guard expressions are
+> deliberately one condition - channel OP constant - because F2 logic parts already
+> compose arbitrary logic into a channel. Dispatch semantics landed exactly as the
+> open question suggested: plan-time for feasibility, push-time for preference.
+> Discovered en route: AE2 round-robins push targets among providers holding
+> IDENTICAL patterns; priority orders pattern CHOICE at plan time - so dynamic
+> priority moves production between different recipes, not between copies of one.
+> The tier also introduced **Regulus** (charged certus + redstone + glowstone in
+> water, one ae2:transform JSON), the mod's first themed resource.
 
 ---
 

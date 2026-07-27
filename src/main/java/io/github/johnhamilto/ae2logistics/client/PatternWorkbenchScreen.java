@@ -29,10 +29,101 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
     private static final int GRID_X = 26;
     private static final int GRID_Y = 17;
 
+    private net.minecraft.client.gui.components.EditBox guardChannelBox;
+    private net.minecraft.client.gui.components.EditBox guardValueBox;
+    private net.minecraft.client.gui.components.Button guardOpButton;
+    private net.minecraft.client.gui.components.Button wrapButton;
+    private int guardOp = 4;
+    private net.minecraft.world.item.ItemStack lastSeenPattern = net.minecraft.world.item.ItemStack.EMPTY;
+
     public PatternWorkbenchScreen(PatternWorkbenchMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 166;
+        this.imageHeight = 190;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        guardChannelBox = new net.minecraft.client.gui.components.EditBox(font,
+                leftPos + 40, topPos + 74, 88, 14, Component.empty());
+        guardChannelBox.setMaxLength(80);
+        addRenderableWidget(guardChannelBox);
+
+        guardOpButton = net.minecraft.client.gui.components.Button.builder(
+                Component.literal(io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS[guardOp]),
+                b -> {
+                    guardOp = (guardOp + 1) % io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS.length;
+                    b.setMessage(Component.literal(
+                            io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS[guardOp]));
+                }).bounds(leftPos + 132, topPos + 72, 24, 16).build();
+        addRenderableWidget(guardOpButton);
+
+        guardValueBox = new net.minecraft.client.gui.components.EditBox(font,
+                leftPos + 40, topPos + 90, 60, 14, Component.empty());
+        guardValueBox.setMaxLength(19);
+        guardValueBox.setValue("0");
+        addRenderableWidget(guardValueBox);
+
+        wrapButton = net.minecraft.client.gui.components.Button.builder(Component.literal("Wrap"),
+                b -> wrapOrUnwrap()).bounds(leftPos + 106, topPos + 88, 62, 16).build();
+        addRenderableWidget(wrapButton);
+
+        lastSeenPattern = net.minecraft.world.item.ItemStack.EMPTY;
+        refreshGuardWidgets();
+    }
+
+    private void wrapOrUnwrap() {
+        var stack = menu.patternStack();
+        if (stack.is(AE2Logistics.GUARDED_PATTERN.get())) {
+            PacketDistributor.sendToServer(new io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload(
+                    menu.pos, io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload.ACTION_UNWRAP,
+                    "", 0, 0));
+        } else if (!stack.isEmpty()) {
+            long value;
+            try {
+                value = Long.parseLong(guardValueBox.getValue().trim());
+            } catch (NumberFormatException e) {
+                value = 0;
+            }
+            PacketDistributor.sendToServer(new io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload(
+                    menu.pos, io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload.ACTION_WRAP,
+                    guardChannelBox.getValue(), guardOp, value));
+        }
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        if (!net.minecraft.world.item.ItemStack.matches(lastSeenPattern, menu.patternStack())) {
+            lastSeenPattern = menu.patternStack().copy();
+            refreshGuardWidgets();
+        }
+    }
+
+    private void refreshGuardWidgets() {
+        var stack = menu.patternStack();
+        boolean present = !stack.isEmpty();
+        boolean guarded = stack.is(AE2Logistics.GUARDED_PATTERN.get());
+        guardChannelBox.setVisible(present);
+        guardValueBox.setVisible(present);
+        guardOpButton.visible = present;
+        wrapButton.visible = present;
+        guardChannelBox.setEditable(!guarded);
+        guardValueBox.setEditable(!guarded);
+        guardOpButton.active = !guarded;
+        wrapButton.setMessage(Component.literal(guarded ? "Unwrap" : "Wrap"));
+        if (guarded) {
+            var data = stack.get(AE2Logistics.GUARDED_PATTERN_DATA.get());
+            if (data != null) {
+                guardChannelBox.setValue(data.channel().toString());
+                guardValueBox.setValue(Long.toString(data.value()));
+                guardOp = Math.floorMod(data.op(),
+                        io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS.length);
+                guardOpButton.setMessage(Component.literal(
+                        io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS[guardOp]));
+            }
+        }
     }
 
     @Nullable
@@ -181,5 +272,12 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         guiGraphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
+        if (!menu.patternStack().isEmpty()) {
+            guiGraphics.drawString(font, "Guard", leftPos + 8, topPos + 76, 0x9BB2C4, false);
+            if (menu.patternStack().is(AE2Logistics.GUARDED_PATTERN.get())) {
+                guiGraphics.drawString(font, "Unwrap to edit the recipe", leftPos + 8, topPos + 60,
+                        0x5A6B7C, false);
+            }
+        }
     }
 }

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "ae2logistics:block/guarded_pattern_provider"
+    }
+  }
+}

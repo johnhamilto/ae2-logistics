@@ -143,6 +143,24 @@ public class AE2Logistics {
     public static final DeferredItem<Item> GUIDE_TABLET = ITEMS.register("guide_tablet",
             () -> new io.github.johnhamilto.ae2logistics.item.GuideTabletItem(new Item.Properties().stacksTo(1)));
 
+    /** The mod's themed resource: forms when charged certus, redstone, and glowstone meet water. */
+    public static final DeferredItem<Item> REGULUS_CRYSTAL = ITEMS.register("regulus_crystal",
+            () -> new Item(new Item.Properties()));
+
+    public static final Supplier<DataComponentType<io.github.johnhamilto.ae2logistics.crafting.GuardedPatternData>> GUARDED_PATTERN_DATA =
+            DATA_COMPONENTS.register("guarded_pattern",
+                    () -> DataComponentType.<io.github.johnhamilto.ae2logistics.crafting.GuardedPatternData>builder()
+                            .persistent(io.github.johnhamilto.ae2logistics.crafting.GuardedPatternData.CODEC)
+                            .networkSynchronized(io.github.johnhamilto.ae2logistics.crafting.GuardedPatternData.STREAM_CODEC)
+                            .build());
+
+    public static final DeferredItem<Item> GUARDED_PATTERN = ITEMS.register("guarded_pattern",
+            () -> PatternDetailsHelper
+                    .encodedPatternItemBuilder(io.github.johnhamilto.ae2logistics.crafting.GuardedPattern::new)
+                    .invalidPatternTooltip(
+                            io.github.johnhamilto.ae2logistics.crafting.GuardedPattern::getInvalidPatternTooltip)
+                    .build());
+
     // Memory-card payloads: settings our parts export beyond AE2's generic ones.
     public static final Supplier<DataComponentType<net.minecraft.nbt.CompoundTag>> EXPORTED_LOGIC_SETTINGS =
             DATA_COMPONENTS.register("exported_logic_settings",
@@ -173,6 +191,21 @@ public class AE2Logistics {
 
     public static final Supplier<MenuType<PatternWorkbenchMenu>> PATTERN_WORKBENCH_MENU = MENUS.register(
             "pattern_workbench", () -> IMenuTypeExtension.create(PatternWorkbenchMenu::new));
+
+    public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock> GUARDED_PROVIDER =
+            BLOCKS.register("guarded_pattern_provider",
+                    () -> new io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock(
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
+    public static final DeferredItem<BlockItem> GUARDED_PROVIDER_ITEM = ITEMS
+            .registerSimpleBlockItem(GUARDED_PROVIDER);
+    public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlockEntity>> GUARDED_PROVIDER_BE =
+            BLOCK_ENTITIES.register("guarded_pattern_provider", () -> BlockEntityType.Builder
+                    .of(io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlockEntity::new,
+                            GUARDED_PROVIDER.get())
+                    .build(null));
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.GuardedProviderMenu>> GUARDED_PROVIDER_MENU =
+            MENUS.register("guarded_pattern_provider", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.GuardedProviderMenu::new));
 
     public static final DeferredItem<PartItem<ConstantPart>> CONSTANT_PART = part(
             "constant", ConstantPart.class, ConstantPart::new);
@@ -226,6 +259,7 @@ public class AE2Logistics {
                     .displayItems((params, output) -> {
                         output.accept(REGISTER_BANK_ITEM.get());
                         output.accept(PATTERN_WORKBENCH_ITEM.get());
+                        output.accept(GUARDED_PROVIDER_ITEM.get());
                         output.accept(SIGNAL_CARD.get());
                         output.accept(CONSTANT_PART.get());
                         output.accept(THRESHOLD_PART.get());
@@ -241,6 +275,7 @@ public class AE2Logistics {
                         output.accept(JOB_MONITOR_PART.get());
                         output.accept(P2P_TERMINAL_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
+                        output.accept(REGULUS_CRYSTAL.get());
                         output.accept(GUIDE_TABLET.get());
                     })
                     .build());
@@ -270,8 +305,12 @@ public class AE2Logistics {
             }
         });
 
-        modBus.addListener((RegisterCapabilitiesEvent event) -> event.registerBlockEntity(
-                AECapabilities.IN_WORLD_GRID_NODE_HOST, REGISTER_BANK_BE.get(), (be, context) -> be));
+        modBus.addListener((RegisterCapabilitiesEvent event) -> {
+            event.registerBlockEntity(
+                    AECapabilities.IN_WORLD_GRID_NODE_HOST, REGISTER_BANK_BE.get(), (be, context) -> be);
+            event.registerBlockEntity(
+                    AECapabilities.IN_WORLD_GRID_NODE_HOST, GUARDED_PROVIDER_BE.get(), (be, context) -> be);
+        });
 
         modBus.addListener((RegisterPayloadHandlersEvent event) -> {
             var registrar = event.registrar("1");
@@ -292,6 +331,12 @@ public class AE2Logistics {
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureGuardPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureGuardPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureGuardPayload::handle);
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {
