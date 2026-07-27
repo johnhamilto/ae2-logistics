@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.6.0 (2026-07-27). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (52 tests, run
+Status as of v0.7.0 (2026-07-27). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (55 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -11,6 +11,8 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F1 | Signal key type, ME Register Bank, Signal Card, grid-service store | 0.1.0-0.2.0 |
 | F2 | Ten logic parts on a deterministic topological scheduler | 0.2.0 |
 | F5 | Stock Sensor, Rate Meter, ME Tracer Terminal (5-min sparklines) | 0.2.0 |
+| F5 | ME Job Monitor: CPU/job telemetry as signals (active/idle/stalled/pending + per-named-CPU) - F5 complete | 0.7.0 |
+| QoL | Memory cards carry all part settings; stock sensor GUI gained a player inventory | 0.7.0 |
 | F9 | Adaptive processing patterns: fuzzy/bands/tag/any-of/catalyst + Pattern Workbench | 0.2.0-0.3.0 |
 | F11.1 | P2P Frequency Terminal (list, named frequencies, retune) | 0.3.0 |
 | F11.2-4 | Universal Mesh Endpoints: 5 transports, mesh + universal P2P + true provider P2P | 0.4.0-0.5.0 |
@@ -24,20 +26,15 @@ representation).
 
 ## Next session
 
-1. **Playtest feedback first** - several UI surfaces (part GUIs, workbench, tracer,
-   P2P terminal, mesh config) are machine-verified but have never been touched by
-   human hands; friction fixes take priority over new systems.
-2. **Fix the stock sensor ghost slot**: LogicPartMenu has no player inventory slots, so
-   a player cannot carry an item to click into the ghost slot - it only works from
-   code. Discovered while building the mesh filter UI (which got player slots for
-   exactly this reason); apply the same fix to the stock sensor layout.
-3. **Memory card support** for our parts (exportSettings/importSettings currently do
-   not carry our custom fields).
+1. **Playtest feedback first** - every UI surface (part GUIs, workbench, tracer, P2P
+   terminal, mesh config, job monitor) is machine-verified but has never been touched
+   by human hands; friction fixes take priority over new systems.
+2. **F3 guarded patterns, design-first** - the next feature tier. Work out the
+   provider hook question (own provider block vs upstream ICraftingProvider
+   extra-requirements) before writing code.
 
 ## Longer term
 
-- **F5 completion**: job telemetry (craft start/finish/stall as signals, using the
-  AE2CC failure taxonomy) feeding the Tracer Terminal.
 - **F3 guarded patterns**: signals gating pattern availability. Needs either our own
   provider block or the upstream `ICraftingProvider` extra-requirements hook (AE2
   issue #1761); design before code.
@@ -72,6 +69,10 @@ representation).
   (P2P names persist as data attachments on the tunnels' cable-bus block entities).
 - Localization is en_us only; art is programmatic 16x16 (see scripts/gen_textures.py -
   run from the repo root).
+- One Job Monitor per network per prefix; two on the same prefix double every count
+  (multi-writer channels sum by design). Stall detection is progress-freeze polling;
+  19.2.x has no job event API for start/finish attribution.
 - Untested by automation: fluid/energy mesh forwarding E2E (no reliable vanilla
   fixture; needs a test fixture block), GUI interactions, world save/load cycles,
-  catalyst execution phase (planner phase is covered).
+  catalyst execution phase (planner phase is covered), per-named-CPU monitor channels
+  (no programmatic path to name a crafting cluster in a gametest).

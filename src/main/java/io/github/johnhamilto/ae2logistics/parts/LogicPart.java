@@ -107,6 +107,56 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
     }
 
     @Override
+    public void exportSettings(appeng.util.SettingsFrom mode,
+            net.minecraft.core.component.DataComponentMap.Builder builder) {
+        super.exportSettings(mode, builder);
+        if (mode == appeng.util.SettingsFrom.MEMORY_CARD) {
+            var tag = new CompoundTag();
+            if (outChannel != null) {
+                tag.putString("out", outChannel.toString());
+            }
+            if (inA != null) {
+                tag.putString("inA", inA.toString());
+            }
+            if (inB != null) {
+                tag.putString("inB", inB.toString());
+            }
+            tag.putInt("op", op);
+            tag.putLong("valueA", valueA);
+            tag.putLong("valueB", valueB);
+            tag.putBoolean("flag", flag);
+            builder.set(io.github.johnhamilto.ae2logistics.AE2Logistics.EXPORTED_LOGIC_SETTINGS.get(), tag);
+            var watched = watchedKey();
+            if (watched != null) {
+                builder.set(io.github.johnhamilto.ae2logistics.AE2Logistics.EXPORTED_WATCHED_KEY.get(),
+                        watched);
+            }
+        }
+    }
+
+    @Override
+    public void importSettings(appeng.util.SettingsFrom mode,
+            net.minecraft.core.component.DataComponentMap input, @Nullable Player player) {
+        super.importSettings(mode, input, player);
+        if (isClientSide()) {
+            return;
+        }
+        var tag = input.get(io.github.johnhamilto.ae2logistics.AE2Logistics.EXPORTED_LOGIC_SETTINGS.get());
+        if (tag != null) {
+            applyConfig(
+                    tag.contains("out") ? ResourceLocation.tryParse(tag.getString("out")) : null,
+                    tag.contains("inA") ? ResourceLocation.tryParse(tag.getString("inA")) : null,
+                    tag.contains("inB") ? ResourceLocation.tryParse(tag.getString("inB")) : null,
+                    tag.getInt("op"),
+                    tag.getLong("valueA"),
+                    tag.getLong("valueB"),
+                    tag.getBoolean("flag"));
+            var watched = input.get(io.github.johnhamilto.ae2logistics.AE2Logistics.EXPORTED_WATCHED_KEY.get());
+            setWatchedKey(watched);
+        }
+    }
+
+    @Override
     public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
         super.writeToNBT(data, registries);
         if (outChannel != null) {

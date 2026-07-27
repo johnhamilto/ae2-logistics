@@ -521,6 +521,27 @@ write_png(OUT / "item" / "guide_tablet.png", ITEM_GUIDE_TABLET, PART | CARD)
 write_png(OUT / "part" / "tracer_terminal.png", PART_TRACER, PART)
 write_panel(OUT / "gui" / "tracer_panel.png", 236, 190)
 
+PART_JOB_MONITOR = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.##########.D#
+#D.#........#.D#
+#D.#.CCCCCC.#.D#
+#D.#........#.D#
+#D.#.cccC...#.D#
+#D.#........#.D#
+#D.#.ccC....#.D#
+#D.#........#.D#
+#D.##########.D#
+#D....rr......D#
+#D...LLLLLL...D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "job_monitor.png", PART_JOB_MONITOR, PART)
+
 write_png(OUT / "part" / "stock_sensor.png", PART_STOCK_SENSOR, PART)
 write_png(OUT / "part" / "rate.png", PART_RATE, PART)
 write_png(OUT / "part" / "counter.png", PART_COUNTER, PART)

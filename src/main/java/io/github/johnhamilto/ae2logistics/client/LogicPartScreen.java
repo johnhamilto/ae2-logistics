@@ -22,6 +22,7 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
 public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
 
     private static final ResourceLocation BACKGROUND = AE2Logistics.id("textures/gui/logic_panel.png");
+    private static final ResourceLocation TALL_BACKGROUND = AE2Logistics.id("textures/gui/mesh_panel.png");
 
     private static final String[] THRESHOLD_OPS = {"<", "<=", "=", ">=", ">"};
     private static final String[] ARITHMETIC_OPS = {"+", "-", "x", "/", "min", "max", "mod"};
@@ -43,7 +44,12 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
     public LogicPartScreen(LogicPartMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 200;
-        this.imageHeight = 166;
+        // The sensor variant carries a player inventory (to feed the ghost slot by hand).
+        this.imageHeight = menu.type == LogicPartType.STOCK_SENSOR ? 222 : 166;
+    }
+
+    private int controlY() {
+        return menu.type == LogicPartType.STOCK_SENSOR ? 104 : imageHeight - 26;
     }
 
     private static List<Row> rowsFor(LogicPartType type) {
@@ -131,7 +137,7 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
         }
 
         addRenderableWidget(Button.builder(Component.literal("Apply"), b -> apply())
-                .bounds(leftPos + 10, topPos + imageHeight - 26, 60, 18).build());
+                .bounds(leftPos + 10, topPos + controlY(), 60, 18).build());
     }
 
     private static boolean usesFlag(LogicPartType type) {
@@ -193,13 +199,26 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
+        var background = menu.type == LogicPartType.STOCK_SENSOR ? TALL_BACKGROUND : BACKGROUND;
+        guiGraphics.blit(background, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
         if (menu.type == LogicPartType.STOCK_SENSOR) {
-            int x = leftPos + LogicPartMenu.GHOST_SLOT_X - 1;
-            int y = topPos + LogicPartMenu.GHOST_SLOT_Y - 1;
-            guiGraphics.fill(x, y, x + 18, y + 18, 0xFF1A1F27);
-            guiGraphics.fill(x + 1, y + 1, x + 17, y + 17, 0xFF2C333F);
+            slotFrame(guiGraphics, LogicPartMenu.GHOST_SLOT_X, LogicPartMenu.GHOST_SLOT_Y);
+            for (int row = 0; row < 3; row++) {
+                for (int col = 0; col < 9; col++) {
+                    slotFrame(guiGraphics, LogicPartMenu.INV_X + col * 18, LogicPartMenu.INV_Y + row * 18);
+                }
+            }
+            for (int col = 0; col < 9; col++) {
+                slotFrame(guiGraphics, LogicPartMenu.INV_X + col * 18, LogicPartMenu.HOTBAR_Y);
+            }
         }
+    }
+
+    private void slotFrame(GuiGraphics guiGraphics, int slotX, int slotY) {
+        int x = leftPos + slotX - 1;
+        int y = topPos + slotY - 1;
+        guiGraphics.fill(x, y, x + 18, y + 18, 0xFF1A1F27);
+        guiGraphics.fill(x + 1, y + 1, x + 17, y + 17, 0xFF2C333F);
     }
 
     @Override
@@ -216,7 +235,7 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
             guiGraphics.drawString(font, "click with an item", 32, LogicPartMenu.GHOST_SLOT_Y + 5, 0x5A6B7C, false);
         }
 
-        guiGraphics.drawString(font, "Out: " + menu.outputValue(), 78, imageHeight - 22, 0x5CE2FF, false);
+        guiGraphics.drawString(font, "Out: " + menu.outputValue(), 78, controlY() + 5, 0x5CE2FF, false);
     }
 
     @Override

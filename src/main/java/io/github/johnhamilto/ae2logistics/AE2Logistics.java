@@ -143,6 +143,25 @@ public class AE2Logistics {
     public static final DeferredItem<Item> GUIDE_TABLET = ITEMS.register("guide_tablet",
             () -> new io.github.johnhamilto.ae2logistics.item.GuideTabletItem(new Item.Properties().stacksTo(1)));
 
+    // Memory-card payloads: settings our parts export beyond AE2's generic ones.
+    public static final Supplier<DataComponentType<net.minecraft.nbt.CompoundTag>> EXPORTED_LOGIC_SETTINGS =
+            DATA_COMPONENTS.register("exported_logic_settings",
+                    () -> DataComponentType.<net.minecraft.nbt.CompoundTag>builder()
+                            .persistent(net.minecraft.nbt.CompoundTag.CODEC).build());
+    public static final Supplier<DataComponentType<appeng.api.stacks.GenericStack>> EXPORTED_WATCHED_KEY =
+            DATA_COMPONENTS.register("exported_watched_key",
+                    () -> DataComponentType.<appeng.api.stacks.GenericStack>builder()
+                            .persistent(appeng.api.stacks.GenericStack.CODEC).build());
+    public static final Supplier<DataComponentType<net.minecraft.nbt.CompoundTag>> EXPORTED_MESH_SETTINGS =
+            DATA_COMPONENTS.register("exported_mesh_settings",
+                    () -> DataComponentType.<net.minecraft.nbt.CompoundTag>builder()
+                            .persistent(net.minecraft.nbt.CompoundTag.CODEC).build());
+    public static final Supplier<DataComponentType<java.util.List<appeng.api.stacks.GenericStack>>> EXPORTED_MESH_FILTER =
+            DATA_COMPONENTS.register("exported_mesh_filter",
+                    () -> DataComponentType.<java.util.List<appeng.api.stacks.GenericStack>>builder()
+                            .persistent(appeng.api.stacks.GenericStack.FAULT_TOLERANT_NULLABLE_LIST_CODEC)
+                            .build());
+
     public static final DeferredBlock<PatternWorkbenchBlock> PATTERN_WORKBENCH = BLOCKS.register(
             "pattern_workbench",
             () -> new PatternWorkbenchBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
@@ -181,6 +200,13 @@ public class AE2Logistics {
     public static final Supplier<MenuType<TracerTerminalMenu>> TRACER_TERMINAL_MENU = MENUS.register(
             "tracer_terminal", () -> IMenuTypeExtension.create(TracerTerminalMenu::new));
 
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.JobMonitorPart>> JOB_MONITOR_PART =
+            part("job_monitor", io.github.johnhamilto.ae2logistics.parts.JobMonitorPart.class,
+                    io.github.johnhamilto.ae2logistics.parts.JobMonitorPart::new);
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.JobMonitorMenu>> JOB_MONITOR_MENU =
+            MENUS.register("job_monitor", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.JobMonitorMenu::new));
+
     public static final DeferredItem<PartItem<P2PFrequencyTerminalPart>> P2P_TERMINAL_PART = part(
             "p2p_frequency_terminal", P2PFrequencyTerminalPart.class, P2PFrequencyTerminalPart::new);
     public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_PART = part(
@@ -212,6 +238,7 @@ public class AE2Logistics {
                         output.accept(COUNTER_PART.get());
                         output.accept(TIMER_PART.get());
                         output.accept(TRACER_TERMINAL_PART.get());
+                        output.accept(JOB_MONITOR_PART.get());
                         output.accept(P2P_TERMINAL_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(GUIDE_TABLET.get());
@@ -262,6 +289,9 @@ public class AE2Logistics {
                     P2PDataPayload::handle);
             registrar.playToServer(ConfigureMeshPayload.TYPE, ConfigureMeshPayload.STREAM_CODEC,
                     ConfigureMeshPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload::handle);
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {

@@ -48,6 +48,9 @@ public class LogicPartMenu extends AbstractContainerMenu {
 
     public static final int GHOST_SLOT_X = 10;
     public static final int GHOST_SLOT_Y = 44;
+    public static final int INV_X = 19;
+    public static final int INV_Y = 140;
+    public static final int HOTBAR_Y = 198;
 
     private final SimpleContainer ghostContainer = new SimpleContainer(1);
     private int ghostSlotIndex = -1;
@@ -91,6 +94,7 @@ public class LogicPartMenu extends AbstractContainerMenu {
         if (type == LogicPartType.STOCK_SENSOR) {
             ghostContainer.setItem(0, displayStack(part.watchedKey()));
             addGhostSlot();
+            addPlayerSlots(inventory);
         }
     }
 
@@ -134,6 +138,7 @@ public class LogicPartMenu extends AbstractContainerMenu {
         if (type == LogicPartType.STOCK_SENSOR) {
             ghostContainer.setItem(0, ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
             addGhostSlot();
+            addPlayerSlots(inventory);
         }
     }
 
@@ -150,6 +155,19 @@ public class LogicPartMenu extends AbstractContainerMenu {
                 return false;
             }
         });
+    }
+
+    // The ghost slot is set from the carried stack, so the player needs somewhere to
+    // pick one up from - without these slots the ghost slot is unusable by hand.
+    private void addPlayerSlots(Inventory inventory) {
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                addSlot(new Slot(inventory, 9 + row * 9 + col, INV_X + col * 18, INV_Y + row * 18));
+            }
+        }
+        for (int col = 0; col < 9; col++) {
+            addSlot(new Slot(inventory, col, INV_X + col * 18, HOTBAR_Y));
+        }
     }
 
     @Override

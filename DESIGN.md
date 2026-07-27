@@ -26,18 +26,20 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-27, v0.6.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (52 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-27, v0.7.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (55 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
-> **F5** Stock Sensor / Rate Meter / ME Tracer Terminal with five-minute history;
-> **F9** adaptive processing patterns (fuzzy, damage bands, tags, any-of, catalyst) +
-> Pattern Workbench (smithing/stonecutting variants cut by decision); **F11.1** P2P
-> Frequency Terminal with tunnel-resident frequency names; **F11.2/3/4** as one
-> Universal Mesh Endpoint part (five transports, named frequencies, nine-slot
-> whitelists, true provider-P2P with per-machine blocking at range, mesh-ME grid
-> bridging via a virtual quantum-bridge star, and status diagnostics with cabled-loop
-> detection). Current status, queue, and known debt live in ROADMAP.md; per-feature
-> notes below are marked "As built".
+> **F5 complete** - Stock Sensor / Rate Meter / ME Tracer Terminal with five-minute
+> history, and job telemetry via the ME Job Monitor (crafting CPU activity, stalls, and
+> per-named-CPU detail as signal channels); **F9** adaptive processing patterns (fuzzy,
+> damage bands, tags, any-of, catalyst) + Pattern Workbench (smithing/stonecutting
+> variants cut by decision); **F11.1** P2P Frequency Terminal with tunnel-resident
+> frequency names; **F11.2/3/4** as one Universal Mesh Endpoint part (five transports,
+> named frequencies, nine-slot whitelists, true provider-P2P with per-machine blocking
+> at range, mesh-ME grid bridging via a virtual quantum-bridge star, and status
+> diagnostics with cabled-loop detection). Memory cards carry every part's settings.
+> Current status, queue, and known debt live in ROADMAP.md; per-feature notes below are
+> marked "As built".
 
 ---
 
@@ -377,6 +379,22 @@ hazard.
 
 **Storage budget.** Ring buffers must be bounded and server-side; the client receives
 downsampled snapshots only. Budget the whole feature at a few hundred KB per network.
+
+> **As built (v0.2.0 sensors/tracer, v0.7.0 job telemetry — F5 complete).** The sensor
+> half shipped early: Stock Sensor, Rate Meter, and the ME Tracer Terminal with
+> five-minute ring-buffer sparklines (64 channels per network, sampled every 20 ticks).
+> Job telemetry shipped as the **ME Job Monitor** part, an opt-in poller of
+> `ICraftingService.getCpus()`: it drives `<prefix>:active`, `idle`, `stalled`
+> (no progress movement for a configurable window, default 10s), and `pending`
+> (items outstanding), plus `<prefix>:<name>/remaining` and `/stalled` for every CPU
+> cluster the player has named - naming a CPU is the natural opt-in for per-line
+> detail, keeping channel cardinality bounded. The doc's event vocabulary (start/
+> finish/cancel timestamps, per-pattern stall attribution) collapsed to polling
+> because 19.2.x has no job event API; progress-freeze detection turned out to cover
+> the useful cases. The scheduler contract grew `writtenChannels()` for this - the
+> monitor is the first multi-output logic node, and its channels flow through
+> `localCommitted()`, so job stats cross mesh bridges and feed thresholds like any
+> other signal. **This closes the F1-F2-F5 loop the doc called the point of the mod.**
 
 ---
 

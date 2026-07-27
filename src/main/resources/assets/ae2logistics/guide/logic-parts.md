@@ -31,6 +31,32 @@ tick. If two parts write the same channel, the values add.
 - **Signal Counter** — counts rising edges of a channel; optional wrap and reset channel.
 - **Signal Timer** — emits a pulse train: 1 for the first N ticks of every M-tick period.
 
+# ME Job Monitor
+
+The Job Monitor turns autocrafting activity into signals. Mount one on a cable and it
+polls every crafting CPU on the network each tick, driving four channels under a
+configurable prefix (default `craft`):
+
+- `craft:active` — jobs currently running; `craft:idle` — CPUs with nothing to do.
+- `craft:stalled` — jobs that have made **no progress** for the configured window
+  (default 10 seconds): a blocked provider face, a missing ingredient, a machine jam.
+- `craft:pending` — items still outstanding across all running jobs.
+
+Name a Crafting Storage block (an anvil does it) and its cluster gets its own channels:
+`craft:<name>/remaining` and `craft:<name>/stalled`. Naming a CPU is how you opt a
+production line into detailed monitoring.
+
+These are ordinary signals: watch them on the Tracer Terminal, alarm on
+`craft:stalled` with a Threshold into a Redstone Port, or bridge them across networks
+with a signal mesh. One monitor per network — two on the same prefix double every count.
+
+# Memory cards
+
+AE2 memory cards work on every part in this mod: shift-click to save a part's full
+settings (a logic part's channels and constants, the sensor's watched item, a mesh
+endpoint's frequency, role, priorities, and filters), click to apply to another part of
+the same type.
+
 # A worked example: keep 10-50k iron in stock
 
 1. **Stock Sensor** watching iron ingots, output `factory:iron_count`.

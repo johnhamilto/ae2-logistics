@@ -22,6 +22,16 @@ public interface ILogicNode extends IGridNodeService {
     ResourceLocation writtenChannel();
 
     /**
+     * Every channel this node may write this tick. Single-output nodes inherit the
+     * default; multi-output nodes (e.g. the Job Monitor) override it and must
+     * invalidate the graph when the set changes.
+     */
+    default Set<ResourceLocation> writtenChannels() {
+        var written = writtenChannel();
+        return written == null ? Set.of() : Set.of(written);
+    }
+
+    /**
      * Compute this node's output from its inputs. Reads through the context observe
      * same-tick upstream writes; on a broken cycle edge they observe last tick's value.
      */
@@ -35,5 +45,8 @@ public interface ILogicNode extends IGridNodeService {
 
         /** Writes to {@link #writtenChannel()}. Multiple writers of a channel sum, saturating. */
         void write(long value);
+
+        /** Writes a specific channel; it should be one of {@link #writtenChannels()}. */
+        void write(ResourceLocation channel, long value);
     }
 }

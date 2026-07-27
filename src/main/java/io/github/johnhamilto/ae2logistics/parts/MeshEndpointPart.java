@@ -166,6 +166,48 @@ public class MeshEndpointPart extends AEBasePart {
     }
 
     @Override
+    public void exportSettings(appeng.util.SettingsFrom mode,
+            net.minecraft.core.component.DataComponentMap.Builder builder) {
+        super.exportSettings(mode, builder);
+        if (mode == appeng.util.SettingsFrom.MEMORY_CARD) {
+            var tag = new CompoundTag();
+            tag.putString("freq", frequency);
+            tag.putByte("role", role);
+            tag.putInt("priority", priority);
+            tag.putInt("capabilities", capabilities);
+            builder.set(AE2Logistics.EXPORTED_MESH_SETTINGS.get(), tag);
+            var stacks = new java.util.ArrayList<appeng.api.stacks.GenericStack>(FILTER_SLOTS);
+            boolean any = false;
+            for (var stack : filter) {
+                stacks.add(stack);
+                any |= stack != null;
+            }
+            if (any) {
+                builder.set(AE2Logistics.EXPORTED_MESH_FILTER.get(),
+                        java.util.Collections.unmodifiableList(stacks));
+            }
+        }
+    }
+
+    @Override
+    public void importSettings(appeng.util.SettingsFrom mode,
+            net.minecraft.core.component.DataComponentMap input, @Nullable Player player) {
+        super.importSettings(mode, input, player);
+        if (isClientSide()) {
+            return;
+        }
+        var tag = input.get(AE2Logistics.EXPORTED_MESH_SETTINGS.get());
+        if (tag != null) {
+            applyMeshConfig(tag.getString("freq"), (byte) Math.floorMod(tag.getByte("role"), 3),
+                    tag.getInt("priority"), tag.getInt("capabilities") & 63);
+            var stacks = input.get(AE2Logistics.EXPORTED_MESH_FILTER.get());
+            for (int i = 0; i < FILTER_SLOTS; i++) {
+                setFilterSlot(i, stacks != null && i < stacks.size() ? stacks.get(i) : null);
+            }
+        }
+    }
+
+    @Override
     public void addToWorld() {
         super.addToWorld();
         if (!isClientSide()) {

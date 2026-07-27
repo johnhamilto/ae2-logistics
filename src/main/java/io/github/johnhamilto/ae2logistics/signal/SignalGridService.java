@@ -199,6 +199,11 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
                     writtenThisTick.merge(channel, Math.max(0, value), SignalMath::add);
                 }
             }
+
+            @Override
+            public void write(ResourceLocation channel, long value) {
+                writtenThisTick.merge(channel, Math.max(0, value), SignalMath::add);
+            }
         };
 
         for (var node : evalOrder) {
@@ -234,8 +239,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
         var nodes = new ArrayList<>(logicNodes.values());
         Map<ResourceLocation, List<ILogicNode>> writers = new HashMap<>();
         for (var node : nodes) {
-            var written = node.writtenChannel();
-            if (written != null) {
+            for (var written : node.writtenChannels()) {
                 writers.computeIfAbsent(written, k -> new ArrayList<>()).add(node);
             }
         }
