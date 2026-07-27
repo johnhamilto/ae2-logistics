@@ -60,11 +60,14 @@ public class MeshEndpointPart extends AEBasePart {
     private final IItemHandler itemHandler = new MeshItemHandler();
     private final IFluidHandler fluidHandler = new MeshFluidHandler();
     private final IEnergyStorage energyHandler = new MeshEnergyHandler();
+    private final io.github.johnhamilto.ae2logistics.mesh.MeshProviderStorage providerStorage =
+            new io.github.johnhamilto.ae2logistics.mesh.MeshProviderStorage(this);
+    private final java.util.Set<appeng.api.stacks.AEKey> lastBatch = new java.util.HashSet<>();
 
     public MeshEndpointPart(IPartItem<?> partItem) {
         super(partItem);
         getMainNode()
-                .setFlags(GridFlags.REQUIRE_CHANNEL)
+                .setFlags(GridFlags.REQUIRE_CHANNEL, GridFlags.DENSE_CAPACITY)
                 .setIdlePowerUsage(1.0);
     }
 
@@ -108,6 +111,17 @@ public class MeshEndpointPart extends AEBasePart {
 
     public void applyMeshConfig(String newFrequency, byte newRole, int newPriority, int newCapabilities) {
         MeshRegistry.unregister(this);
+        boolean meFrequencyChanged = attuned(MeshRegistry.TYPE_ME)
+                && !this.frequency.equals(newFrequency);
+        if (meFrequencyChanged || (attuned(MeshRegistry.TYPE_ME) && (newCapabilities & MeshRegistry.TYPE_ME) == 0)) {
+            // ME links can only be torn down by the registry; force a star rebuild by
+            // cycling our node so stale cross-frequency bridges cannot survive a rename.
+            var host = getHost().getBlockEntity();
+            if (host.getLevel() != null && !host.getLevel().isClientSide()) {
+                getMainNode().destroy();
+                getMainNode().create(host.getLevel(), host.getBlockPos());
+            }
+        }
         this.frequency = newFrequency.length() > 32 ? newFrequency.substring(0, 32) : newFrequency;
         this.role = newRole;
         this.priority = newPriority;
@@ -216,6 +230,47 @@ public class MeshEndpointPart extends AEBasePart {
             publishedTo.setExternal(this, Map.of());
             publishedTo = null;
         }
+    }
+
+    // --- provider-P2P support ---
+
+    /** Remembers the last batch delivered here; the machine counts as busy until it drains. */
+    public void noteDelivered(java.util.Set<appeng.api.stacks.AEKey> keys) {
+        lastBatch.clear();
+        lastBatch.addAll(keys);
+    }
+
+    public boolean isBusy() {
+        if (lastBatch.isEmpty()) {
+            return false;
+        }
+        var items = adjacentItemHandler();
+        var fluids = adjacentFluidHandler();
+        for (var key : lastBatch) {
+            if (key instanceof appeng.api.stacks.AEItemKey itemKey && items != null) {
+                for (int i = 0; i < items.getSlots(); i++) {
+                    if (itemKey.matches(items.getStackInSlot(i))) {
+                        return true;
+                    }
+                }
+            } else if (key instanceof appeng.api.stacks.AEFluidKey fluidKey && fluids != null) {
+                for (int i = 0; i < fluids.getTanks(); i++) {
+                    var tank = fluids.getFluidInTank(i);
+                    if (!tank.isEmpty() && FluidStack.isSameFluidSameComponents(fluidKey.toStack(1), tank)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        lastBatch.clear();
+        return false;
+    }
+
+    @Nullable
+    public appeng.api.storage.MEStorage exposedMeStorage() {
+        return attuned(MeshRegistry.TYPE_ITEM | MeshRegistry.TYPE_FLUID) && role != ROLE_OUT
+                ? providerStorage
+                : null;
     }
 
     // --- exposed capabilities (insert-only; mirror the next target for blocking mode) ---

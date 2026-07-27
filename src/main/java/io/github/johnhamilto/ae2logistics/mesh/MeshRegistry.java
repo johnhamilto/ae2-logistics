@@ -32,6 +32,7 @@ public final class MeshRegistry {
     public static final int TYPE_FLUID = 4;
     public static final int TYPE_ENERGY = 8;
     public static final int TYPE_SIGNAL = 16;
+    public static final int TYPE_ME = 32;
 
     private static final Map<String, Set<MeshEndpointPart>> BY_FREQUENCY = new HashMap<>();
     private static final Map<String, MeshEndpointPart> STICKY_ITEM = new HashMap<>();
@@ -64,6 +65,8 @@ public final class MeshRegistry {
     }
 
     public static void clear() {
+        ME_LINKS.clear();
+        ME_MEMBERSHIP.clear();
         BY_FREQUENCY.clear();
         STICKY_ITEM.clear();
         STICKY_ITEM_TICK.clear();
@@ -192,9 +195,70 @@ public final class MeshRegistry {
         }
     }
 
+    private static final Map<String, List<appeng.api.networking.IGridConnection>> ME_LINKS = new HashMap<>();
+    private static final Map<String, Long> ME_MEMBERSHIP = new HashMap<>();
+
+    /**
+     * Mesh-ME is a virtual quantum-bridge star: every ME-attuned endpoint's grid node is
+     * connected to the deterministically elected hub (lowest stableKey), so AE2's own
+     * pather carries channels, power, and grid membership through the mesh. Endpoint
+     * nodes are DENSE_CAPACITY, so each spoke carries up to 32 channels.
+     */
+    private static void manageMeStars() {
+        ME_LINKS.keySet().removeIf(freq -> {
+            if (!BY_FREQUENCY.containsKey(freq)) {
+                ME_LINKS.getOrDefault(freq, List.of())
+                        .forEach(appeng.api.networking.IGridConnection::destroy);
+                ME_MEMBERSHIP.remove(freq);
+                return true;
+            }
+            return false;
+        });
+
+        for (var entry : BY_FREQUENCY.entrySet()) {
+            var members = new ArrayList<MeshEndpointPart>();
+            long membership = 0;
+            for (var part : entry.getValue()) {
+                if (part.attuned(TYPE_ME) && part.getMainNode().getNode() != null) {
+                    members.add(part);
+                    membership = membership * 31 + part.stableKey();
+                }
+            }
+            membership = membership * 31 + members.size();
+
+            if (ME_MEMBERSHIP.getOrDefault(entry.getKey(), 0L) == membership) {
+                continue;
+            }
+            ME_MEMBERSHIP.put(entry.getKey(), membership);
+
+            ME_LINKS.getOrDefault(entry.getKey(), List.of())
+                    .forEach(appeng.api.networking.IGridConnection::destroy);
+            var links = new ArrayList<appeng.api.networking.IGridConnection>();
+
+            if (members.size() >= 2) {
+                members.sort(Comparator.comparingLong(MeshEndpointPart::stableKey));
+                var hub = members.get(0).getMainNode().getNode();
+                for (int i = 1; i < members.size(); i++) {
+                    var spoke = members.get(i).getMainNode().getNode();
+                    try {
+                        links.add(appeng.me.GridConnection.create(hub, spoke, null));
+                    } catch (IllegalStateException ignored) {
+                        // already connected through cables or another mesh; that's fine
+                    }
+                }
+            }
+            if (links.isEmpty()) {
+                ME_LINKS.remove(entry.getKey());
+            } else {
+                ME_LINKS.put(entry.getKey(), links);
+            }
+        }
+    }
+
     /** Once per server tick: recompute redstone wired-OR and signal bridging per frequency. */
     public static void tick(long tick) {
         gameTick = tick;
+        manageMeStars();
 
         for (var entry : BY_FREQUENCY.entrySet()) {
             int redstone = 0;

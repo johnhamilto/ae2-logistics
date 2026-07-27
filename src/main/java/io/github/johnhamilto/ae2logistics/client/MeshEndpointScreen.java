@@ -21,8 +21,9 @@ public class MeshEndpointScreen extends AbstractContainerScreen<MeshEndpointMenu
 
     private static final String[] ROLES = {"Role: Input", "Role: Output", "Role: Both"};
     private static final int[] TYPES = {MeshRegistry.TYPE_REDSTONE, MeshRegistry.TYPE_ITEM,
-            MeshRegistry.TYPE_FLUID, MeshRegistry.TYPE_ENERGY, MeshRegistry.TYPE_SIGNAL};
-    private static final String[] TYPE_NAMES = {"Redstone", "Items", "Fluids", "Energy", "Signals"};
+            MeshRegistry.TYPE_FLUID, MeshRegistry.TYPE_ENERGY, MeshRegistry.TYPE_SIGNAL,
+            MeshRegistry.TYPE_ME};
+    private static final String[] TYPE_NAMES = {"Redstone", "Items", "Fluids", "Energy", "Signals", "ME Link"};
 
     private EditBox frequencyBox;
     private EditBox priorityBox;

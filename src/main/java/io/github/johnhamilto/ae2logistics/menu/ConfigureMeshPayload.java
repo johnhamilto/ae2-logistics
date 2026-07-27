@@ -46,6 +46,6 @@ public record ConfigureMeshPayload(BlockPos pos, byte side, String frequency, by
                 payload.frequency.trim(),
                 (byte) Math.floorMod(payload.role, 3),
                 payload.priority,
-                payload.capabilities & 31);
+                payload.capabilities & 63);
     }
 }

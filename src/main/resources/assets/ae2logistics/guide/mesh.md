@@ -20,11 +20,13 @@ Right-click to configure: type a frequency name, pick a role, toggle capabilitie
 
 - **Redstone** - a wired-OR bus: outputs emit the highest level present at any input.
 - **Items and fluids** - anything pushed into an input endpoint is delivered into the
-  inventory an output endpoint faces, by priority then round-robin. Transfers made in
-  the same tick stick to one destination, so **a pattern provider pushing a batch
-  through the mesh lands the whole batch on one machine**, and blocking mode reads the
-  destination's inventory through the mesh. Point a provider at an input endpoint and
-  scatter output endpoints across your machines - that is provider P2P.
+  inventory an output endpoint faces, by priority then round-robin, with batches kept
+  whole on one destination.
+- **Provider P2P** - point a pattern provider at an input endpoint and it behaves as if
+  it were adjacent to every machine on the frequency: each batch goes complete to the
+  first machine that has finished its previous batch, and when all machines are still
+  working, nothing is pushed until one frees up - true per-machine blocking, at range,
+  over one face.
 - **Energy** - FE pushed into an input spreads across all outputs by priority.
 - **Signals** - the only transport that crosses networks: input endpoints publish their
   network's channels onto the frequency and outputs inject them into their own network,
@@ -34,7 +36,12 @@ Right-click to configure: type a frequency name, pick a role, toggle capabilitie
 Every transfer has a hop budget of one: a mesh delivery can never enter another mesh,
 which makes item loops structurally impossible rather than merely discouraged.
 
-ME channels do not travel through the mesh - channel capacity is the one thing this
-addon never inflates.
+- **ME Link** - endpoints with the ME Link capability fuse their networks like a
+  multi-point quantum bridge: one elected hub, a virtual star of dense connections, and
+  AE2's own pather carrying channels (up to 32 per spoke), power, and grid membership
+  through the mesh. Renaming or un-attuning an endpoint cleanly tears its links down.
+
+The mesh never creates channel capacity from nothing - every endpoint costs a channel
+and ME links route through AE2's normal pathing rules.
 
 Each endpoint costs one channel and idles at one AE per tick.

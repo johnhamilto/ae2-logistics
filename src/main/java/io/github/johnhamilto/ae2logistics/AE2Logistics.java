@@ -249,6 +249,8 @@ public class AE2Logistics {
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {
+            event.register(AECapabilities.ME_STORAGE,
+                    (part, context) -> part.exposedMeStorage(), MeshEndpointPart.class);
             event.register(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
                     (part, context) -> part.exposedItemHandler(), MeshEndpointPart.class);
             event.register(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
