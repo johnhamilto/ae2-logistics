@@ -21,6 +21,7 @@ repositories {
 
 dependencies {
     implementation "org.appliedenergistics:appliedenergistics2:${project.ae2_version}"
+    compileOnly "org.appliedenergistics:guideme:${project.guideme_version}"
 }
 
 sourceSets {

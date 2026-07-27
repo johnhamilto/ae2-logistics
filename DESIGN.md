@@ -26,6 +26,14 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
+> **As-built status (2026-07-26).** The Phase 0 spike succeeded and the architecture bet
+> held. Shipped and CI-verified (10 in-game gametests): **F1** signal keys + ME Register
+> Bank + Signal Card; **F2** all nine logic parts on a grid-service topological scheduler
+> (plus a tenth part, the Stock Sensor); **F9 slice** adaptive processing patterns
+> (exact/fuzzy/tag specs) + Pattern Workbench, including an end-to-end autocraft that
+> consumes a tag substitute through a real CPU and provider. Per-feature notes below are
+> marked "As built".
+
 ---
 
 ## 1. API foundations
@@ -182,6 +190,15 @@ visible to:
 fight AE2's storage invariants, F2/F5 fall back to a private grid service with bespoke UI —
 much more work, much less elegance. **Prototype F1 before committing to anything else.**
 
+> **As built.** The spike passed in-game: signals display in terminals, and Level
+> Emitters/Storage Monitors accept them via a Signal Card (`ContainerItemStrategy`) since
+> config slots fill from held items. Values live in a `SignalGridService` (one per grid,
+> mounted once via `addGlobalStorageProvider`) — banks are persistence anchors and
+> interaction points, not mount points, which resolves multi-bank ambiguity by
+> construction. Option (b) held: MEStorage's default insert/extract refuse transfers.
+> One correction to §1.3's assumption set: 19.2.x has no storage change-notification API,
+> but none is needed — `StorageService` re-reads mounted storage every tick and diffs.
+
 ---
 
 ### F2 — Logic parts
@@ -224,6 +241,18 @@ order-dependent glitches. Options:
    each time it changes and evaluates in order within one tick. Cycles get an explicit
    one-tick delay element (like a Factorio combinator). **Preferred.** Costs a graph
    rebuild on every part add/remove, which is fine — that's a rare event.
+
+> **As built.** Option 2, with refinements: the graph is over *channel bindings* (writers
+> of X → readers of X), so rebuilds also trigger on part reconfiguration; evaluation order
+> is deterministic via a stable per-part key (position+side); cycles are broken at the
+> smallest key rather than by an explicit delay part, giving feedback loops an implicit
+> deterministic one-tick delay; and multiple writers to one channel **sum, saturating** —
+> commutative, so order never matters. All of this is pinned by gametests (same-tick
+> chain propagation, +1/tick cycle advancement, multi-writer sums). All nine parts
+> shipped, plus a Stock Sensor that writes any stored key's amount to a channel — making
+> item/fluid reads a dedicated part rather than extra input plumbing on every part.
+> Config GUIs are AE2-styled visually but run on vanilla menus + one payload; migrating
+> to AE2's menu framework is deliberate later work.
 
 **Risk.** Scope creep into a visual programming language. Hold the line at ~9 part types;
 composition is the feature.
@@ -432,6 +461,19 @@ Consider shipping this last, or as a config-gated module.
 
 **This is the strongest crafting-side idea in the doc.** It is a real, universal,
 version-independent gap, unlike ingredient count (§4.2).
+
+> **As built (first slice).** Open question 1 resolved emphatically yes:
+> `IPatternDetails.IInput` is public API with `getPossibleInputs()` + `isValid()`, and the
+> stock planner honors both at calculation and execution — an end-to-end gametest proves a
+> `Tag("#minecraft:planks")` input consuming birch when the pattern was encoded with oak.
+> Shipped: Adaptive Processing Pattern (Exact / Fuzzy-ignore-components / Tag specs,
+> candidates expanded at decode with the canonical item first, so rule 2 "the planner
+> never branches" is inherited from AE2 itself) and the Pattern Workbench, which converts
+> vanilla processing patterns by clicking ingredients (gated by a Fuzzy Card in its
+> recipe rather than an encoding-terminal upgrade). Deferred: `AnyOf`, damage-band fuzzy,
+> crafting/smithing/stonecutting types, `Catalyst`, encoding-terminal integration, JEI
+> drag. Finding for the test harness: crafting calculations require a machine-backed
+> `IActionSource` or the planner silently skips all patterns.
 
 **Problem.** Pattern inputs are matched by *exact key identity*, and an `AEItemKey` includes
 its data components. Any ingredient carrying NBT is therefore effectively un-autocraftable.
@@ -1124,6 +1166,11 @@ crash.
 
 ## 5. Suggested phasing
 
+> **Status:** Phase 0 ✓ (passed in one day, not weeks), Phase 1 ✓ (all nine parts, not
+> six), Phase 1b ✓ (first slice), Phase 2 partially ✓ (Stock Sensor/Rate shipped as
+> logic parts; tracer terminal and job telemetry remain). Gametest harness added beyond
+> plan — 10 in-game tests run in CI.
+
 **Phase 0 — Spike (1–2 weeks).**
 Prove `AEKeyTypes` registration works for a non-item, non-fluid, non-chemical key with
 assignment semantics. Read Applied Mekanistics' source as the reference implementation.
@@ -1200,23 +1247,26 @@ Flagged explicitly — **verify before building**:
    secondary outputs**. §4 has been rewritten accordingly. *Lesson: the AE2 guide is
    versioned per Minecraft release and old versions rank highly in search — always check the
    `development` / current-version page.*
-8. **Does `IPatternDetails` expose a multi-candidate input abstraction?** (F9 open question
-   1.) The highest-leverage unknown in the document. Check
-   <https://appliedenergistics.github.io/javadoc/> for `IPatternDetails` and any nested
-   input interface before writing code; the answer changes F9's cost by an order of
-   magnitude.
+8. ~~**Does `IPatternDetails` expose a multi-candidate input abstraction?**~~ **Resolved —
+   yes.** `IPatternDetails.IInput.getPossibleInputs()` + `isValid(AEKey, Level)` are
+   public API, honored by the planner at calculation and execution. Proven end-to-end by
+   the autocraft gametest.
 9. **Does blocking mode compare machine-slot contents by exact key?** (F9 open question 3.)
    If yes, it must be made spec-aware.
-10. **Does AE2's `FuzzyMode` enum live in public API** or in internal packages? F9's design
-    assumes it can be reused directly rather than reimplemented.
+10. ~~**Does AE2's `FuzzyMode` enum live in public API?**~~ **Resolved — yes**
+    (`appeng.api.config.FuzzyMode`, with codecs), though note its constants are
+    damage-band-only; "ignore components" is plain item-identity comparison, which is how
+    the shipped Fuzzy spec matches.
 3. **Novelty of every feature here is unverified.** The AE2 addon ecosystem is large and a
    substantial fraction is Chinese-language and poorly indexed by Western search. Search
    CurseForge and Modrinth directly, and ask in the AE2 Discord, before committing to any
    feature.
 4. **Whether CPU selection is hookable** (F4). Unknown. Investigate `ICraftingService` and
    AE2's CPU selection internals before speccing.
-5. **Whether custom `AEKey` types can safely carry assignment semantics** (F1). The whole
-   design rests on this.
+5. ~~**Whether custom `AEKey` types can safely carry assignment semantics** (F1).~~
+   **Resolved — yes.** Registers refuse insert/extract via MEStorage defaults and are
+   written by assignment through the grid service; terminals, emitters, and monitors all
+   cooperate. Verified in-game and by gametest.
 6. **Whether guard evaluation can be made cheap enough for the planner** (F3).
 7. **AE2's licensing** for any code you read for reference — check before copying patterns
    from AE2 or other addons' sources.
