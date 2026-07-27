@@ -49,7 +49,10 @@ import io.github.johnhamilto.ae2logistics.command.SignalCommands;
 import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 import io.github.johnhamilto.ae2logistics.crafting.EncodedAdaptivePattern;
 import io.github.johnhamilto.ae2logistics.item.SignalCardItem;
+import io.github.johnhamilto.ae2logistics.menu.ConfigureMeshPayload;
 import io.github.johnhamilto.ae2logistics.menu.ConfigurePartPayload;
+import io.github.johnhamilto.ae2logistics.menu.MeshEndpointMenu;
+import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.menu.CyclePatternSpecPayload;
 import io.github.johnhamilto.ae2logistics.menu.LogicPartMenu;
 import io.github.johnhamilto.ae2logistics.menu.PatternWorkbenchMenu;
@@ -64,6 +67,7 @@ import io.github.johnhamilto.ae2logistics.parts.BooleanPart;
 import io.github.johnhamilto.ae2logistics.parts.ConstantPart;
 import io.github.johnhamilto.ae2logistics.parts.CounterPart;
 import io.github.johnhamilto.ae2logistics.parts.HysteresisPart;
+import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 import io.github.johnhamilto.ae2logistics.parts.RatePart;
 import io.github.johnhamilto.ae2logistics.parts.RedstoneIOPart;
 import io.github.johnhamilto.ae2logistics.parts.P2PFrequencyTerminalPart;
@@ -164,6 +168,10 @@ public class AE2Logistics {
 
     public static final DeferredItem<PartItem<P2PFrequencyTerminalPart>> P2P_TERMINAL_PART = part(
             "p2p_frequency_terminal", P2PFrequencyTerminalPart.class, P2PFrequencyTerminalPart::new);
+    public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_PART = part(
+            "mesh_endpoint", MeshEndpointPart.class, MeshEndpointPart::new);
+    public static final Supplier<MenuType<MeshEndpointMenu>> MESH_ENDPOINT_MENU = MENUS.register(
+            "mesh_endpoint", () -> IMenuTypeExtension.create(MeshEndpointMenu::new));
     public static final Supplier<MenuType<P2PFrequencyTerminalMenu>> P2P_TERMINAL_MENU = MENUS.register(
             "p2p_frequency_terminal", () -> IMenuTypeExtension.create(P2PFrequencyTerminalMenu::new));
 
@@ -190,6 +198,7 @@ public class AE2Logistics {
                         output.accept(TIMER_PART.get());
                         output.accept(TRACER_TERMINAL_PART.get());
                         output.accept(P2P_TERMINAL_PART.get());
+                        output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(GUIDE_TABLET.get());
                     })
                     .build());
@@ -235,7 +244,23 @@ public class AE2Logistics {
                     P2PActionPayload::handle);
             registrar.playToClient(P2PDataPayload.TYPE, P2PDataPayload.STREAM_CODEC,
                     P2PDataPayload::handle);
+            registrar.playToServer(ConfigureMeshPayload.TYPE, ConfigureMeshPayload.STREAM_CODEC,
+                    ConfigureMeshPayload::handle);
         });
+
+        modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    (part, context) -> part.exposedItemHandler(), MeshEndpointPart.class);
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+                    (part, context) -> part.exposedFluidHandler(), MeshEndpointPart.class);
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
+                    (part, context) -> part.exposedEnergyHandler(), MeshEndpointPart.class);
+        });
+
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) ->
+                MeshRegistry.tick(event.getServer().getTickCount()));
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerStoppedEvent event) ->
+                MeshRegistry.clear());
 
         ContainerItemStrategy.register(SignalKeyType.TYPE, SignalKey.class, new SignalCardContainerStrategy());
 

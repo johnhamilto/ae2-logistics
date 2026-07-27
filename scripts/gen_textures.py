@@ -494,6 +494,27 @@ ITEM_GUIDE_TABLET = """
 ................
 """
 
+PART_MESH_ENDPOINT = """
+################
+#DDDDDDDDDDDDDD#
+#D.....CC.....D#
+#D.....CC.....D#
+#D..C..CC..C..D#
+#D...C.CC.C...D#
+#D....cccc....D#
+#DCCCcc.rrcccCD#
+#DCCCcc.rrcccCD#
+#D....cccc....D#
+#D...C.CC.C...D#
+#D..C..CC..C..D#
+#D.....CC.....D#
+#D.....CC.....D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "mesh_endpoint.png", PART_MESH_ENDPOINT, PART)
+
 write_png(OUT / "part" / "p2p_frequency_terminal.png", PART_P2P_TERMINAL, PART)
 write_png(OUT / "item" / "guide_tablet.png", ITEM_GUIDE_TABLET, PART | CARD)
 

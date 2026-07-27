@@ -1,0 +1,410 @@
+package io.github.johnhamilto.ae2logistics.parts;
+
+import java.util.Map;
+
+import org.jetbrains.annotations.Nullable;
+
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.items.IItemHandler;
+
+import appeng.api.networking.GridFlags;
+import appeng.api.parts.IPartCollisionHelper;
+import appeng.api.parts.IPartItem;
+import appeng.api.parts.IPartModel;
+import appeng.api.util.AECableType;
+import appeng.items.parts.PartModels;
+import appeng.parts.AEBasePart;
+import appeng.parts.PartModel;
+
+import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import io.github.johnhamilto.ae2logistics.menu.MeshEndpointMenu;
+import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
+import io.github.johnhamilto.ae2logistics.signal.SignalService;
+
+/**
+ * A universal mesh endpoint: joins a named frequency with a role (in/out/both), a
+ * priority, and any subset of transport capabilities (redstone, items, fluids, energy,
+ * signals). Two endpoints on one frequency are a universal point-to-point tunnel; more
+ * make a many-to-many mesh. Costs one AE2 channel.
+ */
+public class MeshEndpointPart extends AEBasePart {
+
+    @PartModels
+    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/mesh_endpoint"));
+
+    public static final byte ROLE_IN = 0;
+    public static final byte ROLE_OUT = 1;
+    public static final byte ROLE_BOTH = 2;
+
+    private String frequency = "";
+    private byte role = ROLE_IN;
+    private int priority;
+    private int capabilities;
+
+    private int meshRedstone;
+    @Nullable
+    private SignalService publishedTo;
+
+    private final IItemHandler itemHandler = new MeshItemHandler();
+    private final IFluidHandler fluidHandler = new MeshFluidHandler();
+    private final IEnergyStorage energyHandler = new MeshEnergyHandler();
+
+    public MeshEndpointPart(IPartItem<?> partItem) {
+        super(partItem);
+        getMainNode()
+                .setFlags(GridFlags.REQUIRE_CHANNEL)
+                .setIdlePowerUsage(1.0);
+    }
+
+    public String frequency() {
+        return frequency;
+    }
+
+    public int priority() {
+        return priority;
+    }
+
+    public byte role() {
+        return role;
+    }
+
+    public int capabilityMask() {
+        return capabilities;
+    }
+
+    public boolean attuned(int type) {
+        return (capabilities & type) != 0;
+    }
+
+    public boolean isSource(int type) {
+        return attuned(type) && role != ROLE_OUT && isActiveAndLoaded();
+    }
+
+    public boolean isValidTarget(int type) {
+        return attuned(type) && role != ROLE_IN && isActiveAndLoaded();
+    }
+
+    private boolean isActiveAndLoaded() {
+        var host = getHost().getBlockEntity();
+        return host.getLevel() != null && !host.isRemoved() && getMainNode().isActive();
+    }
+
+    public long stableKey() {
+        var host = getHost().getBlockEntity();
+        return host.getBlockPos().asLong() * 31 + (getSide() == null ? 6 : getSide().ordinal());
+    }
+
+    public void applyMeshConfig(String newFrequency, byte newRole, int newPriority, int newCapabilities) {
+        MeshRegistry.unregister(this);
+        this.frequency = newFrequency.length() > 32 ? newFrequency.substring(0, 32) : newFrequency;
+        this.role = newRole;
+        this.priority = newPriority;
+        this.capabilities = newCapabilities;
+        if (!attuned(MeshRegistry.TYPE_SIGNAL)) {
+            withdrawSignals();
+        }
+        if (!attuned(MeshRegistry.TYPE_REDSTONE)) {
+            setMeshRedstone(0);
+        }
+        MeshRegistry.register(this);
+        getHost().markForSave();
+    }
+
+    @Override
+    public void addToWorld() {
+        super.addToWorld();
+        if (!isClientSide()) {
+            MeshRegistry.register(this);
+        }
+    }
+
+    @Override
+    public void removeFromWorld() {
+        if (!isClientSide()) {
+            MeshRegistry.unregister(this);
+        }
+        super.removeFromWorld();
+    }
+
+    // --- transport plumbing used by MeshRegistry ---
+
+    @Nullable
+    public IItemHandler adjacentItemHandler() {
+        var host = getHost().getBlockEntity();
+        if (host.getLevel() == null) {
+            return null;
+        }
+        return host.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,
+                host.getBlockPos().relative(getSide()), getSide().getOpposite());
+    }
+
+    @Nullable
+    public IFluidHandler adjacentFluidHandler() {
+        var host = getHost().getBlockEntity();
+        if (host.getLevel() == null) {
+            return null;
+        }
+        return host.getLevel().getCapability(Capabilities.FluidHandler.BLOCK,
+                host.getBlockPos().relative(getSide()), getSide().getOpposite());
+    }
+
+    @Nullable
+    public IEnergyStorage adjacentEnergyHandler() {
+        var host = getHost().getBlockEntity();
+        if (host.getLevel() == null) {
+            return null;
+        }
+        return host.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,
+                host.getBlockPos().relative(getSide()), getSide().getOpposite());
+    }
+
+    public int readFaceRedstone() {
+        var host = getHost().getBlockEntity();
+        if (host.getLevel() == null) {
+            return 0;
+        }
+        return host.getLevel().getSignal(host.getBlockPos().relative(getSide()), getSide());
+    }
+
+    public void setMeshRedstone(int level) {
+        if (meshRedstone != level) {
+            meshRedstone = level;
+            var host = getHost().getBlockEntity();
+            var world = host.getLevel();
+            if (world != null) {
+                var block = world.getBlockState(host.getBlockPos()).getBlock();
+                world.updateNeighborsAt(host.getBlockPos(), block);
+                world.updateNeighborsAt(host.getBlockPos().relative(getSide()), block);
+            }
+        }
+    }
+
+    @Nullable
+    public SignalService signalService() {
+        var node = getMainNode().getNode();
+        if (node == null || node.getGrid() == null) {
+            return null;
+        }
+        return node.getGrid().getService(SignalService.class);
+    }
+
+    public void publishSignals(Map<ResourceLocation, Long> signals) {
+        var service = signalService();
+        if (service != publishedTo && publishedTo != null) {
+            publishedTo.setExternal(this, Map.of());
+        }
+        publishedTo = service;
+        if (service != null) {
+            service.setExternal(this, signals);
+        }
+    }
+
+    public void withdrawSignals() {
+        if (publishedTo != null) {
+            publishedTo.setExternal(this, Map.of());
+            publishedTo = null;
+        }
+    }
+
+    // --- exposed capabilities (insert-only; mirror the next target for blocking mode) ---
+
+    @Nullable
+    public IItemHandler exposedItemHandler() {
+        return attuned(MeshRegistry.TYPE_ITEM) && role != ROLE_OUT ? itemHandler : null;
+    }
+
+    @Nullable
+    public IFluidHandler exposedFluidHandler() {
+        return attuned(MeshRegistry.TYPE_FLUID) && role != ROLE_OUT ? fluidHandler : null;
+    }
+
+    @Nullable
+    public IEnergyStorage exposedEnergyHandler() {
+        return attuned(MeshRegistry.TYPE_ENERGY) && role != ROLE_OUT ? energyHandler : null;
+    }
+
+    private class MeshItemHandler implements IItemHandler {
+        @Nullable
+        private IItemHandler mirror() {
+            var target = MeshRegistry.peekTarget(frequency, MeshRegistry.TYPE_ITEM, MeshEndpointPart.this);
+            return target == null ? null : target.adjacentItemHandler();
+        }
+
+        @Override
+        public int getSlots() {
+            var mirror = mirror();
+            return mirror == null ? 1 : mirror.getSlots();
+        }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            var mirror = mirror();
+            return mirror == null || slot >= mirror.getSlots() ? ItemStack.EMPTY : mirror.getStackInSlot(slot);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return MeshRegistry.forwardItem(MeshEndpointPart.this, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return 64;
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return true;
+        }
+    }
+
+    private class MeshFluidHandler implements IFluidHandler {
+        @Override
+        public int getTanks() {
+            return 1;
+        }
+
+        @Override
+        public FluidStack getFluidInTank(int tank) {
+            return FluidStack.EMPTY;
+        }
+
+        @Override
+        public int getTankCapacity(int tank) {
+            return 16000;
+        }
+
+        @Override
+        public boolean isFluidValid(int tank, FluidStack stack) {
+            return true;
+        }
+
+        @Override
+        public int fill(FluidStack resource, FluidAction action) {
+            return MeshRegistry.forwardFluid(MeshEndpointPart.this, resource, action.simulate());
+        }
+
+        @Override
+        public FluidStack drain(FluidStack resource, FluidAction action) {
+            return FluidStack.EMPTY;
+        }
+
+        @Override
+        public FluidStack drain(int maxDrain, FluidAction action) {
+            return FluidStack.EMPTY;
+        }
+    }
+
+    private class MeshEnergyHandler implements IEnergyStorage {
+        @Override
+        public int receiveEnergy(int maxReceive, boolean simulate) {
+            return MeshRegistry.forwardEnergy(MeshEndpointPart.this, maxReceive, simulate);
+        }
+
+        @Override
+        public int extractEnergy(int maxExtract, boolean simulate) {
+            return 0;
+        }
+
+        @Override
+        public int getEnergyStored() {
+            return 0;
+        }
+
+        @Override
+        public int getMaxEnergyStored() {
+            return Integer.MAX_VALUE;
+        }
+
+        @Override
+        public boolean canExtract() {
+            return false;
+        }
+
+        @Override
+        public boolean canReceive() {
+            return true;
+        }
+    }
+
+    // --- redstone emission ---
+
+    @Override
+    public boolean canConnectRedstone() {
+        return attuned(MeshRegistry.TYPE_REDSTONE);
+    }
+
+    @Override
+    public int isProvidingStrongPower() {
+        return role != ROLE_IN && attuned(MeshRegistry.TYPE_REDSTONE) ? meshRedstone : 0;
+    }
+
+    @Override
+    public int isProvidingWeakPower() {
+        return isProvidingStrongPower();
+    }
+
+    // --- part boilerplate ---
+
+    @Override
+    public void getBoxes(IPartCollisionHelper bch) {
+        bch.addBox(5, 5, 11, 11, 11, 16);
+    }
+
+    @Override
+    public float getCableConnectionLength(AECableType cable) {
+        return 16;
+    }
+
+    @Override
+    public boolean onUseWithoutItem(Player player, Vec3 pos) {
+        if (!isClientSide() && player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.openMenu(
+                    new SimpleMenuProvider(
+                            (id, inventory, p) -> new MeshEndpointMenu(id, inventory, this),
+                            Component.translatable(getPartItem().asItem().getDescriptionId())),
+                    buffer -> MeshEndpointMenu.writeOpenData(buffer, this));
+        }
+        return true;
+    }
+
+    @Override
+    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
+        super.writeToNBT(data, registries);
+        data.putString("freq", frequency);
+        data.putByte("role", role);
+        data.putInt("priority", priority);
+        data.putInt("capabilities", capabilities);
+    }
+
+    @Override
+    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
+        super.readFromNBT(data, registries);
+        frequency = data.getString("freq");
+        role = data.getByte("role");
+        priority = data.getInt("priority");
+        capabilities = data.getInt("capabilities");
+    }
+
+    @Override
+    public IPartModel getStaticModels() {
+        return MODEL;
+    }
+}

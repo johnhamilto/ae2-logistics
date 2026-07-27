@@ -27,6 +27,9 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     private final Map<ResourceLocation, Long> committed = new HashMap<>();
     private final Map<ResourceLocation, Long> writtenThisTick = new HashMap<>();
     private Set<ResourceLocation> lastPartDriven = new HashSet<>();
+    private final Map<Object, Map<ResourceLocation, Long>> externals = new IdentityHashMap<>();
+    private final Map<ResourceLocation, Long> mergedView = new HashMap<>();
+    private boolean viewDirty;
 
     private final Map<IGridNode, ILogicNode> logicNodes = new IdentityHashMap<>();
     @Nullable
@@ -69,7 +72,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
 
     @Override
     public long get(ResourceLocation channel) {
-        return committed.getOrDefault(channel, 0L);
+        return committed().getOrDefault(channel, 0L);
     }
 
     @Override
@@ -85,16 +88,47 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
                 committed.put(channel, value);
             }
         }
+        viewDirty = true;
     }
 
     @Override
     public Map<ResourceLocation, Long> committed() {
-        return committed;
+        if (externals.isEmpty()) {
+            return committed;
+        }
+        if (viewDirty) {
+            mergedView.clear();
+            mergedView.putAll(committed);
+            for (var contribution : externals.values()) {
+                for (var entry : contribution.entrySet()) {
+                    mergedView.merge(entry.getKey(), entry.getValue(), SignalMath::add);
+                }
+            }
+            viewDirty = false;
+        }
+        return mergedView;
     }
 
     @Override
     public void invalidateGraph() {
         evalOrder = null;
+    }
+
+    @Override
+    public void setExternal(Object source, Map<ResourceLocation, Long> values) {
+        if (values.isEmpty()) {
+            if (externals.remove(source) != null) {
+                viewDirty = true;
+            }
+        } else {
+            externals.put(source, Map.copyOf(values));
+            viewDirty = true;
+        }
+    }
+
+    @Override
+    public Map<ResourceLocation, Long> localCommitted() {
+        return committed;
     }
 
     @Override
@@ -120,8 +154,9 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     }
 
     private void sample() {
-        rings.keySet().removeIf(channel -> !committed.containsKey(channel));
-        for (var entry : committed.entrySet()) {
+        var view = committed();
+        rings.keySet().removeIf(channel -> !view.containsKey(channel));
+        for (var entry : view.entrySet()) {
             var ring = rings.get(entry.getKey());
             if (ring == null) {
                 if (rings.size() >= MAX_TRACKED_CHANNELS) {
@@ -185,6 +220,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
         }
         committed.putAll(writtenThisTick);
         lastPartDriven = new HashSet<>(writtenThisTick.keySet());
+        viewDirty = true;
     }
 
     /**

@@ -23,8 +23,17 @@ public interface SignalService extends IGridService {
     /** The committed channel view currently visible to storage, terminals, and emitters. */
     Map<ResourceLocation, Long> committed();
 
+    /** Like {@link #committed()} but without external (mesh-bridged) contributions. */
+    Map<ResourceLocation, Long> localCommitted();
+
     /** Re-run graph discovery before the next evaluation, e.g. after a part was reconfigured. */
     void invalidateGraph();
+
+    /**
+     * Sets an external contribution (e.g. a mesh bridge from another network). Values sum
+     * with other layers per channel; pass an empty map to withdraw the source entirely.
+     */
+    void setExternal(Object source, Map<ResourceLocation, Long> values);
 
     /**
      * History samples for a tracked channel, oldest first, sampled once per second over
