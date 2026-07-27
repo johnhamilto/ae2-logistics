@@ -223,6 +223,138 @@ public class MeshGameTests {
         return count;
     }
 
+    /** A mesh delivery aimed at another mesh input must be refused, not looped. */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void meshDeliveryCannotEnterAnotherMesh(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 1));
+
+        var firstIn = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.NORTH, "loop-a",
+                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_ITEM);
+        // loop-a's output faces EAST into the cable hosting loop-b's input on its WEST face.
+        placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.EAST, "loop-a",
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
+        placeEndpoint(helper, new BlockPos(2, 1, 1), Direction.WEST, "loop-b",
+                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_ITEM);
+
+        helper.runAfterDelay(30, () -> {
+            var handler = firstIn.exposedItemHandler();
+            helper.assertTrue(handler != null, "input must expose a handler");
+            var rest = handler.insertItem(0, new ItemStack(Items.IRON_INGOT, 4), false);
+            helper.assertTrue(rest.getCount() == 4,
+                    "delivery into another mesh must be refused whole, got back " + rest.getCount());
+            helper.succeed();
+        });
+    }
+
+    /** With a single machine still holding its batch, the provider must push nothing more. */
+    @GameTest(template = "empty5", timeoutTicks = 400)
+    public void providerP2PBlocksWhenAllMachinesBusy(GameTestHelper helper) {
+        var level = helper.getLevel();
+
+        helper.setBlock(new BlockPos(2, 1, 0),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(2, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 2));
+        helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity source) {
+            source.setItem(0, new ItemStack(Items.BIRCH_PLANKS, 8));
+        }
+        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        PartHelper.setPart(level, helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST, null,
+                (IPartItem<?>) storageBus);
+        helper.setBlock(new BlockPos(2, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+        helper.setBlock(new BlockPos(2, 1, 3),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+        placeCable(helper, new BlockPos(2, 2, 2));
+        placeCable(helper, new BlockPos(2, 2, 3));
+
+        var input = placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.SOUTH, "busy-mesh",
+                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_ITEM);
+        placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.EAST, "busy-mesh",
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
+        helper.setBlock(new BlockPos(3, 1, 2), Blocks.CHEST);
+
+        var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern.encode(pattern,
+                java.util.List.of(new appeng.api.stacks.GenericStack(
+                        appeng.api.stacks.AEItemKey.of(Items.OAK_PLANKS), 4)),
+                java.util.List.of(new appeng.api.stacks.GenericStack(
+                        appeng.api.stacks.AEItemKey.of(Items.CRAFTING_TABLE), 1)),
+                java.util.List.of(io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec
+                        .ofTag(ResourceLocation.parse("minecraft:planks"))));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+            providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
+        }
+
+        var job = new Object() {
+            java.util.concurrent.Future<appeng.api.networking.crafting.ICraftingPlan> future;
+            boolean submitted;
+        };
+        helper.startSequence()
+                .thenExecuteAfter(100, () -> {
+                    var grid = input.getMainNode().getGrid();
+                    var source = new appeng.me.helpers.MachineSource(input);
+                    job.future = grid.getCraftingService().beginCraftingCalculation(level,
+                            () -> source, appeng.api.stacks.AEItemKey.of(Items.CRAFTING_TABLE), 2,
+                            appeng.api.networking.crafting.CalculationStrategy.REPORT_MISSING_ITEMS);
+                })
+                .thenWaitUntil(() -> {
+                    try {
+                        var plan = job.future.get(0, java.util.concurrent.TimeUnit.MILLISECONDS);
+                        if (!job.submitted) {
+                            input.getMainNode().getGrid().getCraftingService()
+                                    .submitJob(plan, null, null, true, new appeng.me.helpers.MachineSource(input));
+                            job.submitted = true;
+                        }
+                    } catch (java.util.concurrent.TimeoutException e) {
+                        throw new net.minecraft.gametest.framework.GameTestAssertException("planning");
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .thenExecuteAfter(80, () -> {
+                    int chest = countItems(helper, new BlockPos(3, 1, 2));
+                    helper.assertTrue(chest == 4,
+                            "only one batch may push while the machine is busy, chest has " + chest);
+                    helper.succeed();
+                })
+                .thenSucceed();
+    }
+
+    /** Removing an endpoint from the frequency must split the fused grids again. */
+    @GameTest(template = "empty5", timeoutTicks = 300)
+    public void meMeshSplitsWhenEndpointLeaves(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        helper.setBlock(new BlockPos(3, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(4, 1, 1));
+
+        var first = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "me-split",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
+        var second = placeEndpoint(helper, new BlockPos(4, 1, 1), Direction.UP, "me-split",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
+
+        helper.runAfterDelay(40, () -> {
+            helper.assertTrue(first.getMainNode().getNode().getGrid()
+                    == second.getMainNode().getNode().getGrid(), "grids should fuse first");
+            second.applyMeshConfig("", MeshEndpointPart.ROLE_BOTH, 0, 0);
+        });
+        helper.runAfterDelay(80, () -> {
+            var firstNode = first.getMainNode().getNode();
+            var secondNode = second.getMainNode().getNode();
+            helper.assertTrue(firstNode != null && secondNode != null, "nodes missing after reconfig");
+            helper.assertTrue(firstNode.getGrid() != secondNode.getGrid(),
+                    "grids must split after the endpoint leaves the frequency");
+            helper.succeed();
+        });
+    }
+
     /** ME-attuned endpoints on one frequency fuse their networks like a multi-point quantum bridge. */
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void meMeshBridgesGrids(GameTestHelper helper) {

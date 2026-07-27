@@ -26,13 +26,16 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-26).** The Phase 0 spike succeeded and the architecture bet
-> held. Shipped and CI-verified (10 in-game gametests): **F1** signal keys + ME Register
-> Bank + Signal Card; **F2** all nine logic parts on a grid-service topological scheduler
-> (plus a tenth part, the Stock Sensor); **F9 slice** adaptive processing patterns
-> (exact/fuzzy/tag specs) + Pattern Workbench, including an end-to-end autocraft that
-> consumes a tag substitute through a real CPU and provider. Per-feature notes below are
-> marked "As built".
+> **As-built status (2026-07-26, v0.5.1).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (45 in-game gametests): **F1** signals + Register Bank
+> + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
+> **F5** Stock Sensor / Rate Meter / ME Tracer Terminal with five-minute history;
+> **F9** adaptive processing patterns (fuzzy, damage bands, tags, any-of, catalyst) +
+> Pattern Workbench (smithing/stonecutting variants cut by decision); **F11.1** P2P
+> Frequency Terminal; **F11.2/3/4** as one Universal Mesh Endpoint part (five
+> transports, named frequencies, true provider-P2P with per-machine blocking at range,
+> and mesh-ME grid bridging via a virtual quantum-bridge star). Current status, queue,
+> and known debt live in ROADMAP.md; per-feature notes below are marked "As built".
 
 ---
 
@@ -768,6 +771,24 @@ essentially frozen for a decade.
   controller face = 1024 channels through a single dense cable.
 
 Everything below either removes a limitation in that list or generalizes it.
+
+> **As built (v0.3.0-v0.5.1).** F11.1 shipped as designed (named frequencies persist in
+> the terminal part; retune guards input collisions; role flipping is impossible from
+> outside AE2 - `setOutput` is package-private). F11.2, F11.3, and F11.4 collapsed into
+> one part, the **Universal Mesh Endpoint**: named string frequencies, in/out/both
+> roles, priorities, and any subset of {redstone, items, fluids, energy, signals, ME}
+> per endpoint at one channel each - two endpoints are the universal P2P, more are the
+> mesh. Redstone is the wired-OR bus; items/fluids deliver whole batches with a
+> one-hop budget (loops structurally impossible); signals bridge across networks
+> through a layered view that can never re-publish mesh input (no feedback). Provider
+> P2P works through the ME_STORAGE adapter providers prefer: batch boundaries detected
+> in the simulate/modulate stream, each batch routed complete to the first machine not
+> still holding its previous batch, refusal when all busy - per-machine blocking at
+> range. Mesh-ME diverged from the pooling design: there is no dynamic channel-demand
+> API, but ME P2P is grid *connections*, so ME-attuned endpoints form a virtual
+> quantum-bridge star (deterministic hub, DENSE_CAPACITY spokes at 32 channels) and
+> AE2's pather does the rest. The collision-diagnosis model remains future work, as do
+> per-capability channel costing and per-endpoint filters (see ROADMAP.md).
 
 ---
 

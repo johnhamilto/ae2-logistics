@@ -110,18 +110,9 @@ public class MeshEndpointPart extends AEBasePart {
     }
 
     public void applyMeshConfig(String newFrequency, byte newRole, int newPriority, int newCapabilities) {
+        // Unregistering changes the old frequency's membership, so the registry tears
+        // down and rebuilds that frequency's ME star without us on the next tick.
         MeshRegistry.unregister(this);
-        boolean meFrequencyChanged = attuned(MeshRegistry.TYPE_ME)
-                && !this.frequency.equals(newFrequency);
-        if (meFrequencyChanged || (attuned(MeshRegistry.TYPE_ME) && (newCapabilities & MeshRegistry.TYPE_ME) == 0)) {
-            // ME links can only be torn down by the registry; force a star rebuild by
-            // cycling our node so stale cross-frequency bridges cannot survive a rename.
-            var host = getHost().getBlockEntity();
-            if (host.getLevel() != null && !host.getLevel().isClientSide()) {
-                getMainNode().destroy();
-                getMainNode().create(host.getLevel(), host.getBlockPos());
-            }
-        }
         this.frequency = newFrequency.length() > 32 ? newFrequency.substring(0, 32) : newFrequency;
         this.role = newRole;
         this.priority = newPriority;

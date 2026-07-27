@@ -4,11 +4,17 @@ A control plane for Applied Energistics 2: signals, logic parts, job policy, and
 observability, built in AE2's own idiom. The full design rationale lives in
 [DESIGN.md](DESIGN.md).
 
-**Status: Phase 0 spike.** Signals exist as a first-class AE2 key type — a named
-channel whose stored amount is its value. An ME Register Bank holds them on the
-grid, a Signal Card carries a channel into device config slots, and debug
-commands write and read values. Everything visible in an ME Terminal today is a
-number some machine can react to tomorrow.
+**Status: v0.5.x — the control plane is real.** Signals are a first-class AE2 key
+type computed by ten logic parts on a deterministic per-network scheduler, watched
+live on the ME Tracer Terminal, and bridged across networks by mesh endpoints.
+Adaptive Processing Patterns match ingredients by tag, fuzzy identity, damage band,
+or explicit alternatives, with catalyst inputs credited back. Universal Mesh
+Endpoints carry redstone, items, fluids, energy, signals, and ME itself over named
+frequencies — two endpoints are a universal P2P tunnel, more are a mesh, and a
+pattern provider pushing into one gains true per-machine blocking at range. A P2P
+Frequency Terminal tames vanilla tunnel linking. See [ROADMAP.md](ROADMAP.md) for
+whats next and the in-game guide (craft the AE2 Logistics Guide) for how to use
+everything. Verified by a 45-test in-game gametest suite on every push.
 
 ## Trying it
 

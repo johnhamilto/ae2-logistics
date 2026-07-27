@@ -199,6 +199,45 @@ public class SchedulerGameTests {
     }
 
     @GameTest(template = EMPTY)
+    public void redstoneInputModeReadsFace(GameTestHelper helper) {
+        var busPos = setupNetwork(helper);
+        var port = place(helper, busPos, Direction.UP, AE2Logistics.REDSTONE_IO_PART.get());
+        port.applyConfig(SRC, null, null, 0, 0, 0, false);
+        helper.setBlock(new BlockPos(2, 2, 1), Blocks.REDSTONE_BLOCK);
+
+        helper.runAfterDelay(20, () -> {
+            var service = service(helper, port);
+            helper.assertTrue(service.get(SRC) == 15,
+                    "input-mode port should write 15 from the redstone block, got " + service.get(SRC));
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = EMPTY, timeoutTicks = 300)
+    public void hysteresisLatchesBetweenSetpoints(GameTestHelper helper) {
+        var busPos = setupNetwork(helper);
+        var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
+        var latch = place(helper, busPos, Direction.NORTH, AE2Logistics.HYSTERESIS_PART.get());
+        latch.applyConfig(FLAG, SRC, null, 0, 1000, 50000, false);
+
+        constant.applyConfig(SRC, null, null, 0, 500, 0, false);
+        helper.runAfterDelay(10, () -> helper.assertTrue(service(helper, latch).get(FLAG) == 1,
+                "below low setpoint must latch on"));
+        helper.runAfterDelay(15, () -> constant.applyConfig(SRC, null, null, 0, 5000, 0, false));
+        helper.runAfterDelay(30, () -> helper.assertTrue(service(helper, latch).get(FLAG) == 1,
+                "between setpoints must hold the latch on"));
+        helper.runAfterDelay(35, () -> constant.applyConfig(SRC, null, null, 0, 60000, 0, false));
+        helper.runAfterDelay(50, () -> helper.assertTrue(service(helper, latch).get(FLAG) == 0,
+                "above high setpoint must latch off"));
+        helper.runAfterDelay(55, () -> constant.applyConfig(SRC, null, null, 0, 5000, 0, false));
+        helper.runAfterDelay(70, () -> {
+            helper.assertTrue(service(helper, latch).get(FLAG) == 0,
+                    "between setpoints must hold the latch off");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = EMPTY)
     public void redstoneOutputEmits(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
