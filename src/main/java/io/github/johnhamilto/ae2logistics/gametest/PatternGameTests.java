@@ -179,6 +179,123 @@ public class PatternGameTests {
     }
 
     @GameTest(template = "empty5")
+    public void anyOfMatchesOnlyListedAlternatives(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var stack = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
+        AdaptivePattern.encode(stack,
+                List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)), List.of(output),
+                List.of(AdaptiveInputSpec.EXACT
+                        .withAlternative(new GenericStack(AEItemKey.of(Items.SPRUCE_PLANKS), 1))));
+
+        var details = PatternDetailsHelper.decodePattern(stack, level);
+        var input = details.getInputs()[0];
+        helper.assertTrue(input.getPossibleInputs().length == 2,
+                "expected 2 candidates (oak + spruce), got " + input.getPossibleInputs().length);
+        helper.assertTrue(input.isValid(AEItemKey.of(Items.SPRUCE_PLANKS), level),
+                "spruce must match as listed alternative");
+        helper.assertTrue(!input.isValid(AEItemKey.of(Items.BIRCH_PLANKS), level),
+                "birch must NOT match - it is not in the AnyOf list");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty5")
+    public void damageBandDistinguishesDamagedFromPristine(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
+
+        var stack = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        AdaptivePattern.encode(stack,
+                List.of(new GenericStack(AEItemKey.of(Items.IRON_PICKAXE), 1)), List.of(output),
+                List.of(AdaptiveInputSpec.fuzzy(appeng.api.config.FuzzyMode.PERCENT_99)));
+        var details = PatternDetailsHelper.decodePattern(stack, level);
+        var input = details.getInputs()[0];
+
+        var damaged = new ItemStack(Items.IRON_PICKAXE);
+        damaged.setDamageValue(50);
+        helper.assertTrue(input.isValid(AEItemKey.of(Items.IRON_PICKAXE), level),
+                "pristine template must match pristine candidate in 99 percent band");
+        helper.assertTrue(!input.isValid(AEItemKey.of(damaged), level),
+                "pristine template must reject damaged candidate in 99 percent band");
+        helper.succeed();
+    }
+
+    /** With one pickaxe in storage, a catalyst pattern can plan two crafts; without the flag it cannot. */
+    @GameTest(template = "empty5", timeoutTicks = 400)
+    public void catalystAllowsReuseAcrossCrafts(GameTestHelper helper) {
+        var catalystSpec = AdaptiveInputSpec.EXACT.withCatalyst(true);
+        runCatalystPlanTest(helper, catalystSpec, true);
+    }
+
+    @GameTest(template = "empty5", timeoutTicks = 400)
+    public void nonCatalystConsumesPerCraft(GameTestHelper helper) {
+        runCatalystPlanTest(helper, AdaptiveInputSpec.EXACT, false);
+    }
+
+    private static void runCatalystPlanTest(GameTestHelper helper, AdaptiveInputSpec pickaxeSpec,
+            boolean expectComplete) {
+        var level = helper.getLevel();
+
+        helper.setBlock(new BlockPos(1, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
+        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        PartHelper.setPart(level, busPos, null, null, (IPartItem<?>) cable);
+
+        helper.setBlock(new BlockPos(3, 1, 1), net.minecraft.world.level.block.Blocks.CHEST);
+        if (helper.getBlockEntity(new BlockPos(3, 1, 1)) instanceof ChestBlockEntity source) {
+            source.setItem(0, new ItemStack(Items.IRON_PICKAXE));
+            source.setItem(1, new ItemStack(Items.BIRCH_PLANKS, 8));
+        }
+        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        PartHelper.setPart(level, busPos, Direction.EAST, null, (IPartItem<?>) storageBus);
+        var gridHandle = (LogicPart) PartHelper.setPart(level, busPos, Direction.NORTH, null,
+                AE2Logistics.CONSTANT_PART.get());
+
+        helper.setBlock(new BlockPos(2, 1, 2),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+
+        var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        AdaptivePattern.encode(pattern,
+                List.of(new GenericStack(AEItemKey.of(Items.IRON_PICKAXE), 1),
+                        new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
+                List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
+                List.of(pickaxeSpec, AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 2)) instanceof PatternProviderBlockEntity providerBe) {
+            providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
+        }
+
+        var job = new Object() {
+            Future<ICraftingPlan> future;
+        };
+        helper.startSequence()
+                .thenExecuteAfter(100, () -> {
+                    var grid = gridHandle.getMainNode().getGrid();
+                    var source = new MachineSource(gridHandle);
+                    job.future = grid.getCraftingService().beginCraftingCalculation(level,
+                            () -> source, AEItemKey.of(Items.CRAFTING_TABLE), 2,
+                            CalculationStrategy.REPORT_MISSING_ITEMS);
+                })
+                .thenWaitUntil(() -> {
+                    ICraftingPlan plan;
+                    try {
+                        plan = job.future.get(0, TimeUnit.MILLISECONDS);
+                    } catch (TimeoutException e) {
+                        throw new GameTestAssertException("still planning");
+                    } catch (Exception e) {
+                        throw new RuntimeException("planning failed", e);
+                    }
+                    if (expectComplete && plan.simulation()) {
+                        helper.fail("catalyst plan should complete with one pickaxe for two crafts");
+                    }
+                    if (!expectComplete && !plan.simulation()) {
+                        helper.fail("non-catalyst plan should be missing a second pickaxe");
+                    }
+                })
+                .thenSucceed();
+    }
+
+    @GameTest(template = "empty5")
     public void fuzzySpecIgnoresComponentsAndExactDoesNot(GameTestHelper helper) {
         var level = helper.getLevel();
         var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);

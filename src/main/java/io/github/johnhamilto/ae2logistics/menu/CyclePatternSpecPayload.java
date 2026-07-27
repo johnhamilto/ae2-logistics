@@ -2,6 +2,8 @@ package io.github.johnhamilto.ae2logistics.menu;
 
 import java.util.ArrayList;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -18,7 +20,12 @@ import io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec;
 import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 import io.github.johnhamilto.ae2logistics.crafting.EncodedAdaptivePattern;
 
-public record CyclePatternSpecPayload(BlockPos pos, int inputIndex) implements CustomPacketPayload {
+public record CyclePatternSpecPayload(BlockPos pos, int inputIndex, byte action) implements CustomPacketPayload {
+
+    public static final byte ACTION_CYCLE = 0;
+    public static final byte ACTION_ADD_ALTERNATIVE = 1;
+    public static final byte ACTION_RESET = 2;
+    public static final byte ACTION_TOGGLE_CATALYST = 3;
 
     public static final Type<CyclePatternSpecPayload> TYPE = new Type<>(AE2Logistics.id("cycle_pattern_spec"));
 
@@ -26,8 +33,9 @@ public record CyclePatternSpecPayload(BlockPos pos, int inputIndex) implements C
             (buffer, payload) -> {
                 buffer.writeBlockPos(payload.pos);
                 buffer.writeVarInt(payload.inputIndex);
+                buffer.writeByte(payload.action);
             },
-            buffer -> new CyclePatternSpecPayload(buffer.readBlockPos(), buffer.readVarInt()));
+            buffer -> new CyclePatternSpecPayload(buffer.readBlockPos(), buffer.readVarInt(), buffer.readByte()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -74,7 +82,18 @@ public record CyclePatternSpecPayload(BlockPos pos, int inputIndex) implements C
         for (int i = 0; i < inputs.size(); i++) {
             specs.add(encoded.specFor(i));
         }
-        specs.set(index, AdaptivePattern.nextSpec(input, specs.get(index)));
+        var current = specs.get(index);
+        var next = switch (payload.action) {
+            case ACTION_ADD_ALTERNATIVE -> {
+                var carried = player.containerMenu.getCarried();
+                var key = carriedKey(carried);
+                yield key != null ? current.withAlternative(key) : current;
+            }
+            case ACTION_RESET -> AdaptiveInputSpec.EXACT;
+            case ACTION_TOGGLE_CATALYST -> current.withCatalyst(!current.catalyst());
+            default -> AdaptivePattern.nextSpec(input, current);
+        };
+        specs.set(index, next);
 
         var result = stack.getItem() == AE2Logistics.ADAPTIVE_PATTERN.get()
                 ? stack.copy()
@@ -82,5 +101,18 @@ public record CyclePatternSpecPayload(BlockPos pos, int inputIndex) implements C
         result.set(AE2Logistics.ENCODED_ADAPTIVE_PATTERN.get(),
                 new EncodedAdaptivePattern(inputs, encoded.sparseOutputs(), specs));
         workbench.inventory().setItem(0, result);
+    }
+
+    @Nullable
+    private static GenericStack carriedKey(ItemStack carried) {
+        if (carried.isEmpty()) {
+            return null;
+        }
+        var unwrapped = GenericStack.fromItemStack(carried);
+        if (unwrapped != null) {
+            return new GenericStack(unwrapped.what(), 1);
+        }
+        var key = appeng.api.stacks.AEItemKey.of(carried);
+        return key != null ? new GenericStack(key, 1) : null;
     }
 }

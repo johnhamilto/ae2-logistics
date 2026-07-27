@@ -12,10 +12,12 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+import appeng.api.config.FuzzyMode;
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
+import appeng.util.helpers.ItemComparisonHelper;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 
@@ -121,6 +123,16 @@ public class AdaptivePattern implements IPatternDetails {
                     }
                 }
                 this.possibleInputs = candidates.toArray(GenericStack[]::new);
+            } else if (spec.mode() == AdaptiveInputSpec.Mode.ANY_OF && !spec.alternatives().isEmpty()) {
+                this.tagKey = null;
+                var candidates = new ArrayList<GenericStack>();
+                candidates.add(primary);
+                for (var alternative : spec.alternatives()) {
+                    if (!alternative.what().equals(stack.what())) {
+                        candidates.add(new GenericStack(alternative.what(), 1));
+                    }
+                }
+                this.possibleInputs = candidates.toArray(GenericStack[]::new);
             } else {
                 this.tagKey = null;
                 this.possibleInputs = new GenericStack[] { primary };
@@ -142,24 +154,44 @@ public class AdaptivePattern implements IPatternDetails {
             var primary = possibleInputs[0].what();
             return switch (spec.mode()) {
                 case EXACT -> input.matches(possibleInputs[0]);
-                case FUZZY -> input instanceof AEItemKey candidate
-                        && primary instanceof AEItemKey primaryItem
-                        && candidate.getItem() == primaryItem.getItem();
+                case FUZZY -> {
+                    if (!(input instanceof AEItemKey candidate) || !(primary instanceof AEItemKey primaryItem)
+                            || candidate.getItem() != primaryItem.getItem()) {
+                        yield false;
+                    }
+                    var band = spec.fuzzyMode().orElse(FuzzyMode.IGNORE_ALL);
+                    yield band == FuzzyMode.IGNORE_ALL
+                            || ItemComparisonHelper.isFuzzyEqualItem(
+                                    primaryItem.toStack(), candidate.toStack(), band);
+                }
                 case TAG -> tagKey != null && input.isTagged(tagKey);
+                case ANY_OF -> {
+                    for (var candidate : possibleInputs) {
+                        if (input.matches(candidate)) {
+                            yield true;
+                        }
+                    }
+                    yield false;
+                }
             };
         }
 
+        /** Catalysts use AE2's container-item mechanism: pushed, then credited back. */
         @Nullable
         @Override
         public AEKey getRemainingKey(AEKey template) {
-            return null;
+            return spec.catalyst() ? template : null;
         }
     }
 
-    /** The spec cycle used by the Pattern Workbench: EXACT, FUZZY, then each item tag. */
+    /**
+     * The spec cycle used by the Pattern Workbench: EXACT, FUZZY (plus damage bands for
+     * damageable items), then each item tag. The catalyst flag is preserved across the
+     * cycle; cycling away from ANY_OF discards the alternatives list.
+     */
     public static AdaptiveInputSpec nextSpec(GenericStack input, AdaptiveInputSpec current) {
         if (!(input.what() instanceof AEItemKey itemKey)) {
-            return AdaptiveInputSpec.EXACT;
+            return AdaptiveInputSpec.EXACT.withCatalyst(current.catalyst());
         }
         var tags = itemKey.getItem().builtInRegistryHolder().tags()
                 .map(TagKey::location)
@@ -167,14 +199,22 @@ public class AdaptivePattern implements IPatternDetails {
                 .limit(8)
                 .toList();
 
-        var sequence = new ArrayList<AdaptiveInputSpec>(2 + tags.size());
+        var sequence = new ArrayList<AdaptiveInputSpec>();
         sequence.add(AdaptiveInputSpec.EXACT);
         sequence.add(AdaptiveInputSpec.fuzzy());
+        if (itemKey.toStack().getMaxDamage() > 0) {
+            sequence.add(AdaptiveInputSpec.fuzzy(FuzzyMode.PERCENT_99));
+            sequence.add(AdaptiveInputSpec.fuzzy(FuzzyMode.PERCENT_75));
+            sequence.add(AdaptiveInputSpec.fuzzy(FuzzyMode.PERCENT_50));
+            sequence.add(AdaptiveInputSpec.fuzzy(FuzzyMode.PERCENT_25));
+        }
         for (ResourceLocation tag : tags) {
             sequence.add(AdaptiveInputSpec.ofTag(tag));
         }
 
-        int index = sequence.indexOf(current);
-        return sequence.get((index + 1) % sequence.size());
+        var currentMatch = current.withCatalyst(false);
+        int index = sequence.indexOf(currentMatch);
+        var next = sequence.get((index + 1) % sequence.size());
+        return next.withCatalyst(current.catalyst());
     }
 }

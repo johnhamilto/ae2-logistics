@@ -74,12 +74,26 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
                 var spec = encoded.specFor(i);
                 var badge = switch (spec.mode()) {
                     case EXACT -> "";
-                    case FUZZY -> "F";
+                    case FUZZY -> spec.fuzzyMode().map(m -> switch (m) {
+                        case PERCENT_99 -> "99";
+                        case PERCENT_75 -> "75";
+                        case PERCENT_50 -> "50";
+                        case PERCENT_25 -> "25";
+                        default -> "F";
+                    }).orElse("F");
                     case TAG -> "#";
+                    case ANY_OF -> "A" + (spec.alternatives().size() + 1);
                 };
                 if (!badge.isEmpty()) {
-                    guiGraphics.drawString(font, badge, x + 12, y + 8,
-                            spec.mode() == AdaptiveInputSpec.Mode.FUZZY ? 0x5CE2FF : 0xF5C542, true);
+                    var color = switch (spec.mode()) {
+                        case FUZZY -> 0x5CE2FF;
+                        case TAG -> 0xF5C542;
+                        default -> 0xB08CFF;
+                    };
+                    guiGraphics.drawString(font, badge, x + 17 - font.width(badge), y + 8, color, true);
+                }
+                if (spec.catalyst()) {
+                    guiGraphics.drawString(font, "C", x - 1, y - 2, 0xFFD24D, true);
                 }
             }
 
@@ -109,12 +123,29 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
         lines.add(itemKey.toStack().getHoverName());
         lines.add(switch (spec.mode()) {
             case EXACT -> Component.literal("Match: exact item").withStyle(net.minecraft.ChatFormatting.GRAY);
-            case FUZZY -> Component.literal("Match: any variant (ignores damage/components)")
+            case FUZZY -> Component.literal(spec.fuzzyMode()
+                    .map(m -> "Match: same item, damage band " + m.getSerializedName())
+                    .orElse("Match: any variant (ignores damage/components)"))
                     .withStyle(net.minecraft.ChatFormatting.AQUA);
             case TAG -> Component.literal("Match: tag #" + spec.tag().map(ResourceLocation::toString).orElse("?"))
                     .withStyle(net.minecraft.ChatFormatting.GOLD);
+            case ANY_OF -> Component.literal("Match: any of " + (spec.alternatives().size() + 1) + " items")
+                    .withStyle(net.minecraft.ChatFormatting.LIGHT_PURPLE);
         });
-        lines.add(Component.literal("Click to cycle").withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+        if (spec.mode() == AdaptiveInputSpec.Mode.ANY_OF) {
+            for (var alternative : spec.alternatives()) {
+                if (alternative.what() instanceof AEItemKey altKey) {
+                    lines.add(Component.literal("  + ").append(altKey.toStack().getHoverName())
+                            .withStyle(net.minecraft.ChatFormatting.DARK_PURPLE));
+                }
+            }
+        }
+        if (spec.catalyst()) {
+            lines.add(Component.literal("Catalyst: required, credited back")
+                    .withStyle(net.minecraft.ChatFormatting.YELLOW));
+        }
+        lines.add(Component.literal("Click: cycle | +item: alternative").withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+        lines.add(Component.literal("Shift: reset | Ctrl: catalyst").withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
         guiGraphics.renderComponentTooltip(font, lines, mouseX, mouseY);
     }
 
@@ -131,7 +162,17 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int index = gridIndexAt(mouseX, mouseY);
         if (index >= 0 && decoded() != null) {
-            PacketDistributor.sendToServer(new CyclePatternSpecPayload(menu.pos, index));
+            byte action;
+            if (hasShiftDown()) {
+                action = CyclePatternSpecPayload.ACTION_RESET;
+            } else if (hasControlDown()) {
+                action = CyclePatternSpecPayload.ACTION_TOGGLE_CATALYST;
+            } else if (!menu.getCarried().isEmpty()) {
+                action = CyclePatternSpecPayload.ACTION_ADD_ALTERNATIVE;
+            } else {
+                action = CyclePatternSpecPayload.ACTION_CYCLE;
+            }
+            PacketDistributor.sendToServer(new CyclePatternSpecPayload(menu.pos, index, action));
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
