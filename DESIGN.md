@@ -470,9 +470,12 @@ version-independent gap, unlike ingredient count (§4.2).
 > candidates expanded at decode with the canonical item first, so rule 2 "the planner
 > never branches" is inherited from AE2 itself) and the Pattern Workbench, which converts
 > vanilla processing patterns by clicking ingredients (gated by a Fuzzy Card in its
-> recipe rather than an encoding-terminal upgrade). Deferred: `AnyOf`, damage-band fuzzy,
-> crafting/smithing/stonecutting types, `Catalyst`, encoding-terminal integration, JEI
-> drag. Finding for the test harness: crafting calculations require a machine-backed
+> recipe rather than an encoding-terminal upgrade). Since shipped in 0.2.0: `AnyOf`, damage-band
+> fuzzy, and `Catalyst` (via `getRemainingKey`/container-item flow), all pinned by a
+> generated crafting-tree gametest matrix. **Cut by decision (2026-07-26): smithing and
+> stonecutting variants — those recipes have no real fuzziness need.** Still deferred:
+> crafting-pattern substitution policy, encoding-terminal integration, JEI ghost-drag.
+> Finding for the test harness: crafting calculations require a machine-backed
 > `IActionSource` or the planner silently skips all patterns.
 
 **Problem.** Pattern inputs are matched by *exact key identity*, and an `AEItemKey` includes

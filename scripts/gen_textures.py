@@ -456,6 +456,47 @@ PART_TRACER = """
 ################
 """
 
+PART_P2P_TERMINAL = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.##########.D#
+#D.#........#.D#
+#D.#.CC.....#.D#
+#D.#.CC..rr.#.D#
+#D.#...cc...#.D#
+#D.#.rr..CC.#.D#
+#D.#.....CC.#.D#
+#D.#........#.D#
+#D.##########.D#
+#D............D#
+#D...LLLLLL...D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+ITEM_GUIDE_TABLET = """
+................
+..OOOOOOOOOOOO..
+..OFFFFFFFFFFO..
+..OFSSSSSSSSFO..
+..OFS......SFO..
+..OFS.rr...SFO..
+..OFS.rr.r.SFO..
+..OFS..r.r.SFO..
+..OFS..rrr.SFO..
+..OFS......SFO..
+..OFSSSSSSSSFO..
+..OFFFFFFFFFFO..
+..OFFFgggFFFFO..
+..OOOOOOOOOOOO..
+................
+................
+"""
+
+write_png(OUT / "part" / "p2p_frequency_terminal.png", PART_P2P_TERMINAL, PART)
+write_png(OUT / "item" / "guide_tablet.png", ITEM_GUIDE_TABLET, PART | CARD)
+
 write_png(OUT / "part" / "tracer_terminal.png", PART_TRACER, PART)
 write_panel(OUT / "gui" / "tracer_panel.png", 236, 190)
 

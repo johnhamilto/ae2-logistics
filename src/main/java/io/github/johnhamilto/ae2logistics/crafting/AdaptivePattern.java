@@ -12,8 +12,12 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.TooltipFlag;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.crafting.IPatternDetails;
+import appeng.api.crafting.PatternDetailsTooltip;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
@@ -89,6 +93,43 @@ public class AdaptivePattern implements IPatternDetails {
     }
 
     @Override
+    public PatternDetailsTooltip getTooltip(Level level, TooltipFlag flags) {
+        var tooltip = new PatternDetailsTooltip(PatternDetailsTooltip.OUTPUT_TEXT_PRODUCES);
+        tooltip.addInputsAndOutputs(this);
+        for (var input : inputs) {
+            var spec = input.spec;
+            if (spec.mode() == AdaptiveInputSpec.Mode.EXACT && !spec.catalyst()) {
+                continue;
+            }
+            var name = input.possibleInputs[0].what().getDisplayName().copy();
+            var description = switch (spec.mode()) {
+                case EXACT -> Component.literal("exact");
+                case FUZZY -> Component.literal(spec.fuzzyMode()
+                        .map(mode -> "fuzzy, damage band " + mode.getSerializedName())
+                        .orElse("fuzzy, any variant"));
+                case TAG -> Component.literal("#" + spec.tag().map(Object::toString).orElse("?"));
+                case ANY_OF -> Component.literal("any of " + (spec.alternatives().size() + 1) + " items");
+            };
+            if (spec.catalyst()) {
+                description = description.copy().append(", catalyst");
+            }
+            tooltip.addProperty(name, description);
+        }
+        return tooltip;
+    }
+
+    public static PatternDetailsTooltip getInvalidPatternTooltip(net.minecraft.world.item.ItemStack stack,
+            Level level, @Nullable Exception cause, TooltipFlag flags) {
+        var tooltip = new PatternDetailsTooltip(PatternDetailsTooltip.OUTPUT_TEXT_PRODUCES);
+        var encoded = stack.get(AE2Logistics.ENCODED_ADAPTIVE_PATTERN.get());
+        if (encoded != null) {
+            encoded.sparseInputs().stream().filter(java.util.Objects::nonNull).forEach(tooltip::addInput);
+            encoded.sparseOutputs().stream().filter(java.util.Objects::nonNull).forEach(tooltip::addOutput);
+        }
+        return tooltip;
+    }
+
+    @Override
     public int hashCode() {
         return definition.hashCode();
     }
@@ -99,9 +140,9 @@ public class AdaptivePattern implements IPatternDetails {
     }
 
     static class Input implements IInput {
-        private final GenericStack[] possibleInputs;
+        final GenericStack[] possibleInputs;
         private final long multiplier;
-        private final AdaptiveInputSpec spec;
+        final AdaptiveInputSpec spec;
         @Nullable
         private final TagKey<net.minecraft.world.item.Item> tagKey;
 

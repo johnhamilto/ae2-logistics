@@ -53,6 +53,9 @@ import io.github.johnhamilto.ae2logistics.menu.ConfigurePartPayload;
 import io.github.johnhamilto.ae2logistics.menu.CyclePatternSpecPayload;
 import io.github.johnhamilto.ae2logistics.menu.LogicPartMenu;
 import io.github.johnhamilto.ae2logistics.menu.PatternWorkbenchMenu;
+import io.github.johnhamilto.ae2logistics.menu.P2PActionPayload;
+import io.github.johnhamilto.ae2logistics.menu.P2PDataPayload;
+import io.github.johnhamilto.ae2logistics.menu.P2PFrequencyTerminalMenu;
 import io.github.johnhamilto.ae2logistics.menu.SelectTracerChannelPayload;
 import io.github.johnhamilto.ae2logistics.menu.TracerDataPayload;
 import io.github.johnhamilto.ae2logistics.menu.TracerTerminalMenu;
@@ -63,6 +66,7 @@ import io.github.johnhamilto.ae2logistics.parts.CounterPart;
 import io.github.johnhamilto.ae2logistics.parts.HysteresisPart;
 import io.github.johnhamilto.ae2logistics.parts.RatePart;
 import io.github.johnhamilto.ae2logistics.parts.RedstoneIOPart;
+import io.github.johnhamilto.ae2logistics.parts.P2PFrequencyTerminalPart;
 import io.github.johnhamilto.ae2logistics.parts.StockSensorPart;
 import io.github.johnhamilto.ae2logistics.parts.ThresholdPart;
 import io.github.johnhamilto.ae2logistics.parts.TimerPart;
@@ -113,7 +117,12 @@ public class AE2Logistics {
                     .build());
 
     public static final DeferredItem<Item> ADAPTIVE_PATTERN = ITEMS.register("adaptive_processing_pattern",
-            () -> PatternDetailsHelper.encodedPatternItemBuilder(AdaptivePattern::new).build());
+            () -> PatternDetailsHelper.encodedPatternItemBuilder(AdaptivePattern::new)
+                    .invalidPatternTooltip(AdaptivePattern::getInvalidPatternTooltip)
+                    .build());
+
+    public static final DeferredItem<Item> GUIDE_TABLET = ITEMS.register("guide_tablet",
+            () -> new io.github.johnhamilto.ae2logistics.item.GuideTabletItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredBlock<PatternWorkbenchBlock> PATTERN_WORKBENCH = BLOCKS.register(
             "pattern_workbench",
@@ -153,6 +162,11 @@ public class AE2Logistics {
     public static final Supplier<MenuType<TracerTerminalMenu>> TRACER_TERMINAL_MENU = MENUS.register(
             "tracer_terminal", () -> IMenuTypeExtension.create(TracerTerminalMenu::new));
 
+    public static final DeferredItem<PartItem<P2PFrequencyTerminalPart>> P2P_TERMINAL_PART = part(
+            "p2p_frequency_terminal", P2PFrequencyTerminalPart.class, P2PFrequencyTerminalPart::new);
+    public static final Supplier<MenuType<P2PFrequencyTerminalMenu>> P2P_TERMINAL_MENU = MENUS.register(
+            "p2p_frequency_terminal", () -> IMenuTypeExtension.create(P2PFrequencyTerminalMenu::new));
+
     public static final Supplier<MenuType<LogicPartMenu>> LOGIC_PART_MENU = MENUS.register("logic_part",
             () -> IMenuTypeExtension.create(LogicPartMenu::new));
 
@@ -175,6 +189,8 @@ public class AE2Logistics {
                         output.accept(COUNTER_PART.get());
                         output.accept(TIMER_PART.get());
                         output.accept(TRACER_TERMINAL_PART.get());
+                        output.accept(P2P_TERMINAL_PART.get());
+                        output.accept(GUIDE_TABLET.get());
                     })
                     .build());
 
@@ -215,6 +231,10 @@ public class AE2Logistics {
                     SelectTracerChannelPayload::handle);
             registrar.playToClient(TracerDataPayload.TYPE, TracerDataPayload.STREAM_CODEC,
                     TracerDataPayload::handle);
+            registrar.playToServer(P2PActionPayload.TYPE, P2PActionPayload.STREAM_CODEC,
+                    P2PActionPayload::handle);
+            registrar.playToClient(P2PDataPayload.TYPE, P2PDataPayload.STREAM_CODEC,
+                    P2PDataPayload::handle);
         });
 
         ContainerItemStrategy.register(SignalKeyType.TYPE, SignalKey.class, new SignalCardContainerStrategy());

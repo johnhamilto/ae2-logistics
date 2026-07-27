@@ -14,6 +14,8 @@
   "item.ae2logistics.counter": "Signal Counter",
   "item.ae2logistics.timer": "Signal Timer",
   "item.ae2logistics.tracer_terminal": "ME Tracer Terminal",
+  "item.ae2logistics.p2p_frequency_terminal": "P2P Frequency Terminal",
+  "item.ae2logistics.guide_tablet": "AE2 Logistics Guide",
   "itemGroup.ae2logistics": "AE2 Logistics",
   "tooltip.ae2logistics.signal_card.unbound": "Unbound - use /ae2logistics signal card <channel>"
 }
