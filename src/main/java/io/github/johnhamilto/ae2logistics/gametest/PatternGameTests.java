@@ -248,6 +248,118 @@ public class PatternGameTests {
         helper.succeed();
     }
 
+    /**
+     * The worry case: storage holds ONLY a damaged, renamed pickaxe. possibleInputs for a
+     * fuzzy spec is just the pristine primary, so this only plans if the calculation
+     * fuzzy-searches the inventory and filters through isValid (it does - this pins it).
+     */
+    @GameTest(template = "empty5", timeoutTicks = 400)
+    public void fuzzyPlansFromDamagedOnlyStorage(GameTestHelper helper) {
+        var damaged = new ItemStack(Items.IRON_PICKAXE);
+        damaged.setDamageValue(damaged.getMaxDamage() / 2);
+        damaged.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
+                net.minecraft.network.chat.Component.literal("Trusty"));
+
+        var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        AdaptivePattern.encode(pattern,
+                List.of(new GenericStack(AEItemKey.of(Items.IRON_PICKAXE), 1),
+                        new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
+                List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
+                List.of(AdaptiveInputSpec.fuzzy(), AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
+
+        planPlot(helper, List.of(pattern),
+                List.of(damaged, new ItemStack(Items.BIRCH_PLANKS, 8)),
+                AEItemKey.of(Items.CRAFTING_TABLE), 1, true,
+                "fuzzy input must plan from a damaged, renamed pickaxe in storage");
+    }
+
+    /**
+     * Two-level tree: crafting a table needs #planks (nothing stocked), planks come from
+     * a second pattern whose #logs input is satisfied only by spruce logs - a non-primary
+     * tag member - proving spec resolution works at depth, not just at the root.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 400)
+    public void tagSubstitutionResolvesAtTreeDepth(GameTestHelper helper) {
+        var tablePattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        AdaptivePattern.encode(tablePattern,
+                List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
+                List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
+                List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
+
+        var planksPattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        AdaptivePattern.encode(planksPattern,
+                List.of(new GenericStack(AEItemKey.of(Items.OAK_LOG), 1)),
+                List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
+                List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:logs"))));
+
+        planPlot(helper, List.of(tablePattern, planksPattern),
+                List.of(new ItemStack(Items.SPRUCE_LOG, 4)),
+                AEItemKey.of(Items.CRAFTING_TABLE), 1, true,
+                "two-level tree must plan: spruce logs satisfy #logs at depth, crafted planks feed #planks");
+    }
+
+    static void planPlot(GameTestHelper helper, List<ItemStack> patterns, List<ItemStack> chestItems,
+            AEItemKey request, long amount, boolean expectComplete, String message) {
+        var level = helper.getLevel();
+
+        helper.setBlock(new BlockPos(1, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
+        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        PartHelper.setPart(level, busPos, null, null, (IPartItem<?>) cable);
+
+        helper.setBlock(new BlockPos(3, 1, 1), net.minecraft.world.level.block.Blocks.CHEST);
+        if (helper.getBlockEntity(new BlockPos(3, 1, 1)) instanceof ChestBlockEntity source) {
+            for (int i = 0; i < chestItems.size(); i++) {
+                source.setItem(i, chestItems.get(i));
+            }
+        }
+        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        PartHelper.setPart(level, busPos, Direction.EAST, null, (IPartItem<?>) storageBus);
+        var gridHandle = (LogicPart) PartHelper.setPart(level, busPos, Direction.NORTH, null,
+                AE2Logistics.CONSTANT_PART.get());
+
+        helper.setBlock(new BlockPos(2, 1, 2),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 2)) instanceof PatternProviderBlockEntity providerBe) {
+            for (int i = 0; i < patterns.size(); i++) {
+                providerBe.getLogic().getPatternInv().setItemDirect(i, patterns.get(i));
+            }
+        }
+
+        var job = new Object() {
+            Future<ICraftingPlan> future;
+        };
+        helper.startSequence()
+                .thenExecuteAfter(100, () -> {
+                    var grid = gridHandle.getMainNode().getGrid();
+                    var source = new MachineSource(gridHandle);
+                    job.future = grid.getCraftingService().beginCraftingCalculation(level,
+                            () -> source, request, amount, CalculationStrategy.REPORT_MISSING_ITEMS);
+                })
+                .thenWaitUntil(() -> {
+                    ICraftingPlan plan;
+                    try {
+                        plan = job.future.get(0, TimeUnit.MILLISECONDS);
+                    } catch (TimeoutException e) {
+                        throw new GameTestAssertException("still planning");
+                    } catch (Exception e) {
+                        throw new RuntimeException("planning failed", e);
+                    }
+                    if (expectComplete && plan.simulation()) {
+                        var missing = new StringBuilder();
+                        for (var entry : plan.missingItems()) {
+                            missing.append(entry.getKey()).append('=').append(entry.getLongValue()).append(' ');
+                        }
+                        helper.fail(message + "; missing: [" + missing + "]");
+                    }
+                    if (!expectComplete && !plan.simulation()) {
+                        helper.fail(message);
+                    }
+                })
+                .thenSucceed();
+    }
+
     /** With one pickaxe in storage, a catalyst pattern can plan two crafts; without the flag it cannot. */
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void catalystAllowsReuseAcrossCrafts(GameTestHelper helper) {
