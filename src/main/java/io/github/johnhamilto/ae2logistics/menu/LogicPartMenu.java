@@ -6,11 +6,17 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+
+import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.GenericStack;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
@@ -39,6 +45,12 @@ public class LogicPartMenu extends AbstractContainerMenu {
 
     private int outputHi;
     private int outputLo;
+
+    public static final int GHOST_SLOT_X = 10;
+    public static final int GHOST_SLOT_Y = 44;
+
+    private final SimpleContainer ghostContainer = new SimpleContainer(1);
+    private int ghostSlotIndex = -1;
 
     public LogicPartMenu(int containerId, Inventory inventory, LogicPart part) {
         super(AE2Logistics.LOGIC_PART_MENU.get(), containerId);
@@ -75,6 +87,11 @@ public class LogicPartMenu extends AbstractContainerMenu {
             public void set(int value) {
             }
         });
+
+        if (type == LogicPartType.STOCK_SENSOR) {
+            ghostContainer.setItem(0, displayStack(part.watchedKey()));
+            addGhostSlot();
+        }
     }
 
     public LogicPartMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
@@ -113,6 +130,59 @@ public class LogicPartMenu extends AbstractContainerMenu {
                 outputLo = value;
             }
         });
+
+        if (type == LogicPartType.STOCK_SENSOR) {
+            ghostContainer.setItem(0, ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
+            addGhostSlot();
+        }
+    }
+
+    private void addGhostSlot() {
+        ghostSlotIndex = slots.size();
+        addSlot(new Slot(ghostContainer, 0, GHOST_SLOT_X, GHOST_SLOT_Y) {
+            @Override
+            public boolean mayPickup(Player player) {
+                return false;
+            }
+
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        if (ghostSlotIndex >= 0 && slotId == ghostSlotIndex) {
+            var key = keyFromCarried(getCarried());
+            if (part != null) {
+                part.setWatchedKey(key);
+            }
+            ghostContainer.setItem(0, displayStack(key));
+            return;
+        }
+        super.clicked(slotId, button, clickType, player);
+    }
+
+    @Nullable
+    private static GenericStack keyFromCarried(ItemStack carried) {
+        if (carried.isEmpty()) {
+            return null;
+        }
+        var unwrapped = GenericStack.fromItemStack(carried);
+        if (unwrapped != null) {
+            return new GenericStack(unwrapped.what(), 1);
+        }
+        var key = AEItemKey.of(carried);
+        return key != null ? new GenericStack(key, 1) : null;
+    }
+
+    private static ItemStack displayStack(@Nullable GenericStack stack) {
+        if (stack != null && stack.what() instanceof AEItemKey itemKey) {
+            return itemKey.toStack();
+        }
+        return ItemStack.EMPTY;
     }
 
     public static void writeOpenData(RegistryFriendlyByteBuf buffer, LogicPart part) {
@@ -127,6 +197,9 @@ public class LogicPartMenu extends AbstractContainerMenu {
         buffer.writeLong(part.valueARaw());
         buffer.writeLong(part.valueBRaw());
         buffer.writeBoolean(part.flagRaw());
+        if (part.type() == LogicPartType.STOCK_SENSOR) {
+            ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, displayStack(part.watchedKey()));
+        }
     }
 
     private static String toStringOrEmpty(@Nullable ResourceLocation id) {

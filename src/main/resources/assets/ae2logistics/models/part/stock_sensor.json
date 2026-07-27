@@ -1,0 +1,21 @@
+{
+  "textures": {
+    "housing": "ae2logistics:part/logic_housing",
+    "front": "ae2logistics:part/stock_sensor",
+    "particle": "ae2logistics:part/logic_housing"
+  },
+  "elements": [
+    {
+      "from": [4, 4, 12],
+      "to": [12, 12, 16],
+      "faces": {
+        "north": {"uv": [0, 0, 16, 16], "texture": "#front"},
+        "south": {"uv": [0, 0, 16, 16], "texture": "#housing"},
+        "east": {"uv": [0, 0, 16, 16], "texture": "#housing"},
+        "west": {"uv": [0, 0, 16, 16], "texture": "#housing"},
+        "up": {"uv": [0, 0, 16, 16], "texture": "#housing"},
+        "down": {"uv": [0, 0, 16, 16], "texture": "#housing"}
+      }
+    }
+  ]
+}

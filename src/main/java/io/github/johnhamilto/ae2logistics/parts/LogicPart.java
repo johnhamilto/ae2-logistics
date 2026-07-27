@@ -16,6 +16,7 @@ import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
+import appeng.api.stacks.GenericStack;
 import appeng.api.util.AECableType;
 import appeng.parts.AEBasePart;
 
@@ -50,6 +51,15 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
 
     /** Identifies the concrete part type to the shared menu/screen. */
     public abstract LogicPartType type();
+
+    /** The storage key watched by sensor-style parts; null for everything else. */
+    @Nullable
+    public GenericStack watchedKey() {
+        return null;
+    }
+
+    public void setWatchedKey(@Nullable GenericStack stack) {
+    }
 
     @Override
     public Set<ResourceLocation> readChannels() {

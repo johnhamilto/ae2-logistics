@@ -128,6 +128,60 @@ public class SchedulerGameTests {
     }
 
     @GameTest(template = EMPTY)
+    public void stockSensorReadsNetworkStorage(GameTestHelper helper) {
+        var busPos = setupNetwork(helper);
+
+        helper.setBlock(new BlockPos(3, 1, 1), Blocks.CHEST);
+        if (helper.getBlockEntity(new BlockPos(3, 1, 1)) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+            chest.setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT, 34));
+        } else {
+            helper.fail("no chest block entity");
+        }
+
+        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        helper.assertTrue(storageBus instanceof IPartItem<?>, "storage bus must be a part item");
+        PartHelper.setPart(helper.getLevel(), busPos, Direction.EAST, null, (IPartItem<?>) storageBus);
+
+        var sensor = place(helper, busPos, Direction.UP, AE2Logistics.STOCK_SENSOR_PART.get());
+        sensor.applyConfig(SRC, null, null, 0, 0, 0, false);
+        sensor.setWatchedKey(new appeng.api.stacks.GenericStack(
+                appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.IRON_INGOT), 1));
+
+        helper.runAfterDelay(40, () -> {
+            var service = service(helper, sensor);
+            var node = sensor.getMainNode().getNode();
+            var cached = node.getGrid().getStorageService().getCachedInventory();
+            var contents = new StringBuilder();
+            for (var entry : cached) {
+                contents.append(entry.getKey()).append('=').append(entry.getLongValue()).append(' ');
+            }
+            helper.assertTrue(service.get(SRC) == 34,
+                    "sensor should report 34 iron, got " + service.get(SRC)
+                            + "; cached inventory: [" + contents + "]");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = EMPTY, timeoutTicks = 200)
+    public void timerDrivesCounter(GameTestHelper helper) {
+        var busPos = setupNetwork(helper);
+        var timer = place(helper, busPos, Direction.UP, AE2Logistics.TIMER_PART.get());
+        var counter = place(helper, busPos, Direction.NORTH, AE2Logistics.COUNTER_PART.get());
+
+        timer.applyConfig(X, null, null, 0, 10, 2, false);
+        counter.applyConfig(Y, X, null, 0, 0, 0, false);
+
+        var sampled = new AtomicLong();
+        helper.runAfterDelay(25, () -> sampled.set(service(helper, counter).get(Y)));
+        helper.runAfterDelay(65, () -> {
+            long later = service(helper, counter).get(Y);
+            long delta = later - sampled.get();
+            helper.assertTrue(delta == 4, "expected 4 rising edges over 40 ticks, got " + delta);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = EMPTY)
     public void redstoneOutputEmits(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());

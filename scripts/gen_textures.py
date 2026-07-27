@@ -360,6 +360,87 @@ write_png(OUT / "part" / "hysteresis.png", PART_HYSTERESIS, PART)
 write_png(OUT / "part" / "arithmetic.png", PART_ARITHMETIC, PART)
 write_png(OUT / "part" / "logic_gate.png", PART_LOGIC_GATE, PART)
 write_png(OUT / "part" / "redstone_port.png", PART_REDSTONE_PORT, PART)
+
+PART_STOCK_SENSOR = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D..LLLLLLLL..D#
+#D.LL......LL.D#
+#D.L..CCCC..L.D#
+#D.L.CC..CC.L.D#
+#D.L.C.rr.C.L.D#
+#D.L.C.rr.C.L.D#
+#D.L.CC..CC.L.D#
+#D.L..CCCC..L.D#
+#D.LL......LL.D#
+#D..LLLLLLLL..D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_RATE = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.........CC.D#
+#D.........CC.D#
+#D......CC.CC.D#
+#D......CC.CC.D#
+#D...CC.CC.CC.D#
+#D...CC.CC.CC.D#
+#D.CCCC.CC.CC.D#
+#D.CCCC.CC.CC.D#
+#D............D#
+#D.cccccccccc.D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_COUNTER = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.C..C..C....D#
+#D.C..C..C..r.D#
+#D.C..C..C.r..D#
+#D.C..C..C.r..D#
+#D.C..C..Cr...D#
+#D.C..C.rC....D#
+#D.C..C.r.C...D#
+#D.C..Cr..C...D#
+#D.C..r...C...D#
+#D.C.r....C...D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PART_TIMER = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D....CCCC....D#
+#D...C....C...D#
+#D..C......C..D#
+#D..C...r..C..D#
+#D..C...r..C..D#
+#D..C...rrrC..D#
+#D..C......C..D#
+#D..C......C..D#
+#D...C....C...D#
+#D....CCCC....D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "stock_sensor.png", PART_STOCK_SENSOR, PART)
+write_png(OUT / "part" / "rate.png", PART_RATE, PART)
+write_png(OUT / "part" / "counter.png", PART_COUNTER, PART)
+write_png(OUT / "part" / "timer.png", PART_TIMER, PART)
 write_panel(OUT / "gui" / "logic_panel.png", 200, 166)
 
 write_png(OUT / "block" / "register_bank_side.png", REGISTER_BANK_SIDE, STEEL)

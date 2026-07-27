@@ -56,9 +56,13 @@ import io.github.johnhamilto.ae2logistics.menu.PatternWorkbenchMenu;
 import io.github.johnhamilto.ae2logistics.parts.ArithmeticPart;
 import io.github.johnhamilto.ae2logistics.parts.BooleanPart;
 import io.github.johnhamilto.ae2logistics.parts.ConstantPart;
+import io.github.johnhamilto.ae2logistics.parts.CounterPart;
 import io.github.johnhamilto.ae2logistics.parts.HysteresisPart;
+import io.github.johnhamilto.ae2logistics.parts.RatePart;
 import io.github.johnhamilto.ae2logistics.parts.RedstoneIOPart;
+import io.github.johnhamilto.ae2logistics.parts.StockSensorPart;
 import io.github.johnhamilto.ae2logistics.parts.ThresholdPart;
+import io.github.johnhamilto.ae2logistics.parts.TimerPart;
 import io.github.johnhamilto.ae2logistics.signal.SignalCardContainerStrategy;
 import io.github.johnhamilto.ae2logistics.signal.SignalGridService;
 import io.github.johnhamilto.ae2logistics.signal.SignalKey;
@@ -131,6 +135,14 @@ public class AE2Logistics {
             "logic_gate", BooleanPart.class, BooleanPart::new);
     public static final DeferredItem<PartItem<RedstoneIOPart>> REDSTONE_IO_PART = part(
             "redstone_port", RedstoneIOPart.class, RedstoneIOPart::new);
+    public static final DeferredItem<PartItem<StockSensorPart>> STOCK_SENSOR_PART = part(
+            "stock_sensor", StockSensorPart.class, StockSensorPart::new);
+    public static final DeferredItem<PartItem<RatePart>> RATE_PART = part(
+            "rate", RatePart.class, RatePart::new);
+    public static final DeferredItem<PartItem<CounterPart>> COUNTER_PART = part(
+            "counter", CounterPart.class, CounterPart::new);
+    public static final DeferredItem<PartItem<TimerPart>> TIMER_PART = part(
+            "timer", TimerPart.class, TimerPart::new);
 
     public static final Supplier<MenuType<LogicPartMenu>> LOGIC_PART_MENU = MENUS.register("logic_part",
             () -> IMenuTypeExtension.create(LogicPartMenu::new));
@@ -149,6 +161,10 @@ public class AE2Logistics {
                         output.accept(ARITHMETIC_PART.get());
                         output.accept(LOGIC_GATE_PART.get());
                         output.accept(REDSTONE_IO_PART.get());
+                        output.accept(STOCK_SENSOR_PART.get());
+                        output.accept(RATE_PART.get());
+                        output.accept(COUNTER_PART.get());
+                        output.accept(TIMER_PART.get());
                     })
                     .build());
 
