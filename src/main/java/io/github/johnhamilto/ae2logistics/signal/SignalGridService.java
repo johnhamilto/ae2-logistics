@@ -32,6 +32,32 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     @Nullable
     private List<ILogicNode> evalOrder;
 
+    private final Map<ResourceLocation, Ring> rings = new HashMap<>();
+    private long tickCounter;
+
+    private static class Ring {
+        final long[] data = new long[HISTORY_SAMPLES];
+        int cursor;
+        int filled;
+
+        void push(long value) {
+            data[cursor] = value;
+            cursor = (cursor + 1) % data.length;
+            if (filled < data.length) {
+                filled++;
+            }
+        }
+
+        long[] snapshot() {
+            var out = new long[filled];
+            int start = filled < data.length ? 0 : cursor;
+            for (int i = 0; i < filled; i++) {
+                out[i] = data[(start + i) % data.length];
+            }
+            return out;
+        }
+    }
+
     public SignalGridService(IGrid grid, IStorageService storageService) {
         storageService.addGlobalStorageProvider(this);
     }
@@ -88,7 +114,32 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     }
 
     @Override
+    public long[] history(ResourceLocation channel) {
+        var ring = rings.get(channel);
+        return ring != null ? ring.snapshot() : new long[0];
+    }
+
+    private void sample() {
+        rings.keySet().removeIf(channel -> !committed.containsKey(channel));
+        for (var entry : committed.entrySet()) {
+            var ring = rings.get(entry.getKey());
+            if (ring == null) {
+                if (rings.size() >= MAX_TRACKED_CHANNELS) {
+                    continue;
+                }
+                ring = new Ring();
+                rings.put(entry.getKey(), ring);
+            }
+            ring.push(entry.getValue());
+        }
+    }
+
+    @Override
     public void onServerStartTick() {
+        if (++tickCounter % SAMPLE_INTERVAL_TICKS == 0) {
+            sample();
+        }
+
         if (logicNodes.isEmpty() && lastPartDriven.isEmpty()) {
             return;
         }

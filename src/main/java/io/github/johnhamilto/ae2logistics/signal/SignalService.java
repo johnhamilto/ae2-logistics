@@ -25,4 +25,15 @@ public interface SignalService extends IGridService {
 
     /** Re-run graph discovery before the next evaluation, e.g. after a part was reconfigured. */
     void invalidateGraph();
+
+    /**
+     * History samples for a tracked channel, oldest first, sampled once per second over
+     * the last five minutes. Empty if the channel is not tracked (only the first
+     * {@link #MAX_TRACKED_CHANNELS} channels get history).
+     */
+    long[] history(ResourceLocation channel);
+
+    int MAX_TRACKED_CHANNELS = 64;
+    int HISTORY_SAMPLES = 300;
+    int SAMPLE_INTERVAL_TICKS = 20;
 }

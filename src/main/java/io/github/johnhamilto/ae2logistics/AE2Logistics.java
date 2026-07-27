@@ -53,6 +53,9 @@ import io.github.johnhamilto.ae2logistics.menu.ConfigurePartPayload;
 import io.github.johnhamilto.ae2logistics.menu.CyclePatternSpecPayload;
 import io.github.johnhamilto.ae2logistics.menu.LogicPartMenu;
 import io.github.johnhamilto.ae2logistics.menu.PatternWorkbenchMenu;
+import io.github.johnhamilto.ae2logistics.menu.SelectTracerChannelPayload;
+import io.github.johnhamilto.ae2logistics.menu.TracerDataPayload;
+import io.github.johnhamilto.ae2logistics.menu.TracerTerminalMenu;
 import io.github.johnhamilto.ae2logistics.parts.ArithmeticPart;
 import io.github.johnhamilto.ae2logistics.parts.BooleanPart;
 import io.github.johnhamilto.ae2logistics.parts.ConstantPart;
@@ -63,6 +66,7 @@ import io.github.johnhamilto.ae2logistics.parts.RedstoneIOPart;
 import io.github.johnhamilto.ae2logistics.parts.StockSensorPart;
 import io.github.johnhamilto.ae2logistics.parts.ThresholdPart;
 import io.github.johnhamilto.ae2logistics.parts.TimerPart;
+import io.github.johnhamilto.ae2logistics.parts.TracerTerminalPart;
 import io.github.johnhamilto.ae2logistics.signal.SignalCardContainerStrategy;
 import io.github.johnhamilto.ae2logistics.signal.SignalGridService;
 import io.github.johnhamilto.ae2logistics.signal.SignalKey;
@@ -143,6 +147,11 @@ public class AE2Logistics {
             "counter", CounterPart.class, CounterPart::new);
     public static final DeferredItem<PartItem<TimerPart>> TIMER_PART = part(
             "timer", TimerPart.class, TimerPart::new);
+    public static final DeferredItem<PartItem<TracerTerminalPart>> TRACER_TERMINAL_PART = part(
+            "tracer_terminal", TracerTerminalPart.class, TracerTerminalPart::new);
+
+    public static final Supplier<MenuType<TracerTerminalMenu>> TRACER_TERMINAL_MENU = MENUS.register(
+            "tracer_terminal", () -> IMenuTypeExtension.create(TracerTerminalMenu::new));
 
     public static final Supplier<MenuType<LogicPartMenu>> LOGIC_PART_MENU = MENUS.register("logic_part",
             () -> IMenuTypeExtension.create(LogicPartMenu::new));
@@ -165,6 +174,7 @@ public class AE2Logistics {
                         output.accept(RATE_PART.get());
                         output.accept(COUNTER_PART.get());
                         output.accept(TIMER_PART.get());
+                        output.accept(TRACER_TERMINAL_PART.get());
                     })
                     .build());
 
@@ -201,6 +211,10 @@ public class AE2Logistics {
                     ConfigurePartPayload::handle);
             registrar.playToServer(CyclePatternSpecPayload.TYPE, CyclePatternSpecPayload.STREAM_CODEC,
                     CyclePatternSpecPayload::handle);
+            registrar.playToServer(SelectTracerChannelPayload.TYPE, SelectTracerChannelPayload.STREAM_CODEC,
+                    SelectTracerChannelPayload::handle);
+            registrar.playToClient(TracerDataPayload.TYPE, TracerDataPayload.STREAM_CODEC,
+                    TracerDataPayload::handle);
         });
 
         ContainerItemStrategy.register(SignalKeyType.TYPE, SignalKey.class, new SignalCardContainerStrategy());

@@ -181,6 +181,23 @@ public class SchedulerGameTests {
         });
     }
 
+    @GameTest(template = EMPTY, timeoutTicks = 200)
+    public void historyRecordsSamples(GameTestHelper helper) {
+        var busPos = setupNetwork(helper);
+        var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
+        constant.applyConfig(SRC, null, null, 0, 500, 0, false);
+
+        helper.runAfterDelay(90, () -> {
+            var service = service(helper, constant);
+            var history = service.history(SRC);
+            helper.assertTrue(history.length >= 2,
+                    "expected at least 2 history samples after 90 ticks, got " + history.length);
+            helper.assertTrue(history[history.length - 1] == 500,
+                    "latest sample should be 500, got " + history[history.length - 1]);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = EMPTY)
     public void redstoneOutputEmits(GameTestHelper helper) {
         var busPos = setupNetwork(helper);

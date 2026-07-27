@@ -437,6 +437,28 @@ PART_TIMER = """
 ################
 """
 
+PART_TRACER = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.##########.D#
+#D.#........#.D#
+#D.#..C.....#.D#
+#D.#.C.C..C.#.D#
+#D.#C...CC.C#.D#
+#D.#.......C#.D#
+#D.#........#.D#
+#D.#cccccccc#.D#
+#D.##########.D#
+#D............D#
+#D...LLLLLL...D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "tracer_terminal.png", PART_TRACER, PART)
+write_panel(OUT / "gui" / "tracer_panel.png", 236, 190)
+
 write_png(OUT / "part" / "stock_sensor.png", PART_STOCK_SENSOR, PART)
 write_png(OUT / "part" / "rate.png", PART_RATE, PART)
 write_png(OUT / "part" / "counter.png", PART_COUNTER, PART)

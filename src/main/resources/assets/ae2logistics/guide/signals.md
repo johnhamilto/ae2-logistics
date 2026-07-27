@@ -33,6 +33,15 @@ Set values by hand while looking at a bank:
 
 Channels driven by logic parts recompute every tick and override manual values.
 
+# ME Tracer Terminal
+
+The Tracer Terminal is the observability surface: a wall-mounted part listing every
+signal on the network with its live value. Click a channel to open its **five-minute
+sparkline** — values are sampled once a second on the server, so you can watch rates
+settle, spot oscillations, and confirm a hysteresis loop is actually latching.
+
+Craft it from an AE2 Terminal, a logic processor, and certus quartz.
+
 # Signal Card
 
 Level Emitters and Storage Monitors are configured by clicking them with an item — and
