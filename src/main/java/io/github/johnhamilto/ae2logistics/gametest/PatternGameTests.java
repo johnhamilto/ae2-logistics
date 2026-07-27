@@ -220,6 +220,34 @@ public class PatternGameTests {
         helper.succeed();
     }
 
+    /** Damage bands must bucket by damage only - names, enchantments, and other components are ignored. */
+    @GameTest(template = "empty5")
+    public void damageBandsIgnoreOtherComponents(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
+
+        var stack = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        AdaptivePattern.encode(stack,
+                List.of(new GenericStack(AEItemKey.of(Items.IRON_PICKAXE), 1)), List.of(output),
+                List.of(AdaptiveInputSpec.fuzzy(appeng.api.config.FuzzyMode.PERCENT_50)));
+        var input = PatternDetailsHelper.decodePattern(stack, level).getInputs()[0];
+
+        var renamedSameBucket = new ItemStack(Items.IRON_PICKAXE);
+        renamedSameBucket.setDamageValue(renamedSameBucket.getMaxDamage() / 10);
+        renamedSameBucket.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
+                net.minecraft.network.chat.Component.literal("Old Faithful"));
+        helper.assertTrue(input.isValid(AEItemKey.of(renamedSameBucket), level),
+                "renamed lightly-damaged pickaxe must match: components other than damage are ignored");
+
+        var renamedOtherBucket = new ItemStack(Items.IRON_PICKAXE);
+        renamedOtherBucket.setDamageValue(renamedOtherBucket.getMaxDamage() * 8 / 10);
+        renamedOtherBucket.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
+                net.minecraft.network.chat.Component.literal("Old Faithful"));
+        helper.assertTrue(!input.isValid(AEItemKey.of(renamedOtherBucket), level),
+                "heavily-damaged pickaxe must still be rejected by the band regardless of name");
+        helper.succeed();
+    }
+
     /** With one pickaxe in storage, a catalyst pattern can plan two crafts; without the flag it cannot. */
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void catalystAllowsReuseAcrossCrafts(GameTestHelper helper) {
