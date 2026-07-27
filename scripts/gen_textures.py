@@ -526,6 +526,7 @@ write_png(OUT / "part" / "rate.png", PART_RATE, PART)
 write_png(OUT / "part" / "counter.png", PART_COUNTER, PART)
 write_png(OUT / "part" / "timer.png", PART_TIMER, PART)
 write_panel(OUT / "gui" / "logic_panel.png", 200, 166)
+write_panel(OUT / "gui" / "mesh_panel.png", 200, 222)
 
 write_png(OUT / "block" / "register_bank_side.png", REGISTER_BANK_SIDE, STEEL)
 write_png(OUT / "block" / "register_bank_top.png", REGISTER_BANK_TOP, STEEL)

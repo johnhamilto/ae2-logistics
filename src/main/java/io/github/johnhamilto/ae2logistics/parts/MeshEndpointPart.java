@@ -48,12 +48,18 @@ public class MeshEndpointPart extends AEBasePart {
     public static final byte ROLE_OUT = 1;
     public static final byte ROLE_BOTH = 2;
 
+    public static final int FILTER_SLOTS = 9;
+
     private String frequency = "";
     private byte role = ROLE_IN;
     private int priority;
     private int capabilities;
+    private final appeng.api.stacks.GenericStack[] filter =
+            new appeng.api.stacks.GenericStack[FILTER_SLOTS];
 
     private int meshRedstone;
+    /** Transient ME star state, maintained by {@link MeshRegistry#tick}. */
+    private byte meLinkState;
     @Nullable
     private SignalService publishedTo;
 
@@ -99,9 +105,41 @@ public class MeshEndpointPart extends AEBasePart {
         return attuned(type) && role != ROLE_IN && isActiveAndLoaded();
     }
 
-    private boolean isActiveAndLoaded() {
+    public boolean isActiveAndLoaded() {
         var host = getHost().getBlockEntity();
         return host.getLevel() != null && !host.isRemoved() && getMainNode().isActive();
+    }
+
+    public byte meLinkState() {
+        return meLinkState;
+    }
+
+    public void setMeLinkState(byte state) {
+        meLinkState = state;
+    }
+
+    @Nullable
+    public appeng.api.stacks.GenericStack filterSlot(int slot) {
+        return filter[slot];
+    }
+
+    public void setFilterSlot(int slot, @Nullable appeng.api.stacks.GenericStack stack) {
+        filter[slot] = stack == null ? null : new appeng.api.stacks.GenericStack(stack.what(), 1);
+        getHost().markForSave();
+    }
+
+    /** An empty filter accepts everything; otherwise the key must match a slot exactly. */
+    public boolean filterAccepts(appeng.api.stacks.AEKey key) {
+        boolean empty = true;
+        for (var slot : filter) {
+            if (slot != null) {
+                if (slot.what().equals(key)) {
+                    return true;
+                }
+                empty = false;
+            }
+        }
+        return empty;
     }
 
     public long stableKey() {
@@ -302,6 +340,10 @@ public class MeshEndpointPart extends AEBasePart {
 
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            var key = appeng.api.stacks.AEItemKey.of(stack);
+            if (key == null || !filterAccepts(key)) {
+                return stack;
+            }
             return MeshRegistry.forwardItem(MeshEndpointPart.this, stack, simulate);
         }
 
@@ -317,7 +359,8 @@ public class MeshEndpointPart extends AEBasePart {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            return true;
+            var key = appeng.api.stacks.AEItemKey.of(stack);
+            return key != null && filterAccepts(key);
         }
     }
 
@@ -344,6 +387,9 @@ public class MeshEndpointPart extends AEBasePart {
 
         @Override
         public int fill(FluidStack resource, FluidAction action) {
+            if (resource.isEmpty() || !filterAccepts(appeng.api.stacks.AEFluidKey.of(resource))) {
+                return 0;
+            }
             return MeshRegistry.forwardFluid(MeshEndpointPart.this, resource, action.simulate());
         }
 
@@ -438,6 +484,15 @@ public class MeshEndpointPart extends AEBasePart {
         data.putByte("role", role);
         data.putInt("priority", priority);
         data.putInt("capabilities", capabilities);
+        var filterList = new net.minecraft.nbt.ListTag();
+        for (int i = 0; i < FILTER_SLOTS; i++) {
+            var tag = new CompoundTag();
+            if (filter[i] != null) {
+                tag.put("key", filter[i].what().toTagGeneric(registries));
+            }
+            filterList.add(tag);
+        }
+        data.put("filter", filterList);
     }
 
     @Override
@@ -447,6 +502,17 @@ public class MeshEndpointPart extends AEBasePart {
         role = data.getByte("role");
         priority = data.getInt("priority");
         capabilities = data.getInt("capabilities");
+        var filterList = data.getList("filter", net.minecraft.nbt.Tag.TAG_COMPOUND);
+        for (int i = 0; i < FILTER_SLOTS; i++) {
+            filter[i] = null;
+            if (i < filterList.size()) {
+                var tag = filterList.getCompound(i);
+                if (tag.contains("key")) {
+                    var key = appeng.api.stacks.AEKey.fromTagGeneric(registries, tag.getCompound("key"));
+                    filter[i] = key == null ? null : new appeng.api.stacks.GenericStack(key, 1);
+                }
+            }
+        }
     }
 
     @Override

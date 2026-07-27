@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.5.1 (2026-07-26). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (45 tests, run
+Status as of v0.6.0 (2026-07-27). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (52 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -15,6 +15,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F11.1 | P2P Frequency Terminal (list, named frequencies, retune) | 0.3.0 |
 | F11.2-4 | Universal Mesh Endpoints: 5 transports, mesh + universal P2P + true provider P2P | 0.4.0-0.5.0 |
 | F11.3-ME | Mesh-ME grid bridging (virtual quantum-bridge star, 32ch/spoke) | 0.5.0 |
+| F11 polish | Stateless P2P names (on-tunnel attachments), mesh rows + rename-all in the terminal, 9-slot endpoint filters (batch-aware), status + cabled-loop diagnostics, /ae2logistics mesh | 0.6.0 |
 | Infra | Gametest harness + CI, in-game guide + tablet, generated art pipeline | 0.1.0+ |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
@@ -26,9 +27,10 @@ representation).
 1. **Playtest feedback first** - several UI surfaces (part GUIs, workbench, tracer,
    P2P terminal, mesh config) are machine-verified but have never been touched by
    human hands; friction fixes take priority over new systems.
-2. **Mesh polish**: mesh frequencies listed in the P2P Frequency Terminal, per-endpoint
-   item/fluid filters, and loop/ambiguity diagnostics for mesh-ME (the DESIGN collision
-   model - AE2 tolerates loops but half-a-base-offline is its worst debugging story).
+2. **Fix the stock sensor ghost slot**: LogicPartMenu has no player inventory slots, so
+   a player cannot carry an item to click into the ghost slot - it only works from
+   code. Discovered while building the mesh filter UI (which got player slots for
+   exactly this reason); apply the same fix to the stock sensor layout.
 3. **Memory card support** for our parts (exportSettings/importSettings currently do
    not carry our custom fields).
 
@@ -62,8 +64,12 @@ representation).
   tracking (upstream).
 - Provider blocking through the mesh is always per-machine ("smart"); the provider's
   own blocking toggle is effectively bypassed.
-- P2P frequency names persist per-terminal, not per-network.
-- Mesh registry is server-global and rebuilt live; nothing persists beyond part NBT.
+- Mesh rename-all retags loaded endpoints only; endpoints in unloaded chunks keep the
+  old frequency until they load. Cabled-loop detection runs when a frequency's ME star
+  (re)builds, not continuously - `/ae2logistics mesh relink` forces a re-check.
+- Endpoint filters match exactly (components included); no fuzzy/tag cards yet.
+- Mesh registry is server-global and rebuilt live; nothing persists beyond part NBT
+  (P2P names persist as data attachments on the tunnels' cable-bus block entities).
 - Localization is en_us only; art is programmatic 16x16 (see scripts/gen_textures.py -
   run from the repo root).
 - Untested by automation: fluid/energy mesh forwarding E2E (no reliable vanilla

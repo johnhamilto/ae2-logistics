@@ -37,8 +37,14 @@ public class P2PFrequencyTerminalMenu extends AbstractContainerMenu {
             String dimension) {
     }
 
+    /** One mesh endpoint, server-wide, for a frequency that touches this grid. */
+    public record MeshRow(String frequency, byte side, byte role, int capabilities, boolean sameGrid,
+            byte status, BlockPos pos, String dimension) {
+    }
+
     // Client-side state, fed by P2PDataPayload.
     public List<Row> rows = new ArrayList<>();
+    public List<MeshRow> meshRows = new ArrayList<>();
 
     public P2PFrequencyTerminalMenu(int containerId, Inventory inventory, P2PFrequencyTerminalPart part) {
         super(AE2Logistics.P2P_TERMINAL_MENU.get(), containerId);
@@ -67,26 +73,74 @@ public class P2PFrequencyTerminalMenu extends AbstractContainerMenu {
         if (node == null || node.getGrid() == null) {
             return;
         }
+        part.migrateLegacyNames();
 
-        var collected = new ArrayList<Row>();
+        // Names live on the tunnels; a frequency's display name is the first non-blank
+        // one among its tunnels, so a tunnel retuned in later still shows the label.
+        var names = new java.util.HashMap<Short, String>();
+        var tunnels = new ArrayList<P2PTunnelPart<?>>();
         for (var gridNode : node.getGrid().getNodes()) {
             if (gridNode.getOwner() instanceof P2PTunnelPart<?> tunnel) {
-                var host = tunnel.getHost().getBlockEntity();
-                var tunnelSide = tunnel.getSide();
-                collected.add(new Row(
-                        host.getBlockPos(),
-                        (byte) (tunnelSide == null ? 6 : tunnelSide.ordinal()),
-                        tunnel.getFrequency(),
-                        tunnel.isOutput(),
-                        net.minecraft.core.registries.BuiltInRegistries.ITEM
-                                .getKey(tunnel.getPartItem().asItem()).toString(),
-                        part.nameFor(tunnel.getFrequency()),
-                        host.getLevel() != null ? host.getLevel().dimension().location().toString() : "?"));
+                tunnels.add(tunnel);
+                var name = io.github.johnhamilto.ae2logistics.parts.P2PNames.nameOn(tunnel);
+                if (!name.isBlank()) {
+                    names.putIfAbsent(tunnel.getFrequency(), name);
+                }
             }
+        }
+
+        var collected = new ArrayList<Row>();
+        for (var tunnel : tunnels) {
+            var host = tunnel.getHost().getBlockEntity();
+            var tunnelSide = tunnel.getSide();
+            collected.add(new Row(
+                    host.getBlockPos(),
+                    (byte) (tunnelSide == null ? 6 : tunnelSide.ordinal()),
+                    tunnel.getFrequency(),
+                    tunnel.isOutput(),
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM
+                            .getKey(tunnel.getPartItem().asItem()).toString(),
+                    names.getOrDefault(tunnel.getFrequency(), ""),
+                    host.getLevel() != null ? host.getLevel().dimension().location().toString() : "?"));
         }
         collected.sort(Comparator.comparingInt((Row row) -> row.frequency() & 0xFFFF)
                 .thenComparing(Row::output));
-        PacketDistributor.sendToPlayer(serverPlayer, new P2PDataPayload(containerId, collected));
+
+        // Every frequency with at least one endpoint on this grid, listed with all of its
+        // endpoints server-wide - the far side of a bridge is what you are debugging.
+        var mesh = new ArrayList<MeshRow>();
+        var grid = node.getGrid();
+        for (var entry : io.github.johnhamilto.ae2logistics.mesh.MeshRegistry.allFrequencies().entrySet()) {
+            var endpoints = new ArrayList<>(entry.getValue());
+            endpoints.sort(Comparator.comparingLong(
+                    io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart::stableKey));
+            boolean touches = false;
+            for (var endpoint : endpoints) {
+                var endpointNode = endpoint.getMainNode().getNode();
+                if (endpointNode != null && endpointNode.getGrid() == grid) {
+                    touches = true;
+                    break;
+                }
+            }
+            if (!touches) {
+                continue;
+            }
+            for (var endpoint : endpoints) {
+                var host = endpoint.getHost().getBlockEntity();
+                var endpointNode = endpoint.getMainNode().getNode();
+                var endpointSide = endpoint.getSide();
+                mesh.add(new MeshRow(
+                        entry.getKey(),
+                        (byte) (endpointSide == null ? 6 : endpointSide.ordinal()),
+                        endpoint.role(),
+                        endpoint.capabilityMask(),
+                        endpointNode != null && endpointNode.getGrid() == grid,
+                        io.github.johnhamilto.ae2logistics.mesh.MeshRegistry.statusOf(endpoint),
+                        host.getBlockPos(),
+                        host.getLevel() != null ? host.getLevel().dimension().location().toString() : "?"));
+            }
+        }
+        PacketDistributor.sendToPlayer(serverPlayer, new P2PDataPayload(containerId, collected, mesh));
     }
 
     @Override

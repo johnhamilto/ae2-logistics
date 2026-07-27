@@ -26,16 +26,18 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-26, v0.5.1).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (45 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-27, v0.6.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (52 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
 > **F5** Stock Sensor / Rate Meter / ME Tracer Terminal with five-minute history;
 > **F9** adaptive processing patterns (fuzzy, damage bands, tags, any-of, catalyst) +
 > Pattern Workbench (smithing/stonecutting variants cut by decision); **F11.1** P2P
-> Frequency Terminal; **F11.2/3/4** as one Universal Mesh Endpoint part (five
-> transports, named frequencies, true provider-P2P with per-machine blocking at range,
-> and mesh-ME grid bridging via a virtual quantum-bridge star). Current status, queue,
-> and known debt live in ROADMAP.md; per-feature notes below are marked "As built".
+> Frequency Terminal with tunnel-resident frequency names; **F11.2/3/4** as one
+> Universal Mesh Endpoint part (five transports, named frequencies, nine-slot
+> whitelists, true provider-P2P with per-machine blocking at range, mesh-ME grid
+> bridging via a virtual quantum-bridge star, and status diagnostics with cabled-loop
+> detection). Current status, queue, and known debt live in ROADMAP.md; per-feature
+> notes below are marked "As built".
 
 ---
 
@@ -787,8 +789,23 @@ Everything below either removes a limitation in that list or generalizes it.
 > range. Mesh-ME diverged from the pooling design: there is no dynamic channel-demand
 > API, but ME P2P is grid *connections*, so ME-attuned endpoints form a virtual
 > quantum-bridge star (deterministic hub, DENSE_CAPACITY spokes at 32 channels) and
-> AE2's pather does the rest. The collision-diagnosis model remains future work, as do
-> per-capability channel costing and per-endpoint filters (see ROADMAP.md).
+> AE2's pather does the rest. Per-capability channel costing remains future work
+> (see ROADMAP.md).
+>
+> **As built, continued (v0.6.0).** The 0.5.1 note above about names persisting in the
+> terminal part is superseded: frequency names now live on the tunnels themselves, as a
+> data attachment on each tunnel's cable-bus block entity keyed by part side. Terminals
+> are stateless readers (any number agree, none is load-bearing), renaming writes every
+> tunnel of the frequency, retuning adopts the destination frequency's name, and old
+> per-terminal names migrate automatically. The terminal also lists mesh frequencies
+> touching the grid with all endpoints server-wide and renames a whole frequency in one
+> action. Endpoints gained nine-slot exact-match whitelists enforced at the input
+> handler, at output targeting, and batch-wise for provider pushes (a batch relocates
+> whole to a machine accepting every ingredient, verified by re-simulation on switch).
+> The collision-diagnosis model shipped as status tracking: per-endpoint OK / offline /
+> waiting / CABLED LOOP, the loop case detected at star (re)build when hub and spoke
+> already share a grid, surfaced in the terminal, the endpoint GUI, and
+> `/ae2logistics mesh list|status|relink`.
 
 ---
 

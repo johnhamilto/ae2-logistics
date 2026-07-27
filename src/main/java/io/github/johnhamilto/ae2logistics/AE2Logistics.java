@@ -97,6 +97,21 @@ public class AE2Logistics {
             .create(Registries.CREATIVE_MODE_TAB, MOD_ID);
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister
             .create(Registries.MENU, MOD_ID);
+    public static final DeferredRegister<net.neoforged.neoforge.attachment.AttachmentType<?>> ATTACHMENTS =
+            DeferredRegister.create(net.neoforged.neoforge.registries.NeoForgeRegistries.ATTACHMENT_TYPES, MOD_ID);
+
+    /** Per cable-bus block entity: part side name -> P2P frequency name. See {@code P2PNames}. */
+    public static final Supplier<net.neoforged.neoforge.attachment.AttachmentType<java.util.Map<String, String>>> P2P_NAMES =
+            ATTACHMENTS.register("p2p_names",
+                    () -> net.neoforged.neoforge.attachment.AttachmentType
+                            .<java.util.Map<String, String>>builder(() -> new java.util.HashMap<>())
+                            .serialize(
+                                    com.mojang.serialization.Codec
+                                            .unboundedMap(com.mojang.serialization.Codec.STRING,
+                                                    com.mojang.serialization.Codec.STRING)
+                                            .xmap(java.util.HashMap::new, java.util.HashMap::new),
+                                    map -> !map.isEmpty())
+                            .build());
 
     public static final DeferredBlock<RegisterBankBlock> REGISTER_BANK = BLOCKS.register("register_bank",
             () -> new RegisterBankBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
@@ -220,6 +235,7 @@ public class AE2Logistics {
         DATA_COMPONENTS.register(modBus);
         CREATIVE_TABS.register(modBus);
         MENUS.register(modBus);
+        ATTACHMENTS.register(modBus);
 
         modBus.addListener((RegisterEvent event) -> {
             if (event.getRegistryKey().equals(Registries.BLOCK)) {
@@ -269,6 +285,7 @@ public class AE2Logistics {
         GridServices.register(SignalService.class, SignalGridService.class);
 
         NeoForge.EVENT_BUS.addListener(SignalCommands::register);
+        NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.MeshCommands::register);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             AE2LogisticsClient.initialize(modBus);

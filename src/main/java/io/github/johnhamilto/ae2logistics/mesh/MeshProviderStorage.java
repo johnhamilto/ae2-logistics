@@ -35,6 +35,7 @@ public final class MeshProviderStorage implements MEStorage {
     private MeshEndpointPart batchTarget;
     private boolean lastWasModulate;
     private final Set<AEKey> batchKeys = new HashSet<>();
+    private final java.util.LinkedHashMap<AEKey, Long> batchSim = new java.util.LinkedHashMap<>();
 
     public MeshProviderStorage(MeshEndpointPart endpoint) {
         this.endpoint = endpoint;
@@ -49,17 +50,24 @@ public final class MeshProviderStorage implements MEStorage {
         }
         lastWasModulate = !simulate;
 
-        if (batchTarget == null || !batchTarget.isValidTarget(typeFor(what))) {
-            batchTarget = selectFreeTarget(what);
+        if (typeFor(what) == 0) {
+            return 0;
+        }
+        if (batchTarget == null || !accepts(batchTarget, what)) {
+            batchTarget = selectTarget(what, amount);
             if (batchTarget == null) {
                 return 0;
             }
         }
 
         long inserted = insertInto(batchTarget, what, amount, simulate);
-        if (!simulate && inserted > 0) {
-            batchKeys.add(what.dropSecondary());
-            batchTarget.noteDelivered(batchKeys);
+        if (inserted > 0) {
+            if (simulate) {
+                batchSim.merge(what, inserted, Long::sum);
+            } else {
+                batchKeys.add(what.dropSecondary());
+                batchTarget.noteDelivered(batchKeys);
+            }
         }
         return inserted;
     }
@@ -68,16 +76,34 @@ public final class MeshProviderStorage implements MEStorage {
     private void finishBatch() {
         batchTarget = null;
         batchKeys.clear();
+        batchSim.clear();
     }
 
+    private static boolean accepts(MeshEndpointPart target, AEKey what) {
+        return target.isValidTarget(typeFor(what)) && target.filterAccepts(what);
+    }
+
+    /**
+     * Picks the first non-busy machine that can take the whole batch seen so far: the
+     * provider pushes every key of a pattern to whichever target we settle on, so a
+     * mid-batch switch (say the first target's filter rejects a later ingredient) must
+     * re-verify filter and capacity for everything already simulated this batch.
+     */
     @Nullable
-    private MeshEndpointPart selectFreeTarget(AEKey what) {
-        int type = typeFor(what);
-        if (type == 0) {
-            return null;
-        }
-        for (var candidate : MeshRegistry.outputs(endpoint.frequency(), type, endpoint)) {
-            if (!candidate.isBusy()) {
+    private MeshEndpointPart selectTarget(AEKey what, long amount) {
+        for (var candidate : MeshRegistry.outputs(endpoint.frequency(), typeFor(what), endpoint)) {
+            if (candidate.isBusy() || !candidate.filterAccepts(what)) {
+                continue;
+            }
+            boolean fits = insertInto(candidate, what, amount, true) >= amount;
+            for (var entry : batchSim.entrySet()) {
+                if (!fits) {
+                    break;
+                }
+                fits = accepts(candidate, entry.getKey())
+                        && insertInto(candidate, entry.getKey(), entry.getValue(), true) >= entry.getValue();
+            }
+            if (fits) {
                 return candidate;
             }
         }

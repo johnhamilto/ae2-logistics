@@ -34,6 +34,19 @@ public final class MeshRegistry {
     public static final int TYPE_SIGNAL = 16;
     public static final int TYPE_ME = 32;
 
+    // ME star state per endpoint, evaluated whenever the star (re)builds.
+    public static final byte ME_STATE_NONE = 0;
+    public static final byte ME_STATE_WAITING = 1;
+    public static final byte ME_STATE_LINKED = 2;
+    public static final byte ME_STATE_LOOP = 3;
+    public static final byte ME_STATE_HUB = 4;
+
+    // Overall endpoint status for UI and commands.
+    public static final byte STATUS_OK = 0;
+    public static final byte STATUS_OFFLINE = 1;
+    public static final byte STATUS_ME_WAITING = 2;
+    public static final byte STATUS_CABLED_LOOP = 3;
+
     private static final Map<String, Set<MeshEndpointPart>> BY_FREQUENCY = new HashMap<>();
     private static final Map<String, MeshEndpointPart> STICKY_ITEM = new HashMap<>();
     private static final Map<String, Long> STICKY_ITEM_TICK = new HashMap<>();
@@ -62,6 +75,67 @@ public final class MeshRegistry {
             }
         }
         part.withdrawSignals();
+        part.setMeLinkState(ME_STATE_NONE);
+    }
+
+    public static byte statusOf(MeshEndpointPart part) {
+        if (!part.isActiveAndLoaded()) {
+            return STATUS_OFFLINE;
+        }
+        return switch (part.meLinkState()) {
+            case ME_STATE_WAITING -> STATUS_ME_WAITING;
+            case ME_STATE_LOOP -> STATUS_CABLED_LOOP;
+            default -> STATUS_OK;
+        };
+    }
+
+    public static List<MeshEndpointPart> endpoints(String frequency) {
+        var set = BY_FREQUENCY.get(frequency);
+        return set == null ? List.of() : List.copyOf(set);
+    }
+
+    public static java.util.SortedMap<String, List<MeshEndpointPart>> allFrequencies() {
+        var map = new java.util.TreeMap<String, List<MeshEndpointPart>>();
+        for (var entry : BY_FREQUENCY.entrySet()) {
+            map.put(entry.getKey(), List.copyOf(entry.getValue()));
+        }
+        return map;
+    }
+
+    /** Retags every loaded endpoint; endpoints in unloaded chunks keep the old frequency. */
+    public static void renameFrequency(String from, String to) {
+        for (var part : endpoints(from)) {
+            part.applyMeshConfig(to, part.role(), part.priority(), part.capabilityMask());
+        }
+    }
+
+    /** Forces the frequency's ME star to rebuild (and re-diagnose loops) next tick. */
+    public static void forceRelink(String frequency) {
+        ME_MEMBERSHIP.remove(frequency);
+    }
+
+    /** Compact capability label, e.g. "R,I,F" or "ME". */
+    public static String describeTypes(int mask) {
+        var parts = new ArrayList<String>();
+        if ((mask & TYPE_REDSTONE) != 0) {
+            parts.add("R");
+        }
+        if ((mask & TYPE_ITEM) != 0) {
+            parts.add("I");
+        }
+        if ((mask & TYPE_FLUID) != 0) {
+            parts.add("F");
+        }
+        if ((mask & TYPE_ENERGY) != 0) {
+            parts.add("E");
+        }
+        if ((mask & TYPE_SIGNAL) != 0) {
+            parts.add("S");
+        }
+        if ((mask & TYPE_ME) != 0) {
+            parts.add("ME");
+        }
+        return String.join(",", parts);
     }
 
     public static void clear() {
@@ -91,17 +165,40 @@ public final class MeshRegistry {
         return list;
     }
 
+    /** Priority-ordered valid targets, narrowed to those whose filter accepts the key. */
+    private static List<MeshEndpointPart> targets(String frequency, int type,
+            @Nullable MeshEndpointPart exclude, @Nullable appeng.api.stacks.AEKey key) {
+        var list = outputs(frequency, type, exclude);
+        if (key == null) {
+            return list;
+        }
+        var filtered = new ArrayList<MeshEndpointPart>(list.size());
+        for (var part : list) {
+            if (part.filterAccepts(key)) {
+                filtered.add(part);
+            }
+        }
+        return filtered;
+    }
+
     /** The endpoint the next item/fluid transfer would go to; used for blocking-mode mirroring. */
     @Nullable
     public static MeshEndpointPart peekTarget(String frequency, int type, @Nullable MeshEndpointPart exclude) {
+        return peekTarget(frequency, type, exclude, null);
+    }
+
+    @Nullable
+    public static MeshEndpointPart peekTarget(String frequency, int type, @Nullable MeshEndpointPart exclude,
+            @Nullable appeng.api.stacks.AEKey key) {
         var sticky = type == TYPE_FLUID ? STICKY_FLUID : STICKY_ITEM;
         var stickyTick = type == TYPE_FLUID ? STICKY_FLUID_TICK : STICKY_ITEM_TICK;
         var current = sticky.get(frequency);
         if (current != null && stickyTick.getOrDefault(frequency, -1L) == gameTick
-                && current.isValidTarget(type) && current != exclude) {
+                && current.isValidTarget(type) && current != exclude
+                && (key == null || current.filterAccepts(key))) {
             return current;
         }
-        var candidates = outputs(frequency, type, exclude);
+        var candidates = targets(frequency, type, exclude, key);
         if (candidates.isEmpty()) {
             return null;
         }
@@ -110,22 +207,24 @@ public final class MeshRegistry {
     }
 
     @Nullable
-    private static MeshEndpointPart claimTarget(String frequency, int type, @Nullable MeshEndpointPart exclude) {
+    private static MeshEndpointPart claimTarget(String frequency, int type, @Nullable MeshEndpointPart exclude,
+            @Nullable appeng.api.stacks.AEKey key) {
         var sticky = type == TYPE_FLUID ? STICKY_FLUID : STICKY_ITEM;
         var stickyTick = type == TYPE_FLUID ? STICKY_FLUID_TICK : STICKY_ITEM_TICK;
         var current = sticky.get(frequency);
         if (current != null && stickyTick.getOrDefault(frequency, -1L) == gameTick
-                && current.isValidTarget(type) && current != exclude) {
+                && current.isValidTarget(type) && current != exclude
+                && (key == null || current.filterAccepts(key))) {
             return current;
         }
-        var candidates = outputs(frequency, type, exclude);
+        var candidates = targets(frequency, type, exclude, key);
         if (candidates.isEmpty()) {
             return null;
         }
-        var key = frequency + "/" + type;
-        int cursor = CURSORS.getOrDefault(key, 0);
+        var cursorKey = frequency + "/" + type;
+        int cursor = CURSORS.getOrDefault(cursorKey, 0);
         var chosen = candidates.get(Math.floorMod(cursor, candidates.size()));
-        CURSORS.put(key, cursor + 1);
+        CURSORS.put(cursorKey, cursor + 1);
         sticky.put(frequency, chosen);
         stickyTick.put(frequency, gameTick);
         return chosen;
@@ -135,9 +234,10 @@ public final class MeshRegistry {
         if (DEPTH.get() > 0 || stack.isEmpty()) {
             return stack;
         }
+        var itemKey = appeng.api.stacks.AEItemKey.of(stack);
         var target = simulate
-                ? peekTarget(from.frequency(), TYPE_ITEM, from)
-                : claimTarget(from.frequency(), TYPE_ITEM, from);
+                ? peekTarget(from.frequency(), TYPE_ITEM, from, itemKey)
+                : claimTarget(from.frequency(), TYPE_ITEM, from, itemKey);
         if (target == null) {
             return stack;
         }
@@ -154,9 +254,10 @@ public final class MeshRegistry {
         if (DEPTH.get() > 0 || stack.isEmpty()) {
             return 0;
         }
+        var fluidKey = appeng.api.stacks.AEFluidKey.of(stack);
         var target = simulate
-                ? peekTarget(from.frequency(), TYPE_FLUID, from)
-                : claimTarget(from.frequency(), TYPE_FLUID, from);
+                ? peekTarget(from.frequency(), TYPE_FLUID, from, fluidKey)
+                : claimTarget(from.frequency(), TYPE_FLUID, from, fluidKey);
         if (target == null) {
             return 0;
         }
@@ -235,15 +336,27 @@ public final class MeshRegistry {
                     .forEach(appeng.api.networking.IGridConnection::destroy);
             var links = new ArrayList<appeng.api.networking.IGridConnection>();
 
+            for (var part : entry.getValue()) {
+                part.setMeLinkState(part.attuned(TYPE_ME) ? ME_STATE_WAITING : ME_STATE_NONE);
+            }
             if (members.size() >= 2) {
                 members.sort(Comparator.comparingLong(MeshEndpointPart::stableKey));
-                var hub = members.get(0).getMainNode().getNode();
+                var hubPart = members.get(0);
+                var hub = hubPart.getMainNode().getNode();
+                hubPart.setMeLinkState(ME_STATE_HUB);
                 for (int i = 1; i < members.size(); i++) {
-                    var spoke = members.get(i).getMainNode().getNode();
+                    var spokePart = members.get(i);
+                    var spoke = spokePart.getMainNode().getNode();
+                    // Sharing a grid before we link means a physical path already runs
+                    // parallel to this mesh link. AE2 tolerates the loop; flag it anyway,
+                    // because a redundant path is the classic half-a-base-offline trap.
+                    boolean loop = hub.getGrid() == spoke.getGrid();
                     try {
                         links.add(appeng.me.GridConnection.create(hub, spoke, null));
+                        spokePart.setMeLinkState(loop ? ME_STATE_LOOP : ME_STATE_LINKED);
                     } catch (IllegalStateException ignored) {
-                        // already connected through cables or another mesh; that's fine
+                        // already directly connected; the tightest possible loop
+                        spokePart.setMeLinkState(ME_STATE_LOOP);
                     }
                 }
             }
