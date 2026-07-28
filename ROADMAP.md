@@ -47,18 +47,23 @@ representation).
    types, upstream PR implementations.
 
 ## Longer term
-- **F4 job scheduler/policy**: admission control is feasible today for jobs we
-  originate (submitJob takes an explicit CPU); steering foreign jobs is the open part.
-- **F11.5 wireless machine connectivity** via WAP coverage + Dense WAP.
-- **F11.6 extra tunnel types** (experience; entity/player/chunk-load are balance
-  decisions first).
+- **F10 bundles** (DESIGN.md 4.3): the last unbuilt design-doc feature. Preconditions
+  met; waits on the ecosystem-novelty check (DESIGN 7.3, folded into the publishing
+  pass) and a deliberate go/no-go on the atomic-delivery pitch.
+- **F11.6 extra tunnel types**: experience is straightforward; signal is now mostly
+  superseded by the mesh; entity/player/chunk-load are balance decisions first;
+  tick manipulation is a hard no.
+- **Foreign-job steering**: everything scheduler-side shipped in 0.15.0; steering
+  jobs we did not originate needs an upstream CPU-selection hook (fourth PR
+  candidate below).
 - **GUI framework migration** to AE2's menu system (clone ExtendedAE as reference) if
   playtesting says the vanilla-plumbing screens fall short.
 - **Upstream PRs worth writing**: public grid-connection API for 1.21.1-era AE2 (we
   use internal `GridConnection.create`), dynamic per-node channel demand (would
-  unlock per-capability mesh costing and true pooled accounting), and a
-  filter-provider API so query expressions could drive AE2's own view cells, bus
-  filters, and cell partitions (blocked on internals today; the mod stays mixin-free).
+  unlock per-capability mesh costing and true pooled accounting), a filter-provider
+  API so query expressions could drive AE2's own view cells, bus filters, and cell
+  partitions (blocked on internals today; the mod stays mixin-free), and a
+  CPU-selection hook for foreign-job steering.
 
 ## Known debt and constraints
 

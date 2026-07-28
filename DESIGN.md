@@ -865,6 +865,12 @@ keys work, bundles are mostly free; if F1 fights AE2's storage invariants, you'v
 that cheaply instead of expensively. **Do not start here, and be honest that F9 below is
 the better use of the same crafting-side effort.**
 
+> **Status (2026-07-28):** both sequencing preconditions are long met (F1's key machinery
+> is proven twice over, F9 is complete), and every composition partner named above now
+> exists — including the F8 logic core. F10 is the last unbuilt feature in this document.
+> Whether it is worth building is a demand question, not a feasibility one; it waits on
+> the §7 ecosystem-novelty check and a deliberate go/no-go, not on any groundwork.
+
 ---
 
 ## 4A. F11 — P2P Tunnel Expansion
@@ -1326,6 +1332,13 @@ crash.
 
 ### F11.7 Phasing within F11
 
+> **Status (2026-07-28):** F11.1 ✓, F11.2/3/4 ✓ (as one Universal Mesh Endpoint, including
+> mesh-ME grid bridging), F11.5 ✓ (coverage WAS queryable — `IWirelessAccessPoint` is
+> public API, and AE2's own WAPs serve bridges). Only **F11.6** remains, and its
+> entity/player/chunk-load rows are balance decisions before they are code. The signal
+> tunnel row is now partially superseded: the mesh already carries signals across grids,
+> so a signal P2P tunnel adds AE2-native routing convenience, not new capability.
+
 1. **F11.1 (linking overhaul)** — highest value, lowest risk, ships alone as a useful mod.
 2. **F11.2 (universal)** — moderate, gated on the channel-cost decision.
 3. **F11.6 (new types)** — incremental, ship continuously.
@@ -1340,10 +1353,14 @@ crash.
 
 ## 5. Suggested phasing
 
-> **Status:** Phase 0 ✓ (passed in one day, not weeks), Phase 1 ✓ (all nine parts, not
-> six), Phase 1b ✓ (first slice), Phase 2 partially ✓ (Stock Sensor/Rate shipped as
-> logic parts; tracer terminal and job telemetry remain). Gametest harness added beyond
-> plan — 10 in-game tests run in CI.
+> **Status (2026-07-28): every phase is complete.** Phase 0 ✓ (one day), Phase 1 ✓ (ten
+> parts), Phase 1b ✓ (F9 complete; smithing/stonecutting cut by decision), Phase 2 ✓
+> (tracer + job telemetry), Phase 3 ✓ (F6 + F7), Phase 4 ✓ (F3 + F4 including deadline
+> and preemption stretch goals; F10 deliberately not started — see §4.3), Phase 5 ✓ (F8
+> shipped as the ME Logic Core, channel-gated rather than config-gated; virtual storage
+> devices are the remaining slice). F11 (added later, §4A) shipped through F11.5; F11.6
+> tunnel types remain. The gametest harness grew far beyond plan — 87 in-game tests in CI
+> are the source of truth for behavioral claims (see ROADMAP.md).
 
 **Phase 0 — Spike (1–2 weeks).**
 Prove `AEKeyTypes` registration works for a non-item, non-fluid, non-chemical key with
@@ -1399,9 +1416,15 @@ justified. Ordered by ascending risk of breaking someone's base. Note F3 and F9 
   legibly if the mod is removed — AE2 provides a decode-failure tooltip strategy for
   exactly this; use it.
 - **Security station integration.** F7 and F8 are remote-write capabilities and must respect
-  network security.
+  network security. *(As built: unimplementable on this line — AE2 19.2.x removed the
+  security station and ships no permission API. Writes gate on `mayBuild` +
+  `level.mayInteract` instead, which respects adventure mode and claim mods; if AE2
+  regains a security API, gate on it.)*
 - **Datagen everything.** Part models, recipes, tags, lang. AE2 recommends datagenning part
-  model JSON.
+  model JSON. *(As built: datagen runs for the scaffold, but models/recipes/tags/lang are
+  maintained as handwritten JSON plus the generated-art pipeline (`make textures`); at this
+  asset count the JSON is the simpler system. Revisit if the 26.x port multiplies model
+  formats.)*
 - **Ship a guide.** AE2's own player guide is the gold standard and the reason people
   understand the mod at all. A logic mod without documentation is a logic mod nobody uses.
 
@@ -1411,10 +1434,11 @@ justified. Ordered by ascending risk of breaking someone's base. Note F3 and F9 
 
 Flagged explicitly — **verify before building**:
 
-1. **Target version / API baseline.** The AE2 player guide's `development` branch currently
-   documents Minecraft 1.21.1, while the javadoc index shows a `26.1.x-beta` line. Confirm
-   the live API baseline at <https://appliedenergistics.github.io/javadoc/> and pick the
-   target accordingly. Most of the addon ecosystem (ExtendedAE etc.) is on 1.21.1.
+1. ~~**Target version / API baseline.**~~ **Resolved — shipped against Minecraft 1.21.1 /
+   NeoForge / AE2 19.2.17** (Maven Central; Modmaven is stale for AE2). The hosted javadoc
+   tracks the newest dev line (26.x), so API questions are answered against the local
+   1.21.1 clone, not the website. Multi-version strategy is branch-per-version mirroring
+   AE2 (documented in README).
 2. ~~**Processing pattern limits (9 in / 3 out).**~~ **Resolved — the 9/3 figure was stale.**
    Those numbers come from the 1.18 / 1.19.2 guide pages. From the 1.20.1 guide onward the
    encoding terminal's input and output slots scroll, giving **81 ingredients and 26
@@ -1425,8 +1449,14 @@ Flagged explicitly — **verify before building**:
    yes.** `IPatternDetails.IInput.getPossibleInputs()` + `isValid(AEKey, Level)` are
    public API, honored by the planner at calculation and execution. Proven end-to-end by
    the autocraft gametest.
-9. **Does blocking mode compare machine-slot contents by exact key?** (F9 open question 3.)
-   If yes, it must be made spec-aware.
+9. ~~**Does blocking mode compare machine-slot contents by exact key?**~~ **Resolved — no,
+   and no work is needed.** Source-verified (19.2.17): `PatternProviderLogic.updatePatterns`
+   collects **every `getPossibleInputs()` candidate** of every pattern into `patternInputs`
+   with `.dropSecondary()` (components stripped), and the blocking check compares machine
+   contents the same way (`stack.getKey().dropSecondary()`). Blocking is therefore
+   spec-aware for every adaptive spec type for free: tag and any-of specs enumerate their
+   candidates into the set, and fuzzy / damage-band variants collapse to the same
+   component-stripped item identity.
 10. ~~**Does AE2's `FuzzyMode` enum live in public API?**~~ **Resolved — yes**
     (`appeng.api.config.FuzzyMode`, with codecs), though note its constants are
     damage-band-only; "ignore components" is plain item-identity comparison, which is how
@@ -1434,16 +1464,26 @@ Flagged explicitly — **verify before building**:
 3. **Novelty of every feature here is unverified.** The AE2 addon ecosystem is large and a
    substantial fraction is Chinese-language and poorly indexed by Western search. Search
    CurseForge and Modrinth directly, and ask in the AE2 Discord, before committing to any
-   feature.
-4. **Whether CPU selection is hookable** (F4). Unknown. Investigate `ICraftingService` and
-   AE2's CPU selection internals before speccing.
+   feature. *Still open — queued as part of the publishing pass (docs/publishing/), since
+   the listing copy should not claim firsts without this check.*
+4. ~~**Whether CPU selection is hookable** (F4).~~ **Resolved — not hookable in 19.2 public
+   API.** `submitJob` accepts an explicit target CPU, which is how the shipped scheduler
+   steers everything it originates (admission control, class pools, preemption). Foreign
+   jobs (players, other mods) go through AE2's internal selection with no extension point;
+   steering them is an upstream-PR candidate (a CPU-selection hook), tracked in ROADMAP
+   alongside docs/upstream/.
 5. ~~**Whether custom `AEKey` types can safely carry assignment semantics** (F1).~~
    **Resolved — yes.** Registers refuse insert/extract via MEStorage defaults and are
    written by assignment through the grid service; terminals, emitters, and monitors all
    cooperate. Verified in-game and by gametest.
-6. **Whether guard evaluation can be made cheap enough for the planner** (F3).
-7. **AE2's licensing** for any code you read for reference — check before copying patterns
-   from AE2 or other addons' sources.
+6. ~~**Whether guard evaluation can be made cheap enough for the planner** (F3).~~
+   **Resolved — by never entering the planner.** The as-built F3 evaluates guards in the
+   grid-aware *provider* (patterns cannot see their grid): plan-time hiding via
+   `getAvailablePatterns` plus a push gate in `pushPattern`, re-indexed on a ten-tick
+   fingerprint. The planner runs stock and unmodified.
+7. ~~**AE2's licensing.**~~ **Resolved — LGPL-3.0**, matching AE2's own LGPL-3.0; reference
+   reading and pattern reuse are license-compatible. Chosen 2026-07-25 (delegated call,
+   noted as changeable pre-release).
 
 ---
 
