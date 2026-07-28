@@ -29,6 +29,7 @@ public final class AE2LogisticsClient {
             event.register(AE2Logistics.CONFIG_TERMINAL_MENU.get(), ConfigTerminalScreen::new);
             event.register(AE2Logistics.JOB_SCHEDULER_MENU.get(), JobSchedulerScreen::new);
             event.register(AE2Logistics.LOGIC_CORE_MENU.get(), LogicCoreScreen::new);
+            event.register(AE2Logistics.SUBNET_CORE_MENU.get(), SubnetCoreScreen::new);
         });
     }
 }

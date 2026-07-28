@@ -235,6 +235,21 @@ public class AE2Logistics {
             MENUS.register("logic_core", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.LogicCoreMenu::new));
 
+    public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.SubnetCoreBlock> SUBNET_CORE =
+            BLOCKS.register("subnet_core",
+                    () -> new io.github.johnhamilto.ae2logistics.block.SubnetCoreBlock(
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+    public static final DeferredItem<BlockItem> SUBNET_CORE_ITEM = ITEMS
+            .registerSimpleBlockItem(SUBNET_CORE);
+    public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.SubnetCoreBlockEntity>> SUBNET_CORE_BE =
+            BLOCK_ENTITIES.register("subnet_core", () -> BlockEntityType.Builder
+                    .of(io.github.johnhamilto.ae2logistics.block.SubnetCoreBlockEntity::new,
+                            SUBNET_CORE.get())
+                    .build(null));
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.SubnetCoreMenu>> SUBNET_CORE_MENU =
+            MENUS.register("subnet_core", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.SubnetCoreMenu::new));
+
     /** Where a placed Wireless Bridge should look for its network: an access point position. */
     public static final Supplier<DataComponentType<net.minecraft.core.GlobalPos>> BRIDGE_ANCHOR =
             DATA_COMPONENTS.register("bridge_anchor",
@@ -362,6 +377,7 @@ public class AE2Logistics {
                         output.accept(GUARDED_PROVIDER_ITEM.get());
                         output.accept(JOB_SCHEDULER_ITEM.get());
                         output.accept(LOGIC_CORE_ITEM.get());
+                        output.accept(SUBNET_CORE_ITEM.get());
                         output.accept(DENSE_WAP_ITEM.get());
                         output.accept(WIRELESS_BRIDGE_ITEM.get());
                         output.accept(SIGNAL_CARD.get());
@@ -429,6 +445,8 @@ public class AE2Logistics {
                     AECapabilities.IN_WORLD_GRID_NODE_HOST, DENSE_WAP_BE.get(), (be, context) -> be);
             event.registerBlockEntity(
                     AECapabilities.IN_WORLD_GRID_NODE_HOST, WIRELESS_BRIDGE_BE.get(), (be, context) -> be);
+            event.registerBlockEntity(
+                    AECapabilities.IN_WORLD_GRID_NODE_HOST, SUBNET_CORE_BE.get(), (be, context) -> be);
         });
 
         modBus.addListener((RegisterPayloadHandlersEvent event) -> {
@@ -477,6 +495,9 @@ public class AE2Logistics {
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureCoreEntryPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureCoreEntryPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureCoreEntryPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureSubnetEntryPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureSubnetEntryPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureSubnetEntryPayload::handle);
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {

@@ -26,8 +26,8 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-28, v0.15.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (87 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-28, v0.16.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (92 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
 > **F3 complete** - Guarded Pattern Provider (plan-time hiding + toggleable push
 > gating, both layers) and Guarded Pattern wrappers, with dynamic priority bound to
@@ -577,9 +577,24 @@ Consider shipping this last, or as a config-gated module.
 > gate resolved the doc's open question: physical parts stay channel-free, but **every
 > core entry requires a channel** drawn through the core (a full core is nine channels
 > of pressure; a glass segment provably cannot light it - gametested). Entries without
-> a channel evaluate to nothing. Virtual storage devices with face mapping remain a
-> possible slice 2; node lifecycle followed the predicted teardown-and-rebuild shape
-> (managed nodes are single-use - fresh node per enable).
+> a channel evaluate to nothing. Node lifecycle followed the predicted
+> teardown-and-rebuild shape (managed nodes are single-use - fresh node per enable).
+>
+> **As built, slice 2 (v0.16.0): the full virtual-subnet vision shipped as the ME
+> Subnet Core.** A genuinely separate internal grid lives inside the block - a
+> virtual hub star powered through the core using AE2's own overlay energy grid
+> (`IEnergyOverlayGridConnection`, the quartz-fiber mechanism; a hand-rolled
+> IAEPowerStorage bridge raced grid boot and was replaced with it). Entries:
+> face-bound storage/import/export buses, an **uplink** (subnet mounts a proxy of
+> main storage), and **downlinks** (main mounts a proxy of subnet storage - each a
+> main-grid virtual node costing a main channel, mirroring the physical storage bus
+> it replaces). Uplink+downlink cycles are cut by per-proxy reentrancy latches;
+> conservation is gametested (count-once, store-once, extract-once). The balance
+> answer to this section's open question: internal devices consume the internal
+> ad-hoc grid's eight channels, the core is one main channel, downlinks cost main
+> channels - configuration replaces cable, never channel capacity. Reconfiguration
+> is teardown-and-rebuild as predicted; the GUI is apply-per-entry rather than
+> apply-on-close, which playtesting may still revise.
 
 ---
 
@@ -1356,9 +1371,8 @@ crash.
 > **Status (2026-07-28): every phase is complete.** Phase 0 ✓ (one day), Phase 1 ✓ (ten
 > parts), Phase 1b ✓ (F9 complete; smithing/stonecutting cut by decision), Phase 2 ✓
 > (tracer + job telemetry), Phase 3 ✓ (F6 + F7), Phase 4 ✓ (F3 + F4 including deadline
-> and preemption stretch goals; F10 deliberately not started — see §4.3), Phase 5 ✓ (F8
-> shipped as the ME Logic Core, channel-gated rather than config-gated; virtual storage
-> devices are the remaining slice). F11 (added later, §4A) shipped through F11.5; F11.6
+> and preemption stretch goals; F10 deliberately not started — see §4.3), Phase 5 ✓ (F8 fully
+> complete: the ME Logic Core plus the ME Subnet Core - the virtual-subnet slice). F11 (added later, §4A) shipped through F11.5; F11.6
 > tunnel types remain. The gametest harness grew far beyond plan — 87 in-game tests in CI
 > are the source of truth for behavioral claims (see ROADMAP.md).
 

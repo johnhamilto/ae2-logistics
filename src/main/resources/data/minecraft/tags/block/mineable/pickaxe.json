@@ -6,6 +6,7 @@
     "ae2logistics:job_scheduler",
     "ae2logistics:logic_core",
     "ae2logistics:dense_wireless_access_point",
-    "ae2logistics:wireless_bridge"
+    "ae2logistics:wireless_bridge",
+    "ae2logistics:subnet_core"
   ]
 }

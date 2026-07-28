@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.15.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (87 tests, run
+Status as of v0.16.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (92 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -30,6 +30,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F11.5 | ME Wireless Bridge (coverage-gated grid joining, nearest-AP association, handover) + Dense Wireless Access Point; AE2 WAPs serve bridges - F11.5 complete | 0.14.0 |
 | F4 | Scheduler stretch: wall-clock deadlines with eviction, within-pool priority preemption, rules ride TransferableSettings | 0.15.0 |
 | Infra | Test debt closed: NBT round-trips for all five BEs, named-CPU pools + per-named-CPU monitor channels (custom-name reflection + cluster updateName); advancements; server config (scheduler interval, WAP range, bridge retune); publishing kit in docs/publishing/ | 0.15.0 |
+| F8.2 | ME Subnet Core: whole subnet in one block - face storage/import/export entries, uplink/downlink storage proxies with loop-safe reentrancy latches, quartz-fiber-style overlay power sharing - F8 fully complete | 0.16.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -43,8 +44,7 @@ representation).
    fix friction before anything new. Everything programmatic is gametested.
 2. Publishing pass if the playtest holds: gallery screenshots (shot list in
    docs/publishing/modrinth.md), then Modrinth + CurseForge uploads.
-3. Later: F8 slice 2 (virtual storage devices with face mapping), F11.6 tunnel
-   types, upstream PR implementations.
+3. Later: F11.6 tunnel types, F10 bundles go/no-go, upstream PR implementations.
 
 ## Longer term
 - **F10 bundles** (DESIGN.md 4.3): the last unbuilt design-doc feature. Preconditions

@@ -31,5 +31,6 @@
   "block.ae2logistics.job_scheduler": "ME Job Scheduler",
   "block.ae2logistics.logic_core": "ME Logic Core",
   "block.ae2logistics.dense_wireless_access_point": "Dense Wireless Access Point",
-  "block.ae2logistics.wireless_bridge": "ME Wireless Bridge"
+  "block.ae2logistics.wireless_bridge": "ME Wireless Bridge",
+  "block.ae2logistics.subnet_core": "ME Subnet Core"
 }

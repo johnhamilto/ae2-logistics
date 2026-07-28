@@ -57,6 +57,9 @@ below has an in-game chapter. The quick tour:
 - **Logic Core** — eight virtual logic nodes as list entries in one block, on the
   same deterministic scheduler; each entry costs a channel, so cores want dense
   cable or a controller face.
+- **Subnet Core** — an entire ME subnet in one block: face-bound storage/import/
+  export entries, an uplink to main storage, and downlinks that expose the subnet
+  to the main network (one main channel each). Loop-safe by construction.
 - **Queries** — `tag:c:ores AND NOT craftable` in the ME Query Terminal, counted into
   signals by the Query Sensor, exported by the Query Export Bus; test one with
   `/ae2logistics query <expression>` while looking at a network.
