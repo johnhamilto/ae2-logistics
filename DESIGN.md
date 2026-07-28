@@ -26,8 +26,8 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-28, v0.13.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (78 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-28, v0.14.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (82 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
 > **F3 complete** - Guarded Pattern Provider (plan-time hiding + toggleable push
 > gating, both layers) and Guarded Pattern wrappers, with dynamic priority bound to
@@ -41,7 +41,9 @@ upgrade cards, terminals, keys in storage — rather than by bolting on a foreig
 > provider-P2P with per-machine blocking at range, mesh-ME grid bridging via a virtual
 > quantum-bridge star, and status diagnostics with cabled-loop detection); **F8** the
 > ME Logic Core - eight virtual logic nodes as list entries in one block, on the same
-> scheduler, each requiring a channel (the deliberate hard gate). Memory
+> scheduler, each requiring a channel (the deliberate hard gate); **F11.5** wireless
+> bridging - the ME Wireless Bridge joins machines through WAP coverage (AE2's WAPs
+> serve too) with the Dense WAP as the carrier tier. Memory
 > cards carry every part's settings; **Regulus** is the mod's themed resource
 > (in-world transform, prices the control tier). Current status, queue, and known debt
 > live in ROADMAP.md; per-feature notes below are marked "As built".
@@ -1207,6 +1209,18 @@ coverage for your factory.
   nearest AP, tiebroken by stable position hash. If that AP loses power or channels, the
   endpoint re-associates to another AP in range. This is free resilience gameplay, and it
   produces exactly the kind of event stream F5's tracer should be recording.
+
+> **As built (v0.14.0).** Shipped as the **ME Wireless Bridge** + **Dense Wireless
+> Access Point**. The bridge is a block (not a part - wireless means no cable to sit
+> on): anchor it by clicking any access point with the item, place it anywhere, and it
+> grid-connects to the nearest active in-range access point *of that network* via
+> `GridConnection.create` through the AP's node - so every bridged channel paths
+> through the serving AP, which is the balance rule working exactly as designed.
+> AE2's own WAPs serve bridges (gametested - the retroactive promotion landed);
+> binary availability and sub-second handover on AP loss both gametested. The Dense
+> WAP implements AE2's public `IWirelessAccessPoint` (dense carrier, fixed 32 range,
+> per-BE adjustable for future boosting). Same-dimension only; association tiebreak
+> is position hash as specced. `/ae2logistics wireless status` is the diagnostic.
 
 #### The Dense Wireless Access Point
 

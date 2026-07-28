@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "ae2logistics:block/dense_wireless_access_point"
+    }
+  }
+}

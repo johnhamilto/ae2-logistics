@@ -64,9 +64,13 @@ below has an in-game chapter. The quick tour:
   the P2P Frequency Terminal names, lists, and retunes everything.
 - **Fleet config** — the ME Config Terminal audits and edits every device, snapshots
   for diffs; the Config Blueprint reapplies a region's configuration.
+- **Wireless** — the ME Wireless Bridge joins machines to the network inside
+  Wireless Access Point coverage (AE2's or the Dense WAP's), channels drawn through
+  the serving access point, with automatic handover.
 
 Commands (permission 2): `/ae2logistics signal set|get|list|card`,
-`/ae2logistics mesh list|status|relink`, `/ae2logistics query <expression>`.
+`/ae2logistics mesh list|status|relink`, `/ae2logistics query <expression>`,
+`/ae2logistics wireless status`.
 
 ## Building
 

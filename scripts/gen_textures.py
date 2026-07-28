@@ -716,6 +716,48 @@ LOGIC_CORE_SIDE = """
 
 write_png(OUT / "block" / "logic_core.png", LOGIC_CORE_SIDE, PART)
 
+DENSE_WAP_SIDE = """
+################
+#DDDDDDDDDDDDDD#
+#DLMMMMMMMMMMLD#
+#DM..c....c..MD#
+#DM.c......c.MD#
+#DM.c.CCCC.c.MD#
+#DM..CCCCCC..MD#
+#DM..CCLLCC..MD#
+#DM..CCLLCC..MD#
+#DM..CCCCCC..MD#
+#DM.c.CCCC.c.MD#
+#DM.c......c.MD#
+#DM..c....c..MD#
+#DLMMMMMMMMMMLD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "block" / "dense_wireless_access_point.png", DENSE_WAP_SIDE, PART)
+
+WIRELESS_BRIDGE_SIDE = """
+################
+#DDDDDDDDDDDDDD#
+#DLMMMMMMMMMMLD#
+#DM..........MD#
+#DM....cc....MD#
+#DM..cc..cc..MD#
+#DM.c..CC..c.MD#
+#DM...CCCC...MD#
+#DM...CCCC...MD#
+#DM.c..CC..c.MD#
+#DM..cc..cc..MD#
+#DM....cc....MD#
+#DM.rr.......MD#
+#DLMMMMMMMMMMLD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "block" / "wireless_bridge.png", WIRELESS_BRIDGE_SIDE, PART)
+
 REGULUS = dict(PART)
 REGULUS.update({
     "q": (255, 138, 122, 255),  # regulus glow

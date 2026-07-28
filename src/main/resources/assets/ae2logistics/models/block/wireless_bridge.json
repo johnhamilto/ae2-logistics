@@ -1,0 +1,47 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "ae2logistics:block/wireless_bridge",
+    "face": "ae2logistics:block/wireless_bridge",
+    "frame": "ae2:block/smooth_sky_stone_block"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [0, 0, 0],
+      "to": [16, 3, 16],
+      "faces": {
+        "north": { "uv": [0, 13, 16, 16], "texture": "#frame", "cullface": "north" },
+        "south": { "uv": [0, 13, 16, 16], "texture": "#frame", "cullface": "south" },
+        "east": { "uv": [0, 13, 16, 16], "texture": "#frame", "cullface": "east" },
+        "west": { "uv": [0, 13, 16, 16], "texture": "#frame", "cullface": "west" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#frame" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#frame", "cullface": "down" }
+      }
+    },
+    {
+      "name": "column",
+      "from": [4, 3, 4],
+      "to": [12, 13, 12],
+      "faces": {
+        "north": { "uv": [4, 3, 12, 13], "texture": "#face" },
+        "south": { "uv": [4, 3, 12, 13], "texture": "#face" },
+        "east": { "uv": [4, 3, 12, 13], "texture": "#face" },
+        "west": { "uv": [4, 3, 12, 13], "texture": "#face" }
+      }
+    },
+    {
+      "name": "cap",
+      "from": [2, 13, 2],
+      "to": [14, 15, 14],
+      "faces": {
+        "north": { "uv": [2, 1, 14, 3], "texture": "#frame" },
+        "south": { "uv": [2, 1, 14, 3], "texture": "#frame" },
+        "east": { "uv": [2, 1, 14, 3], "texture": "#frame" },
+        "west": { "uv": [2, 1, 14, 3], "texture": "#frame" },
+        "up": { "uv": [2, 2, 14, 14], "texture": "#face" },
+        "down": { "uv": [2, 2, 14, 14], "texture": "#frame" }
+      }
+    }
+  ]
+}

@@ -235,6 +235,38 @@ public class AE2Logistics {
             MENUS.register("logic_core", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.LogicCoreMenu::new));
 
+    /** Where a placed Wireless Bridge should look for its network: an access point position. */
+    public static final Supplier<DataComponentType<net.minecraft.core.GlobalPos>> BRIDGE_ANCHOR =
+            DATA_COMPONENTS.register("bridge_anchor",
+                    () -> DataComponentType.<net.minecraft.core.GlobalPos>builder()
+                            .persistent(net.minecraft.core.GlobalPos.CODEC).build());
+
+    public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.DenseWapBlock> DENSE_WAP =
+            BLOCKS.register("dense_wireless_access_point",
+                    () -> new io.github.johnhamilto.ae2logistics.block.DenseWapBlock(
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+    public static final DeferredItem<BlockItem> DENSE_WAP_ITEM = ITEMS
+            .registerSimpleBlockItem(DENSE_WAP);
+    public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.DenseWapBlockEntity>> DENSE_WAP_BE =
+            BLOCK_ENTITIES.register("dense_wireless_access_point", () -> BlockEntityType.Builder
+                    .of(io.github.johnhamilto.ae2logistics.block.DenseWapBlockEntity::new,
+                            DENSE_WAP.get())
+                    .build(null));
+
+    public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlock> WIRELESS_BRIDGE =
+            BLOCKS.register("wireless_bridge",
+                    () -> new io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlock(
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+    public static final DeferredItem<io.github.johnhamilto.ae2logistics.item.WirelessBridgeItem> WIRELESS_BRIDGE_ITEM =
+            ITEMS.register("wireless_bridge",
+                    () -> new io.github.johnhamilto.ae2logistics.item.WirelessBridgeItem(
+                            WIRELESS_BRIDGE.get(), new Item.Properties()));
+    public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlockEntity>> WIRELESS_BRIDGE_BE =
+            BLOCK_ENTITIES.register("wireless_bridge", () -> BlockEntityType.Builder
+                    .of(io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlockEntity::new,
+                            WIRELESS_BRIDGE.get())
+                    .build(null));
+
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock> GUARDED_PROVIDER =
             BLOCKS.register("guarded_pattern_provider",
                     () -> new io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock(
@@ -330,6 +362,8 @@ public class AE2Logistics {
                         output.accept(GUARDED_PROVIDER_ITEM.get());
                         output.accept(JOB_SCHEDULER_ITEM.get());
                         output.accept(LOGIC_CORE_ITEM.get());
+                        output.accept(DENSE_WAP_ITEM.get());
+                        output.accept(WIRELESS_BRIDGE_ITEM.get());
                         output.accept(SIGNAL_CARD.get());
                         output.accept(CONSTANT_PART.get());
                         output.accept(THRESHOLD_PART.get());
@@ -389,6 +423,10 @@ public class AE2Logistics {
                     AECapabilities.IN_WORLD_GRID_NODE_HOST, JOB_SCHEDULER_BE.get(), (be, context) -> be);
             event.registerBlockEntity(
                     AECapabilities.IN_WORLD_GRID_NODE_HOST, LOGIC_CORE_BE.get(), (be, context) -> be);
+            event.registerBlockEntity(
+                    AECapabilities.IN_WORLD_GRID_NODE_HOST, DENSE_WAP_BE.get(), (be, context) -> be);
+            event.registerBlockEntity(
+                    AECapabilities.IN_WORLD_GRID_NODE_HOST, WIRELESS_BRIDGE_BE.get(), (be, context) -> be);
         });
 
         modBus.addListener((RegisterPayloadHandlersEvent event) -> {
@@ -464,6 +502,7 @@ public class AE2Logistics {
         NeoForge.EVENT_BUS.addListener(SignalCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.MeshCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.QueryCommands::register);
+        NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.WirelessCommands::register);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             AE2LogisticsClient.initialize(modBus);
