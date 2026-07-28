@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {"item": "ae2logistics:register_bank"},
+    {"item": "ae2logistics:regulus_crystal"},
+    {"item": "ae2:engineering_processor"}
+  ],
+  "result": {"count": 1, "id": "ae2logistics:logic_core"}
+}

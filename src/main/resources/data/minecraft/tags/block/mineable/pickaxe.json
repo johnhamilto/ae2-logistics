@@ -3,6 +3,7 @@
     "ae2logistics:register_bank",
     "ae2logistics:pattern_workbench",
     "ae2logistics:guarded_pattern_provider",
-    "ae2logistics:job_scheduler"
+    "ae2logistics:job_scheduler",
+    "ae2logistics:logic_core"
   ]
 }

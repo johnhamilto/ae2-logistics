@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.12.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (74 tests, run
+Status as of v0.13.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (78 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -26,6 +26,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F11 polish | Stateless P2P names (on-tunnel attachments), mesh rows + rename-all in the terminal, 9-slot endpoint filters (batch-aware), status + cabled-loop diagnostics, /ae2logistics mesh | 0.6.0 |
 | Infra | Gametest harness + CI, in-game guide + tablet, generated art pipeline | 0.1.0+ |
 | Infra | Hardening: fluid/energy mesh E2E, scheduler completion loop, catalyst execution phase all gametested; /ae2logistics query command; upstream PR drafts in docs/upstream/ | 0.12.0 |
+| F8 | ME Logic Core: eight virtual logic entries on the host grid's scheduler, per-entry channel cost, TransferableSettings - F8 complete (virtual storage devices deferred) | 0.13.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -33,13 +34,14 @@ representation).
 
 ## Next session
 
-1. **PLAYTEST.** Jack is testing when home. Fourteen GUI surfaces and two use-item
+1. **PLAYTEST.** Jack is testing when home. Fifteen GUI surfaces and two use-item
    flows (blueprint corners, memory cards) are machine-verified and human-untouched;
    the session should start from his notes and fix friction before anything new.
    Everything programmatic is gametested, so GUI fixes sit on verified cores.
-2. Then the remaining tier by pick: **F8 virtual-node logic core** (the last big
-   design-doc feature), F11.5 wireless, or scheduler stretch goals (deadlines,
-   cancel-and-replan preemption).
+2. In flight this session (2026-07-28): F11.5 wireless connectivity, scheduler
+   stretch (deadlines, preemption, rule transfer), test-debt burn-down, polish batch
+   (advancements, server config, publishing kit).
+3. Later: F8 slice 2 (virtual storage devices with face mapping), F11.6 tunnel types.
 
 ## Longer term
 - **F4 job scheduler/policy**: admission control is feasible today for jobs we

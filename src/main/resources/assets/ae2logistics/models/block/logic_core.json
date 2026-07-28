@@ -1,8 +1,8 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "ae2logistics:block/job_scheduler",
-    "face": "ae2logistics:block/job_scheduler",
+    "particle": "ae2logistics:block/logic_core",
+    "face": "ae2logistics:block/logic_core",
     "frame": "ae2:block/smooth_sky_stone_block"
   },
   "elements": [
@@ -20,14 +20,14 @@
       }
     },
     {
-      "name": "column",
-      "from": [4, 3, 4],
-      "to": [12, 13, 12],
+      "name": "rack",
+      "from": [3, 3, 3],
+      "to": [13, 13, 13],
       "faces": {
-        "north": { "uv": [4, 3, 12, 13], "texture": "#face" },
-        "south": { "uv": [4, 3, 12, 13], "texture": "#face" },
-        "east": { "uv": [4, 3, 12, 13], "texture": "#face" },
-        "west": { "uv": [4, 3, 12, 13], "texture": "#face" }
+        "north": { "uv": [3, 3, 13, 13], "texture": "#face" },
+        "south": { "uv": [3, 3, 13, 13], "texture": "#face" },
+        "east": { "uv": [3, 3, 13, 13], "texture": "#face" },
+        "west": { "uv": [3, 3, 13, 13], "texture": "#face" }
       }
     },
     {

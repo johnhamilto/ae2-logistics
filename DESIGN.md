@@ -26,8 +26,8 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-28, v0.11.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (70 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-28, v0.13.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (78 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
 > **F3 complete** - Guarded Pattern Provider (plan-time hiding + toggleable push
 > gating, both layers) and Guarded Pattern wrappers, with dynamic priority bound to
@@ -39,7 +39,9 @@ upgrade cards, terminals, keys in storage — rather than by bolting on a foreig
 > Terminal with tunnel-resident frequency names; **F11.2/3/4** as one Universal Mesh
 > Endpoint part (five transports, named frequencies, nine-slot whitelists, true
 > provider-P2P with per-machine blocking at range, mesh-ME grid bridging via a virtual
-> quantum-bridge star, and status diagnostics with cabled-loop detection). Memory
+> quantum-bridge star, and status diagnostics with cabled-loop detection); **F8** the
+> ME Logic Core - eight virtual logic nodes as list entries in one block, on the same
+> scheduler, each requiring a channel (the deliberate hard gate). Memory
 > cards carry every part's settings; **Regulus** is the mod's themed resource
 > (in-world transform, prices the control tier). Current status, queue, and known debt
 > live in ROADMAP.md; per-feature notes below are marked "As built".
@@ -560,6 +562,20 @@ nicer as a list inside one block than as 40 cable parts.
 
 **Risk.** Highest *design* risk (balance, legibility) even though the API risk is low.
 Consider shipping this last, or as a config-gated module.
+
+> **As built (v0.13.0).** Shipped as the **ME Logic Core**, deliberately narrower than
+> the full virtual-subnet vision: the core hosts up to **eight logic entries** (every
+> part evaluator except the world-facing Redstone Port) as non-in-world grid nodes
+> wired to the core's dense node with `GridConnection.create` - they join the *host*
+> grid's signal scheduler rather than an internal subnet, so one block replaces a wall
+> of cable parts with identical semantics (gametested: same-tick chaining, stock
+> sensing through the entry's own node, TransferableSettings round-trip). The balance
+> gate resolved the doc's open question: physical parts stay channel-free, but **every
+> core entry requires a channel** drawn through the core (a full core is nine channels
+> of pressure; a glass segment provably cannot light it - gametested). Entries without
+> a channel evaluate to nothing. Virtual storage devices with face mapping remain a
+> possible slice 2; node lifecycle followed the predicted teardown-and-rebuild shape
+> (managed nodes are single-use - fresh node per enable).
 
 ---
 

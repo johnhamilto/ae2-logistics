@@ -114,7 +114,7 @@ public class AE2Logistics {
                             .build());
 
     public static final DeferredBlock<RegisterBankBlock> REGISTER_BANK = BLOCKS.register("register_bank",
-            () -> new RegisterBankBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
+            () -> new RegisterBankBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
     public static final DeferredItem<BlockItem> REGISTER_BANK_ITEM = ITEMS.registerSimpleBlockItem(REGISTER_BANK);
     public static final Supplier<BlockEntityType<RegisterBankBlockEntity>> REGISTER_BANK_BE = BLOCK_ENTITIES
             .register("register_bank", () -> BlockEntityType.Builder
@@ -195,7 +195,7 @@ public class AE2Logistics {
 
     public static final DeferredBlock<PatternWorkbenchBlock> PATTERN_WORKBENCH = BLOCKS.register(
             "pattern_workbench",
-            () -> new PatternWorkbenchBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
+            () -> new PatternWorkbenchBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
     public static final DeferredItem<BlockItem> PATTERN_WORKBENCH_ITEM = ITEMS
             .registerSimpleBlockItem(PATTERN_WORKBENCH);
     public static final Supplier<BlockEntityType<PatternWorkbenchBlockEntity>> PATTERN_WORKBENCH_BE = BLOCK_ENTITIES
@@ -208,7 +208,7 @@ public class AE2Logistics {
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.JobSchedulerBlock> JOB_SCHEDULER =
             BLOCKS.register("job_scheduler",
                     () -> new io.github.johnhamilto.ae2logistics.block.JobSchedulerBlock(
-                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
     public static final DeferredItem<BlockItem> JOB_SCHEDULER_ITEM = ITEMS
             .registerSimpleBlockItem(JOB_SCHEDULER);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity>> JOB_SCHEDULER_BE =
@@ -220,10 +220,25 @@ public class AE2Logistics {
             MENUS.register("job_scheduler", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.JobSchedulerMenu::new));
 
+    public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.LogicCoreBlock> LOGIC_CORE =
+            BLOCKS.register("logic_core",
+                    () -> new io.github.johnhamilto.ae2logistics.block.LogicCoreBlock(
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+    public static final DeferredItem<BlockItem> LOGIC_CORE_ITEM = ITEMS
+            .registerSimpleBlockItem(LOGIC_CORE);
+    public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.LogicCoreBlockEntity>> LOGIC_CORE_BE =
+            BLOCK_ENTITIES.register("logic_core", () -> BlockEntityType.Builder
+                    .of(io.github.johnhamilto.ae2logistics.block.LogicCoreBlockEntity::new,
+                            LOGIC_CORE.get())
+                    .build(null));
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.LogicCoreMenu>> LOGIC_CORE_MENU =
+            MENUS.register("logic_core", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.LogicCoreMenu::new));
+
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock> GUARDED_PROVIDER =
             BLOCKS.register("guarded_pattern_provider",
                     () -> new io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock(
-                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
     public static final DeferredItem<BlockItem> GUARDED_PROVIDER_ITEM = ITEMS
             .registerSimpleBlockItem(GUARDED_PROVIDER);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlockEntity>> GUARDED_PROVIDER_BE =
@@ -314,6 +329,7 @@ public class AE2Logistics {
                         output.accept(PATTERN_WORKBENCH_ITEM.get());
                         output.accept(GUARDED_PROVIDER_ITEM.get());
                         output.accept(JOB_SCHEDULER_ITEM.get());
+                        output.accept(LOGIC_CORE_ITEM.get());
                         output.accept(SIGNAL_CARD.get());
                         output.accept(CONSTANT_PART.get());
                         output.accept(THRESHOLD_PART.get());
@@ -371,6 +387,8 @@ public class AE2Logistics {
                     AECapabilities.IN_WORLD_GRID_NODE_HOST, GUARDED_PROVIDER_BE.get(), (be, context) -> be);
             event.registerBlockEntity(
                     AECapabilities.IN_WORLD_GRID_NODE_HOST, JOB_SCHEDULER_BE.get(), (be, context) -> be);
+            event.registerBlockEntity(
+                    AECapabilities.IN_WORLD_GRID_NODE_HOST, LOGIC_CORE_BE.get(), (be, context) -> be);
         });
 
         modBus.addListener((RegisterPayloadHandlersEvent event) -> {
@@ -416,6 +434,9 @@ public class AE2Logistics {
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureSchedulerPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureSchedulerPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureSchedulerPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureCoreEntryPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureCoreEntryPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureCoreEntryPayload::handle);
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {

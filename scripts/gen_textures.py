@@ -695,6 +695,27 @@ SCHEDULER_SIDE = """
 
 write_png(OUT / "block" / "job_scheduler.png", SCHEDULER_SIDE, PART)
 
+LOGIC_CORE_SIDE = """
+################
+#DDDDDDDDDDDDDD#
+#DLMMMMMMMMMMLD#
+#DM..........MD#
+#DM.CC.cc.CC.MD#
+#DM..........MD#
+#DM.cc.CC.cc.MD#
+#DM..........MD#
+#DM.CC.cc.cc.MD#
+#DM..........MD#
+#DM.cc.cc.CC.MD#
+#DM..........MD#
+#DM.rr.......MD#
+#DLMMMMMMMMMMLD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "block" / "logic_core.png", LOGIC_CORE_SIDE, PART)
+
 REGULUS = dict(PART)
 REGULUS.update({
     "q": (255, 138, 122, 255),  # regulus glow
@@ -728,6 +749,7 @@ write_png(OUT / "part" / "counter.png", PART_COUNTER, PART)
 write_png(OUT / "part" / "timer.png", PART_TIMER, PART)
 write_panel(OUT / "gui" / "logic_panel.png", 200, 166)
 write_panel(OUT / "gui" / "mesh_panel.png", 200, 222)
+write_panel(OUT / "gui" / "core_panel.png", 200, 240)
 
 write_png(OUT / "block" / "register_bank_side.png", REGISTER_BANK_SIDE, STEEL)
 write_png(OUT / "block" / "register_bank_top.png", REGISTER_BANK_TOP, STEEL)

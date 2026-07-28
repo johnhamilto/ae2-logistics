@@ -54,6 +54,9 @@ below has an in-game chapter. The quick tour:
   in water) prices the control tier.
 - **Scheduling** — the ME Job Scheduler keeps stock with admission control, class
   pools, guards, and rate limits.
+- **Logic Core** — eight virtual logic nodes as list entries in one block, on the
+  same deterministic scheduler; each entry costs a channel, so cores want dense
+  cable or a controller face.
 - **Queries** — `tag:c:ores AND NOT craftable` in the ME Query Terminal, counted into
   signals by the Query Sensor, exported by the Query Export Bus; test one with
   `/ae2logistics query <expression>` while looking at a network.
