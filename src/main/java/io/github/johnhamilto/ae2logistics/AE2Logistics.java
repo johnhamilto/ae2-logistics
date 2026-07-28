@@ -154,6 +154,19 @@ public class AE2Logistics {
                             .networkSynchronized(io.github.johnhamilto.ae2logistics.crafting.GuardedPatternData.STREAM_CODEC)
                             .build());
 
+    public static final Supplier<DataComponentType<net.minecraft.core.BlockPos>> BLUEPRINT_CORNER =
+            DATA_COMPONENTS.register("blueprint_corner",
+                    () -> DataComponentType.<net.minecraft.core.BlockPos>builder()
+                            .persistent(net.minecraft.core.BlockPos.CODEC).build());
+    public static final Supplier<DataComponentType<java.util.List<io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem.Entry>>> BLUEPRINT_DATA =
+            DATA_COMPONENTS.register("blueprint_data",
+                    () -> DataComponentType.<java.util.List<io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem.Entry>>builder()
+                            .persistent(io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem.Entry.LIST_CODEC)
+                            .build());
+    public static final DeferredItem<Item> CONFIG_BLUEPRINT = ITEMS.register("config_blueprint",
+            () -> new io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem(
+                    new Item.Properties().stacksTo(1)));
+
     public static final DeferredItem<Item> GUARDED_PATTERN = ITEMS.register("guarded_pattern",
             () -> PatternDetailsHelper
                     .encodedPatternItemBuilder(io.github.johnhamilto.ae2logistics.crafting.GuardedPattern::new)
@@ -191,6 +204,21 @@ public class AE2Logistics {
 
     public static final Supplier<MenuType<PatternWorkbenchMenu>> PATTERN_WORKBENCH_MENU = MENUS.register(
             "pattern_workbench", () -> IMenuTypeExtension.create(PatternWorkbenchMenu::new));
+
+    public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.JobSchedulerBlock> JOB_SCHEDULER =
+            BLOCKS.register("job_scheduler",
+                    () -> new io.github.johnhamilto.ae2logistics.block.JobSchedulerBlock(
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL)));
+    public static final DeferredItem<BlockItem> JOB_SCHEDULER_ITEM = ITEMS
+            .registerSimpleBlockItem(JOB_SCHEDULER);
+    public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity>> JOB_SCHEDULER_BE =
+            BLOCK_ENTITIES.register("job_scheduler", () -> BlockEntityType.Builder
+                    .of(io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity::new,
+                            JOB_SCHEDULER.get())
+                    .build(null));
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.JobSchedulerMenu>> JOB_SCHEDULER_MENU =
+            MENUS.register("job_scheduler", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.JobSchedulerMenu::new));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock> GUARDED_PROVIDER =
             BLOCKS.register("guarded_pattern_provider",
@@ -285,6 +313,7 @@ public class AE2Logistics {
                         output.accept(REGISTER_BANK_ITEM.get());
                         output.accept(PATTERN_WORKBENCH_ITEM.get());
                         output.accept(GUARDED_PROVIDER_ITEM.get());
+                        output.accept(JOB_SCHEDULER_ITEM.get());
                         output.accept(SIGNAL_CARD.get());
                         output.accept(CONSTANT_PART.get());
                         output.accept(THRESHOLD_PART.get());
@@ -302,6 +331,7 @@ public class AE2Logistics {
                         output.accept(QUERY_SENSOR_PART.get());
                         output.accept(QUERY_EXPORT_BUS_PART.get());
                         output.accept(CONFIG_TERMINAL_PART.get());
+                        output.accept(CONFIG_BLUEPRINT.get());
                         output.accept(P2P_TERMINAL_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(REGULUS_CRYSTAL.get());
@@ -339,6 +369,8 @@ public class AE2Logistics {
                     AECapabilities.IN_WORLD_GRID_NODE_HOST, REGISTER_BANK_BE.get(), (be, context) -> be);
             event.registerBlockEntity(
                     AECapabilities.IN_WORLD_GRID_NODE_HOST, GUARDED_PROVIDER_BE.get(), (be, context) -> be);
+            event.registerBlockEntity(
+                    AECapabilities.IN_WORLD_GRID_NODE_HOST, JOB_SCHEDULER_BE.get(), (be, context) -> be);
         });
 
         modBus.addListener((RegisterPayloadHandlersEvent event) -> {
@@ -381,6 +413,9 @@ public class AE2Logistics {
             registrar.playToClient(io.github.johnhamilto.ae2logistics.menu.ConfigTerminalDataPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigTerminalDataPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigTerminalDataPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureSchedulerPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureSchedulerPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureSchedulerPayload::handle);
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {

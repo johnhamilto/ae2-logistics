@@ -26,5 +26,7 @@
   "block.ae2logistics.guarded_pattern_provider": "Guarded Pattern Provider",
   "itemGroup.ae2logistics": "AE2 Logistics",
   "tooltip.ae2logistics.signal_card.unbound": "Unbound - use /ae2logistics signal card <channel>",
-  "item.ae2logistics.config_terminal": "ME Config Terminal"
+  "item.ae2logistics.config_terminal": "ME Config Terminal",
+  "item.ae2logistics.config_blueprint": "Config Blueprint",
+  "block.ae2logistics.job_scheduler": "ME Job Scheduler"
 }

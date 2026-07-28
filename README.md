@@ -4,7 +4,7 @@ A control plane for Applied Energistics 2: signals, logic parts, job policy, and
 observability, built in AE2's own idiom. The full design rationale lives in
 [DESIGN.md](DESIGN.md).
 
-**Status: v0.9.x — the control plane is real, it steers crafting, and it speaks.** Signals are
+**Status: v0.11.x — the control plane is complete enough to run a base.** Signals are
 a first-class AE2 key type computed by ten logic parts on a deterministic
 per-network scheduler, watched live on the ME Tracer Terminal, and bridged across
 networks by mesh endpoints. The ME Job Monitor turns crafting CPU activity, stalls,
@@ -17,8 +17,12 @@ expressions (mod:/tag:/name:/count/craftable/damage, with live signals as terms)
 edited in a Query Terminal with live results, counted into signals by a Query
 Sensor, and exported by a Query Export Bus — the generalized tag-bus. The ME
 Config Terminal audits and edits every configurable device on the network in
-place — settings, priorities, and fleet-wide copy/paste of memory-card
-configuration.
+place — settings, priorities, fleet-wide copy/paste, and persistent snapshots
+with a changed-only diff; the Config Blueprint captures a region's device
+configuration and reapplies it after a rebuild. The ME Job Scheduler adds the
+policy layer autocrafting never had: stock rules with admission control (jobs
+that would stall never start), class-pooled CPUs that respect AE2's Player-Only
+reservation, guards, and rate limits.
 Adaptive Processing Patterns match ingredients by tag, fuzzy identity, damage band,
 or explicit alternatives, with catalyst inputs credited back. Universal Mesh
 Endpoints carry redstone, items, fluids, energy, signals, and ME itself over named
@@ -29,7 +33,7 @@ linking with names that live on the tunnels themselves, lists every mesh frequen
 with live status (including cabled-loop detection), and renames a whole mesh in one
 action. Memory cards carry every part's settings. See [ROADMAP.md](ROADMAP.md) for
 whats next and the in-game guide (craft the AE2 Logistics Guide) for how to use
-everything. Verified by a 67-test in-game gametest suite on every push.
+everything. Verified by a 70-test in-game gametest suite on every push.
 
 ## Trying it
 

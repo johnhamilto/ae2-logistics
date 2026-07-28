@@ -647,6 +647,54 @@ PART_CONFIG_TERMINAL = """
 
 write_png(OUT / "part" / "config_terminal.png", PART_CONFIG_TERMINAL, PART)
 
+BLUEPRINT = dict(CARD)
+BLUEPRINT.update({
+    "B": (58, 108, 200, 255),   # blueprint blue
+    "W": (196, 214, 240, 255),  # draft lines
+})
+
+ITEM_CONFIG_BLUEPRINT = """
+................
+.OOOOOOOOOOOOOO.
+.OBBBBBBBBBBBSO.
+.OBWWWWWBBWWBSO.
+.OBBBBBBBBBBBSO.
+.OBWWBBWWWWWBSO.
+.OBWWBBBBBBBBSO.
+.OBBBBBWWWBBBSO.
+.OBWWWWWBBBBBSO.
+.OBBBBBBBWWBBSO.
+.OBWWBBWWWWWBSO.
+.OBBBBBBBBBBBSO.
+.OBrrBBBBBBBBSO.
+.OSSSSSSSSSSSSO.
+.OOOOOOOOOOOOOO.
+................
+"""
+
+write_png(OUT / "item" / "config_blueprint.png", ITEM_CONFIG_BLUEPRINT, BLUEPRINT)
+
+SCHEDULER_SIDE = """
+################
+#DDDDDDDDDDDDDD#
+#DLMMMMMMMMMMLD#
+#DM..........MD#
+#DM.CC.......MD#
+#DM.CCCCCC...MD#
+#DM..........MD#
+#DM.cc.......MD#
+#DM.cccccccc.MD#
+#DM..........MD#
+#DM.rr.......MD#
+#DM.rrcccc...MD#
+#DM..........MD#
+#DLMMMMMMMMMMLD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "block" / "job_scheduler.png", SCHEDULER_SIDE, PART)
+
 REGULUS = dict(PART)
 REGULUS.update({
     "q": (255, 138, 122, 255),  # regulus glow

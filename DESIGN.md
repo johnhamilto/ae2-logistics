@@ -26,8 +26,8 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-28, v0.10.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (67 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-28, v0.11.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (70 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
 > **F3 complete** - Guarded Pattern Provider (plan-time hiding + toggleable push
 > gating, both layers) and Guarded Pattern wrappers, with dynamic priority bound to
@@ -368,6 +368,21 @@ invasive. **Investigate before speccing further.**
 **Interaction with prior art.** ME Requester already does stock-keeping with batch sizing;
 F4 should *complement* it (schedule requester-issued jobs politely) rather than replace it.
 
+> **As built (v0.11.0).** The open question resolved exactly as suspected: AE2 selects
+> CPUs internally for foreign jobs, but `submitJob` takes an explicit CPU - so F4
+> holds jobs BEFORE submission and steers the ones it originates. The **ME Job
+> Scheduler** block runs four stock rules (target, floor, batch, class, guard
+> channel) through a per-rule state machine: plan asynchronously, then admit only
+> when the plan is complete (provably-stalling jobs never start - the
+> ICraftingProvider-issue motivation, delivered) AND a class-pool CPU is free.
+> Pools ride the named-CPU convention (bulk*/unnamed vs maint*), and CPUs set to
+> AE2's own Player-Only mode are never taken - the interactive reservation composes
+> from upstream instead of fighting it. Attempts rate-limit at ten seconds with the
+> defer reason held visible through the wait. Deadlines and preemption remain
+> stretch; job classes, reservation, admission control, and rate limiting shipped.
+> (One bug for the annals: the rate-limit sentinel `Long.MIN_VALUE` overflowed the
+> window subtraction, making the scheduler wait forever - caught by the admission gametest.)
+
 ---
 
 ### F5 — ME Tracer (observability)
@@ -507,6 +522,13 @@ other addons to opt in.
 > writes gate on player.mayBuild() + level.mayInteract(terminal), which respects
 > adventure mode and protection mods. Deferred to a second slice: diff-since-snapshot
 > and the region blueprint item.
+>
+> **As built, second slice (v0.11.0).** Snapshots landed persistent-in-part (keyed
+> type+dimension+position, diffing settings+priority) with changed/new/gone coloring
+> and a differences-only filter. The **Config Blueprint** item captures a region
+> corner-to-corner - every AE2-based device plus ours via the TransferableSettings
+> bridge (our custom BEs do not extend AE2 bases) - and reapplies by relative
+> position, part side, and matching type at an anchor. Both gametested round-trip.
 
 ---
 

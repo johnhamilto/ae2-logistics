@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.10.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (67 tests, run
+Status as of v0.11.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (70 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -17,6 +17,8 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Resource | Regulus Crystal: first themed resource, in-world transform (charged certus + redstone + glowstone in water) | 0.8.0 |
 | F6 | Query language (mod/tag/name/count/craftable/stored/damage/signal + @refs), replicated library, Query Terminal + Query Sensor + Query Export Bus - F6 complete | 0.9.0 |
 | F7 | ME Config Terminal: audit + in-place edit of every configurable grid device, generic setting cycling, priorities, copy/paste-to-all-same-type (first slice) | 0.10.0 |
+| F7 | Persistent config snapshots with changed/new/gone diff filter; Config Blueprint region capture/apply item - F7 complete | 0.11.0 |
+| F4 | ME Job Scheduler: stock rules with admission control (plan-complete + free class-pool CPU), named-CPU pools respecting Player-Only, guards, rate limiting | 0.11.0 |
 | F9 | Adaptive processing patterns: fuzzy/bands/tag/any-of/catalyst + Pattern Workbench | 0.2.0-0.3.0 |
 | F11.1 | P2P Frequency Terminal (list, named frequencies, retune) | 0.3.0 |
 | F11.2-4 | Universal Mesh Endpoints: 5 transports, mesh + universal P2P + true provider P2P | 0.4.0-0.5.0 |
@@ -30,16 +32,15 @@ representation).
 
 ## Next session
 
-1. **Playtest feedback first** - twelve GUI surfaces now, all machine-verified, none
-   human-touched; friction fixes take priority over new systems. The backlog of
-   unplaytested UI is the project's biggest real risk.
-2. Then Jack's pick: **F7 second slice** (config snapshots with diff view, region
-   blueprint items) or **F4 job scheduler** (admission control for jobs we originate).
+1. **PLAYTEST.** Jack is testing when home. Fourteen GUI surfaces and two use-item
+   flows (blueprint corners, memory cards) are machine-verified and human-untouched;
+   the session should start from his notes and fix friction before anything new.
+   Everything programmatic is gametested, so GUI fixes sit on verified cores.
+2. Then the remaining tier by pick: **F8 virtual-node logic core** (the last big
+   design-doc feature), F11.5 wireless, or scheduler stretch goals (deadlines,
+   cancel-and-replan preemption).
 
 ## Longer term
-
-- **F7 second slice**: diff-since-snapshot, blueprint item (capture + reapply a
-  region's device configuration).
 - **F4 job scheduler/policy**: admission control is feasible today for jobs we
   originate (submitJob takes an explicit CPU); steering foreign jobs is the open part.
 - **F11.5 wireless machine connectivity** via WAP coverage + Dense WAP.
@@ -86,6 +87,10 @@ representation).
   contract (a query counting signals feeds back into its own sensor). Query Terminal
   previews cap at 6 sample rows; export bus scans up to 32 matching kinds per
   operation, 8 items per operation.
+- Scheduler rules poll every second and re-plan at most every ten; deferred reasons
+  stay visible through the retry window. Preemption and deadlines are unshipped
+  stretch goals. Only jobs the scheduler originates are steered - foreign jobs
+  (players, other mods) still use AE2's own CPU selection.
 - Config Terminal writes gate on mayBuild + mayInteract because AE2 19.2.x has no
   security station or permission API (removed upstream in this line); if AE2 regains
   one, gate on it. Session device list is capped at 256 rows; settings detail shows

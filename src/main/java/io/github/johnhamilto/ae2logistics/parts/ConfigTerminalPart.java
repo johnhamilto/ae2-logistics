@@ -27,11 +27,51 @@ public class ConfigTerminalPart extends AEBasePart {
     @PartModels
     public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/config_terminal"));
 
+    /** Persistent snapshot: device key -> settings state at snapshot time. */
+    private final java.util.HashMap<String, String> snapshot = new java.util.HashMap<>();
+
     public ConfigTerminalPart(IPartItem<?> partItem) {
         super(partItem);
         getMainNode()
                 .setFlags()
                 .setIdlePowerUsage(0.5);
+    }
+
+    public java.util.Map<String, String> snapshot() {
+        return snapshot;
+    }
+
+    public void takeSnapshot(java.util.List<io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.Device> devices) {
+        snapshot.clear();
+        for (var device : devices) {
+            if (device.valid()) {
+                snapshot.put(io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.snapshotKey(device),
+                        io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.snapshotValue(device));
+            }
+        }
+        getHost().markForSave();
+    }
+
+    @Override
+    public void writeToNBT(net.minecraft.nbt.CompoundTag data,
+            net.minecraft.core.HolderLookup.Provider registries) {
+        super.writeToNBT(data, registries);
+        var tag = new net.minecraft.nbt.CompoundTag();
+        for (var entry : snapshot.entrySet()) {
+            tag.putString(entry.getKey(), entry.getValue());
+        }
+        data.put("snapshot", tag);
+    }
+
+    @Override
+    public void readFromNBT(net.minecraft.nbt.CompoundTag data,
+            net.minecraft.core.HolderLookup.Provider registries) {
+        super.readFromNBT(data, registries);
+        snapshot.clear();
+        var tag = data.getCompound("snapshot");
+        for (var key : tag.getAllKeys()) {
+            snapshot.put(key, tag.getString(key));
+        }
     }
 
     @Override

@@ -34,7 +34,8 @@ import io.github.johnhamilto.ae2logistics.signal.SignalService;
  * An optional priority channel makes provider priority a live signal value.
  */
 public class GuardedPatternProviderBlockEntity extends BlockEntity
-        implements PatternProviderLogicHost, IInWorldGridNodeHost {
+        implements PatternProviderLogicHost, IInWorldGridNodeHost,
+        io.github.johnhamilto.ae2logistics.config.TransferableSettings {
 
     private static final IGridNodeListener<GuardedPatternProviderBlockEntity> NODE_LISTENER =
             new IGridNodeListener<>() {
@@ -222,6 +223,45 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
         priorityChannel = tag.contains("priorityChannel")
                 ? ResourceLocation.tryParse(tag.getString("priorityChannel"))
                 : null;
+    }
+
+    @Override
+    public net.minecraft.core.component.DataComponentMap exportTransferSettings(
+            @Nullable net.minecraft.world.entity.player.Player player) {
+        var builder = net.minecraft.core.component.DataComponentMap.builder();
+        logic.exportSettings(builder);
+        var tag = new CompoundTag();
+        if (guardChannel != null) {
+            tag.putString("guardChannel", guardChannel.toString());
+        }
+        tag.putInt("guardOp", guardOp);
+        tag.putLong("guardValue", guardValue);
+        tag.putBoolean("gateExecution", gateExecution);
+        if (priorityChannel != null) {
+            tag.putString("priorityChannel", priorityChannel.toString());
+        }
+        builder.set(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get(), tag);
+        return builder.build();
+    }
+
+    @Override
+    public void importTransferSettings(net.minecraft.core.component.DataComponentMap input,
+            @Nullable net.minecraft.world.entity.player.Player player) {
+        logic.importSettings(input, player);
+        var tag = input.get(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get());
+        if (tag != null) {
+            applyGuardConfig(
+                    tag.contains("guardChannel")
+                            ? ResourceLocation.tryParse(tag.getString("guardChannel"))
+                            : null,
+                    tag.getInt("guardOp"),
+                    tag.getLong("guardValue"),
+                    !tag.contains("gateExecution") || tag.getBoolean("gateExecution"),
+                    tag.contains("priorityChannel")
+                            ? ResourceLocation.tryParse(tag.getString("priorityChannel"))
+                            : null,
+                    logic.getPriority());
+        }
     }
 
     // --- host contract ---

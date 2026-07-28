@@ -25,7 +25,7 @@ public class ConfigTerminalMenu extends AbstractContainerMenu {
     public static final int MAX_ROWS = 256;
 
     public record Row(String itemId, String name, boolean hasPos, BlockPos pos, String dimension,
-            String summary, boolean hasPriority, int priority) {
+            String summary, boolean hasPriority, int priority, byte diff) {
     }
 
     public record SettingLine(String name, String value) {
@@ -151,6 +151,12 @@ public class ConfigTerminalMenu extends AbstractContainerMenu {
                     notice = "applied to " + applied;
                 }
             }
+            case ConfigTerminalActionPayload.ACTION_SNAPSHOT -> {
+                if (part != null) {
+                    part.takeSnapshot(devices);
+                    notice = "snapshot: " + part.snapshot().size() + " devices";
+                }
+            }
             default -> {
             }
         }
@@ -176,18 +182,22 @@ public class ConfigTerminalMenu extends AbstractContainerMenu {
         if (serverPlayer == null) {
             return;
         }
+        var snapshot = part != null ? part.snapshot() : java.util.Map.<String, String>of();
+        var diff = ConfigDeviceIndex.computeDiff(snapshot, devices);
         var outRows = new ArrayList<Row>();
         for (var device : devices) {
             if (outRows.size() >= MAX_ROWS) {
                 break;
             }
             if (!device.valid()) {
-                outRows.add(new Row("?", "(removed)", false, BlockPos.ZERO, "?", "", false, 0));
+                outRows.add(new Row("?", "(removed)", false, BlockPos.ZERO, "?", "", false, 0,
+                        ConfigDeviceIndex.DIFF_SAME));
                 continue;
             }
             var icon = device.icon();
             var priorityHost = device.priorityHost();
             var devicePos = device.pos();
+            var key = ConfigDeviceIndex.snapshotKey(device);
             outRows.add(new Row(
                     device.typeId(),
                     icon.isEmpty() ? device.typeId() : icon.getHoverName().getString(),
@@ -196,7 +206,17 @@ public class ConfigTerminalMenu extends AbstractContainerMenu {
                     device.dimension(),
                     device.settingsSummary(),
                     priorityHost != null,
-                    priorityHost != null ? priorityHost.getPriority() : 0));
+                    priorityHost != null ? priorityHost.getPriority() : 0,
+                    snapshot.isEmpty() ? ConfigDeviceIndex.DIFF_SAME
+                            : diff.getOrDefault(key, ConfigDeviceIndex.DIFF_NEW)));
+        }
+        for (var entry : diff.entrySet()) {
+            if (entry.getValue() == ConfigDeviceIndex.DIFF_GONE && outRows.size() < MAX_ROWS) {
+                var key = entry.getKey();
+                var typeId = key.contains("@") ? key.substring(0, key.indexOf('@')) : key;
+                outRows.add(new Row(typeId, "(missing) " + typeId, false, BlockPos.ZERO, "?",
+                        snapshot.getOrDefault(key, ""), false, 0, ConfigDeviceIndex.DIFF_GONE));
+            }
         }
 
         var settings = new ArrayList<SettingLine>();

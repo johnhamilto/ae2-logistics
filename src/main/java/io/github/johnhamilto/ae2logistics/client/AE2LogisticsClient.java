@@ -27,6 +27,7 @@ public final class AE2LogisticsClient {
             event.register(AE2Logistics.QUERY_SENSOR_MENU.get(), QuerySensorScreen::new);
             event.register(AE2Logistics.QUERY_EXPORT_BUS_MENU.get(), QueryExportBusScreen::new);
             event.register(AE2Logistics.CONFIG_TERMINAL_MENU.get(), ConfigTerminalScreen::new);
+            event.register(AE2Logistics.JOB_SCHEDULER_MENU.get(), JobSchedulerScreen::new);
         });
     }
 }

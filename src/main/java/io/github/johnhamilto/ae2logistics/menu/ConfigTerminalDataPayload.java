@@ -30,6 +30,7 @@ public record ConfigTerminalDataPayload(int containerId, List<ConfigTerminalMenu
                             buffer.writeUtf(row.summary());
                             buffer.writeBoolean(row.hasPriority());
                             buffer.writeVarInt(row.priority());
+                            buffer.writeByte(row.diff());
                         }
                         buffer.writeVarInt(payload.selected);
                         buffer.writeVarInt(payload.settings.size());
@@ -50,7 +51,7 @@ public record ConfigTerminalDataPayload(int containerId, List<ConfigTerminalMenu
                             rows.add(new ConfigTerminalMenu.Row(
                                     buffer.readUtf(), buffer.readUtf(), buffer.readBoolean(),
                                     buffer.readBlockPos(), buffer.readUtf(), buffer.readUtf(),
-                                    buffer.readBoolean(), buffer.readVarInt()));
+                                    buffer.readBoolean(), buffer.readVarInt(), buffer.readByte()));
                         }
                         int selected = buffer.readVarInt();
                         int settingCount = buffer.readVarInt();

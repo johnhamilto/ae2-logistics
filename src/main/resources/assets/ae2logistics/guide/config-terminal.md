@@ -29,5 +29,17 @@ position, so adventure mode and protection mods are respected. (AE2's security
 station no longer exists in this Minecraft line; when AE2 regains one, gating will
 follow it.)
 
-Snapshots with diff view and region blueprint items are planned follow-ups - see
-ROADMAP.md.
+# Snapshots and diff
+
+**Snap** records every device's settings and priority into the terminal (persistent).
+From then on the list colors devices against that baseline - gold for changed, cyan
+for new, red for missing - and the toggle button filters to differences only. "What
+did I break last week" becomes a two-click question.
+
+# Config Blueprint
+
+The Config Blueprint item is a multi-block memory card: click two corners to capture
+every AE2-based device in the box (positions, part sides, types, full settings), then
+sneak-click the minimum corner of a rebuilt region to reapply everything to matching
+devices. Sneak-use in the air clears it. Craft it from paper, a Regulus Crystal, and
+a certus quartz crystal.

@@ -32,6 +32,7 @@ public class ConfigTerminalScreen extends AbstractContainerScreen<ConfigTerminal
     private EditBox searchBox;
     private EditBox priorityBox;
     private int scroll;
+    private boolean changedOnly;
     private final List<Button> settingButtons = new ArrayList<>();
     private List<ConfigTerminalMenu.SettingLine> lastSettings = List.of();
 
@@ -46,11 +47,19 @@ public class ConfigTerminalScreen extends AbstractContainerScreen<ConfigTerminal
         super.init();
         searchBox = new EditBox(font, leftPos + 10, topPos + 16, 118, 14, Component.empty());
         searchBox.setMaxLength(64);
+        searchBox.setMaxLength(64);
         addRenderableWidget(searchBox);
 
-        addRenderableWidget(Button.builder(Component.literal("Refresh"), b -> send(
+        addRenderableWidget(Button.builder(Component.literal("Rf"), b -> send(
                 ConfigTerminalActionPayload.ACTION_REFRESH, -1, "", 0))
-                .bounds(leftPos + 134, topPos + 14, 48, 16).build());
+                .bounds(leftPos + 132, topPos + 14, 22, 16).build());
+        addRenderableWidget(Button.builder(Component.literal("Snap"), b -> send(
+                ConfigTerminalActionPayload.ACTION_SNAPSHOT, -1, "", 0))
+                .bounds(leftPos + 158, topPos + 14, 34, 16).build());
+        addRenderableWidget(Button.builder(Component.literal("\u0394"), b -> {
+            changedOnly = !changedOnly;
+            b.setMessage(Component.literal(changedOnly ? "\u0394!" : "\u0394"));
+        }).bounds(leftPos + 196, topPos + 14, 30, 16).build());
 
         priorityBox = new EditBox(font, leftPos + 34, topPos + DETAIL_Y + 44, 42, 12, Component.empty());
         priorityBox.setMaxLength(9);
@@ -116,6 +125,9 @@ public class ConfigTerminalScreen extends AbstractContainerScreen<ConfigTerminal
         var indices = new ArrayList<Integer>();
         for (int i = 0; i < menu.rows.size(); i++) {
             var row = menu.rows.get(i);
+            if (changedOnly && row.diff() == io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_SAME) {
+                continue;
+            }
             if (filter.isEmpty()
                     || row.name().toLowerCase(Locale.ROOT).contains(filter)
                     || row.itemId().toLowerCase(Locale.ROOT).contains(filter)
@@ -149,7 +161,13 @@ public class ConfigTerminalScreen extends AbstractContainerScreen<ConfigTerminal
             if (name.length() > 20) {
                 name = name.substring(0, 19) + "..";
             }
-            guiGraphics.drawString(font, name, LIST_X + 20, y, 0xC7D3DE, false);
+            int nameColor = switch (row.diff()) {
+                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_CHANGED -> 0xF5C542;
+                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_NEW -> 0x5CE2FF;
+                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_GONE -> 0xE0524E;
+                default -> 0xC7D3DE;
+            };
+            guiGraphics.drawString(font, name, LIST_X + 20, y, nameColor, false);
             var info = row.hasPos()
                     ? row.pos().getX() + "," + row.pos().getY() + "," + row.pos().getZ()
                     : "";

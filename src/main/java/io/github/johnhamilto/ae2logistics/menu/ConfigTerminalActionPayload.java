@@ -18,6 +18,7 @@ public record ConfigTerminalActionPayload(int containerId, byte action, int inde
     public static final byte ACTION_COPY = 4;
     public static final byte ACTION_PASTE = 5;
     public static final byte ACTION_PASTE_ALL = 6;
+    public static final byte ACTION_SNAPSHOT = 7;
 
     public static final Type<ConfigTerminalActionPayload> TYPE = new Type<>(AE2Logistics.id("config_action"));
 
