@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.9.0 (2026-07-27). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (65 tests, run
+Status as of v0.10.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (67 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -16,6 +16,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F3 | Guarded Pattern Provider (plan-time hiding + toggleable push gate) + Guarded Pattern wrappers + priority channels - F3 complete | 0.8.0 |
 | Resource | Regulus Crystal: first themed resource, in-world transform (charged certus + redstone + glowstone in water) | 0.8.0 |
 | F6 | Query language (mod/tag/name/count/craftable/stored/damage/signal + @refs), replicated library, Query Terminal + Query Sensor + Query Export Bus - F6 complete | 0.9.0 |
+| F7 | ME Config Terminal: audit + in-place edit of every configurable grid device, generic setting cycling, priorities, copy/paste-to-all-same-type (first slice) | 0.10.0 |
 | F9 | Adaptive processing patterns: fuzzy/bands/tag/any-of/catalyst + Pattern Workbench | 0.2.0-0.3.0 |
 | F11.1 | P2P Frequency Terminal (list, named frequencies, retune) | 0.3.0 |
 | F11.2-4 | Universal Mesh Endpoints: 5 transports, mesh + universal P2P + true provider P2P | 0.4.0-0.5.0 |
@@ -29,14 +30,16 @@ representation).
 
 ## Next session
 
-1. **Playtest feedback first** - eleven GUI surfaces now, all machine-verified, none
-   human-touched; friction fixes take priority over new systems.
-2. **F7 config terminal, design-first** - network-wide machine configuration surface,
-   now that F6 queries exist to select machines and filter contents.
+1. **Playtest feedback first** - twelve GUI surfaces now, all machine-verified, none
+   human-touched; friction fixes take priority over new systems. The backlog of
+   unplaytested UI is the project's biggest real risk.
+2. Then Jack's pick: **F7 second slice** (config snapshots with diff view, region
+   blueprint items) or **F4 job scheduler** (admission control for jobs we originate).
 
 ## Longer term
 
-- **F7 config terminal** (F6 shipped; F7 was gated on it).
+- **F7 second slice**: diff-since-snapshot, blueprint item (capture + reapply a
+  region's device configuration).
 - **F4 job scheduler/policy**: admission control is feasible today for jobs we
   originate (submitJob takes an explicit CPU); steering foreign jobs is the open part.
 - **F11.5 wireless machine connectivity** via WAP coverage + Dense WAP.
@@ -83,6 +86,10 @@ representation).
   contract (a query counting signals feeds back into its own sensor). Query Terminal
   previews cap at 6 sample rows; export bus scans up to 32 matching kinds per
   operation, 8 items per operation.
+- Config Terminal writes gate on mayBuild + mayInteract because AE2 19.2.x has no
+  security station or permission API (removed upstream in this line); if AE2 regains
+  one, gate on it. Session device list is capped at 256 rows; settings detail shows
+  the first four settings.
 - Untested by automation: fluid/energy mesh forwarding E2E (no reliable vanilla
   fixture; needs a test fixture block), GUI interactions, world save/load cycles,
   catalyst execution phase (planner phase is covered), per-named-CPU monitor channels

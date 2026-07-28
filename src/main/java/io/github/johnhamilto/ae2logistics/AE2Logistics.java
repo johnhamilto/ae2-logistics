@@ -252,6 +252,12 @@ public class AE2Logistics {
     public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.QuerySensorMenu>> QUERY_SENSOR_MENU =
             MENUS.register("query_sensor", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.QuerySensorMenu::new));
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.ConfigTerminalPart>> CONFIG_TERMINAL_PART =
+            part("config_terminal", io.github.johnhamilto.ae2logistics.parts.ConfigTerminalPart.class,
+                    io.github.johnhamilto.ae2logistics.parts.ConfigTerminalPart::new);
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.ConfigTerminalMenu>> CONFIG_TERMINAL_MENU =
+            MENUS.register("config_terminal", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.ConfigTerminalMenu::new));
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.QueryExportBusPart>> QUERY_EXPORT_BUS_PART =
             part("query_export_bus", io.github.johnhamilto.ae2logistics.parts.QueryExportBusPart.class,
                     io.github.johnhamilto.ae2logistics.parts.QueryExportBusPart::new);
@@ -295,6 +301,7 @@ public class AE2Logistics {
                         output.accept(QUERY_TERMINAL_PART.get());
                         output.accept(QUERY_SENSOR_PART.get());
                         output.accept(QUERY_EXPORT_BUS_PART.get());
+                        output.accept(CONFIG_TERMINAL_PART.get());
                         output.accept(P2P_TERMINAL_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(REGULUS_CRYSTAL.get());
@@ -368,6 +375,12 @@ public class AE2Logistics {
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureQueryPartPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureQueryPartPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureQueryPartPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigTerminalActionPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigTerminalActionPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigTerminalActionPayload::handle);
+            registrar.playToClient(io.github.johnhamilto.ae2logistics.menu.ConfigTerminalDataPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigTerminalDataPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigTerminalDataPayload::handle);
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {

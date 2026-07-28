@@ -15,7 +15,10 @@ from Regulus Crystal, formed AE2-style by dropping charged certus, redstone, and
 glowstone into water. A query language ties it together: named per-network
 expressions (mod:/tag:/name:/count/craftable/damage, with live signals as terms)
 edited in a Query Terminal with live results, counted into signals by a Query
-Sensor, and exported by a Query Export Bus — the generalized tag-bus.
+Sensor, and exported by a Query Export Bus — the generalized tag-bus. The ME
+Config Terminal audits and edits every configurable device on the network in
+place — settings, priorities, and fleet-wide copy/paste of memory-card
+configuration.
 Adaptive Processing Patterns match ingredients by tag, fuzzy identity, damage band,
 or explicit alternatives, with catalyst inputs credited back. Universal Mesh
 Endpoints carry redstone, items, fluids, energy, signals, and ME itself over named
@@ -26,7 +29,7 @@ linking with names that live on the tunnels themselves, lists every mesh frequen
 with live status (including cabled-loop detection), and renames a whole mesh in one
 action. Memory cards carry every part's settings. See [ROADMAP.md](ROADMAP.md) for
 whats next and the in-game guide (craft the AE2 Logistics Guide) for how to use
-everything. Verified by a 65-test in-game gametest suite on every push.
+everything. Verified by a 67-test in-game gametest suite on every push.
 
 ## Trying it
 

@@ -26,8 +26,8 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-27, v0.9.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (65 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-28, v0.10.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (67 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
 > **F3 complete** - Guarded Pattern Provider (plan-time hiding + toggleable push
 > gating, both layers) and Guarded Pattern wrappers, with dynamic priority bound to
@@ -492,6 +492,21 @@ generalized from patterns to *all* device config.
 **Open questions.** Discovery of third-party devices. AE2 has no generic "configurable
 device" interface, so v1 covers AE2's own devices plus ours, with an extension registry for
 other addons to opt in.
+
+> **As built (v0.10.0, first slice).** The open question dissolved on inspection: AE2
+> DOES have generic surfaces - IConfigurableObject (enum settings with
+> exportSettings()/importSettings() as string maps and Setting.setFromString for
+> cycling), IPriorityHost, and the memory-card exportSettings/importSettings pair on
+> every AEBasePart and AEBaseBlockEntity. The **ME Config Terminal** enumerates any
+> grid device exposing one of those (AE2's machines and third-party addons that build
+> on AE2's bases come along for free - better than an opt-in registry), searches by
+> name/type/setting text, cycles generic settings in place, edits priorities, and does
+> memory-card-semantics **Copy / Paste / Paste-to-all-same-type** remotely - the
+> audit-and-fix workflow. One divergence: the doc's "security-station gated" clause is
+> unimplementable because AE2 19.2.x has no security station or permission API at all;
+> writes gate on player.mayBuild() + level.mayInteract(terminal), which respects
+> adventure mode and protection mods. Deferred to a second slice: diff-since-snapshot
+> and the region blueprint item.
 
 ---
 

@@ -626,6 +626,27 @@ PART_QUERY_EXPORT_BUS = """
 
 write_png(OUT / "part" / "query_export_bus.png", PART_QUERY_EXPORT_BUS, PART)
 
+PART_CONFIG_TERMINAL = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.##########.D#
+#D.#........#.D#
+#D.#.CC.ccc.#.D#
+#D.#.CC.....#.D#
+#D.#........#.D#
+#D.#.cc.CCC.#.D#
+#D.#.cc.....#.D#
+#D.#........#.D#
+#D.##########.D#
+#D....rr......D#
+#D...LLLLLL...D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "config_terminal.png", PART_CONFIG_TERMINAL, PART)
+
 REGULUS = dict(PART)
 REGULUS.update({
     "q": (255, 138, 122, 255),  # regulus glow
