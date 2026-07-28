@@ -33,29 +33,37 @@ linking with names that live on the tunnels themselves, lists every mesh frequen
 with live status (including cabled-loop detection), and renames a whole mesh in one
 action. Memory cards carry every part's settings. See [ROADMAP.md](ROADMAP.md) for
 whats next and the in-game guide (craft the AE2 Logistics Guide) for how to use
-everything. Verified by a 70-test in-game gametest suite on every push.
+everything. Verified by a 74-test in-game gametest suite on every push.
 
 ## Trying it
 
-`make client`, create a world, then:
+`make client`, create a world, and craft the **AE2 Logistics Guide** — every system
+below has an in-game chapter. The quick tour:
 
-```
-/give @p ae2logistics:register_bank
-/ae2logistics signal set factory:iron_rate 500     (looking at a placed bank)
-/ae2logistics signal card factory:iron_rate        (get a bound Signal Card)
-```
+- **Signals** — `/give @p ae2logistics:register_bank`, then
+  `/ae2logistics signal set factory:x 500` while looking at it; the channel shows in
+  terminals, and a Signal Card puts it in any config slot.
+- **Logic parts** — ten cable parts (constant, threshold, hysteresis, arithmetic,
+  gates, timers, sensors) computing channels once per tick in dependency order.
+- **Observability** — the ME Tracer Terminal graphs any channel; the ME Job Monitor
+  turns crafting CPU activity and stalls into channels.
+- **Adaptive patterns** — the Pattern Workbench makes processing patterns match by
+  tag, fuzzy identity, damage band, or alternatives, with catalysts credited back.
+- **Guarded crafting** — the Guarded Pattern Provider hides recipes behind signal
+  conditions and holds pushes; Regulus Crystal (charged certus + redstone + glowstone
+  in water) prices the control tier.
+- **Scheduling** — the ME Job Scheduler keeps stock with admission control, class
+  pools, guards, and rate limits.
+- **Queries** — `tag:c:ores AND NOT craftable` in the ME Query Terminal, counted into
+  signals by the Query Sensor, exported by the Query Export Bus; test one with
+  `/ae2logistics query <expression>` while looking at a network.
+- **Mesh** — Universal Mesh Endpoints carry six transports over named frequencies;
+  the P2P Frequency Terminal names, lists, and retunes everything.
+- **Fleet config** — the ME Config Terminal audits and edits every device, snapshots
+  for diffs; the Config Blueprint reapplies a region's configuration.
 
-Wire the bank into a powered ME network and the channel appears in the terminal
-with its value as the amount. The Signal Card fills config slots — set a Level
-Emitter's filter with it and the emitter thresholds on a computed value instead
-of an item count.
-
-Commands (`/ae2logistics signal ...`, permission level 2): `set <channel> <value>`,
-`get <channel>`, `list` (all target the bank you are looking at), and
-`card <channel>`.
-
-Both items are craftable in survival: the bank from iron, certus quartz, redstone,
-and a logic processor; the Signal Card from AE2's basic card plus a redstone torch.
+Commands (permission 2): `/ae2logistics signal set|get|list|card`,
+`/ae2logistics mesh list|status|relink`, `/ae2logistics query <expression>`.
 
 ## Building
 

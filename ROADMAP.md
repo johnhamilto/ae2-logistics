@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.11.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (70 tests, run
+Status as of v0.12.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (74 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -25,6 +25,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F11.3-ME | Mesh-ME grid bridging (virtual quantum-bridge star, 32ch/spoke) | 0.5.0 |
 | F11 polish | Stateless P2P names (on-tunnel attachments), mesh rows + rename-all in the terminal, 9-slot endpoint filters (batch-aware), status + cabled-loop diagnostics, /ae2logistics mesh | 0.6.0 |
 | Infra | Gametest harness + CI, in-game guide + tablet, generated art pipeline | 0.1.0+ |
+| Infra | Hardening: fluid/energy mesh E2E, scheduler completion loop, catalyst execution phase all gametested; /ae2logistics query command; upstream PR drafts in docs/upstream/ | 0.12.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -95,7 +96,8 @@ representation).
   security station or permission API (removed upstream in this line); if AE2 regains
   one, gate on it. Session device list is capped at 256 rows; settings detail shows
   the first four settings.
-- Untested by automation: fluid/energy mesh forwarding E2E (no reliable vanilla
-  fixture; needs a test fixture block), GUI interactions, world save/load cycles,
-  catalyst execution phase (planner phase is covered), per-named-CPU monitor channels
-  (no programmatic path to name a crafting cluster in a gametest).
+- Untested by automation: GUI interactions, world save/load cycles, per-named-CPU
+  monitor channels (no programmatic path to name a crafting cluster in a gametest).
+  Fluid mesh (cauldron fixture), energy mesh (energy acceptor cross-grid), scheduler
+  completion, and catalyst execution are now covered. Gametest lore: IEnergyService
+  .getStoredPower caches for 90 ticks; ICraftingLink.isDone can lag CPU-free.
