@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.8.0 (2026-07-27). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (61 tests, run
+Status as of v0.9.0 (2026-07-27). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (65 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -15,6 +15,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | QoL | Memory cards carry all part settings; stock sensor GUI gained a player inventory | 0.7.0 |
 | F3 | Guarded Pattern Provider (plan-time hiding + toggleable push gate) + Guarded Pattern wrappers + priority channels - F3 complete | 0.8.0 |
 | Resource | Regulus Crystal: first themed resource, in-world transform (charged certus + redstone + glowstone in water) | 0.8.0 |
+| F6 | Query language (mod/tag/name/count/craftable/stored/damage/signal + @refs), replicated library, Query Terminal + Query Sensor + Query Export Bus - F6 complete | 0.9.0 |
 | F9 | Adaptive processing patterns: fuzzy/bands/tag/any-of/catalyst + Pattern Workbench | 0.2.0-0.3.0 |
 | F11.1 | P2P Frequency Terminal (list, named frequencies, retune) | 0.3.0 |
 | F11.2-4 | Universal Mesh Endpoints: 5 transports, mesh + universal P2P + true provider P2P | 0.4.0-0.5.0 |
@@ -28,16 +29,14 @@ representation).
 
 ## Next session
 
-1. **Playtest feedback first** - every UI surface (part GUIs, workbench, tracer, P2P
-   terminal, mesh config, job monitor, guarded provider) is machine-verified but has
-   never been touched by human hands; friction fixes take priority over new systems.
-2. **F6 query language, design-first** - one expression engine (mod:/tag:/name:/count/
-   craftable + signals as terms), compiled to AEKey predicates, with named per-network
-   views. F7 (config terminal) builds on it afterward.
+1. **Playtest feedback first** - eleven GUI surfaces now, all machine-verified, none
+   human-touched; friction fixes take priority over new systems.
+2. **F7 config terminal, design-first** - network-wide machine configuration surface,
+   now that F6 queries exist to select machines and filter contents.
 
 ## Longer term
 
-- **F6 query language** and **F7 config terminal**, in that order (F7 wants F6).
+- **F7 config terminal** (F6 shipped; F7 was gated on it).
 - **F4 job scheduler/policy**: admission control is feasible today for jobs we
   originate (submitJob takes an explicit CPU); steering foreign jobs is the open part.
 - **F11.5 wireless machine connectivity** via WAP coverage + Dense WAP.
@@ -46,8 +45,10 @@ representation).
 - **GUI framework migration** to AE2's menu system (clone ExtendedAE as reference) if
   playtesting says the vanilla-plumbing screens fall short.
 - **Upstream PRs worth writing**: public grid-connection API for 1.21.1-era AE2 (we
-  use internal `GridConnection.create`), and dynamic per-node channel demand (would
-  unlock per-capability mesh costing and true pooled accounting).
+  use internal `GridConnection.create`), dynamic per-node channel demand (would
+  unlock per-capability mesh costing and true pooled accounting), and a
+  filter-provider API so query expressions could drive AE2's own view cells, bus
+  filters, and cell partitions (blocked on internals today; the mod stays mixin-free).
 
 ## Known debt and constraints
 
@@ -78,6 +79,10 @@ representation).
 - One Job Monitor per network per prefix; two on the same prefix double every count
   (multi-writer channels sum by design). Stall detection is progress-freeze polling;
   19.2.x has no job event API for start/finish attribution.
+- Queries range over item/fluid keys only - signal keys in storage are excluded by
+  contract (a query counting signals feeds back into its own sensor). Query Terminal
+  previews cap at 6 sample rows; export bus scans up to 32 matching kinds per
+  operation, 8 items per operation.
 - Untested by automation: fluid/energy mesh forwarding E2E (no reliable vanilla
   fixture; needs a test fixture block), GUI interactions, world save/load cycles,
   catalyst execution phase (planner phase is covered), per-named-CPU monitor channels

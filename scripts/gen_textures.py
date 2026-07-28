@@ -563,6 +563,69 @@ PART_JOB_MONITOR = """
 
 write_png(OUT / "part" / "job_monitor.png", PART_JOB_MONITOR, PART)
 
+PART_QUERY_TERMINAL = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.##########.D#
+#D.#........#.D#
+#D.#.CCC....#.D#
+#D.#C...C...#.D#
+#D.#C...C...#.D#
+#D.#C...C...#.D#
+#D.#.CCC.C..#.D#
+#D.#......C.#.D#
+#D.##########.D#
+#D............D#
+#D...LLLLLL...D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "query_terminal.png", PART_QUERY_TERMINAL, PART)
+
+PART_QUERY_SENSOR = """
+################
+#DDDDDDDDDDDDDD#
+#DMMMMMMMMMMMMD#
+#DM..........MD#
+#DM...CCCC...MD#
+#DM..C....C..MD#
+#DM.......C..MD#
+#DM......C...MD#
+#DM.....C....MD#
+#DM.....C....MD#
+#DM..........MD#
+#DM.....r....MD#
+#DM..........MD#
+#DMMMMMMMMMMMMD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "query_sensor.png", PART_QUERY_SENSOR, PART)
+
+PART_QUERY_EXPORT_BUS = """
+################
+#DDDDDDDDDDDDDD#
+#DMMMMMMMMMMMMD#
+#DM..........MD#
+#DM...CCC....MD#
+#DM..C...C...MD#
+#DM......C...MD#
+#DM.....C....MD#
+#DM.....C....MD#
+#DM..........MD#
+#DM.....c....MD#
+#DM....ccc...MD#
+#DM...ccccc..MD#
+#DMMMMMMMMMMMMD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "query_export_bus.png", PART_QUERY_EXPORT_BUS, PART)
+
 REGULUS = dict(PART)
 REGULUS.update({
     "q": (255, 138, 122, 255),  # regulus glow

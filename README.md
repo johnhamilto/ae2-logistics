@@ -4,7 +4,7 @@ A control plane for Applied Energistics 2: signals, logic parts, job policy, and
 observability, built in AE2's own idiom. The full design rationale lives in
 [DESIGN.md](DESIGN.md).
 
-**Status: v0.8.x — the control plane is real, and it steers crafting.** Signals are
+**Status: v0.9.x — the control plane is real, it steers crafting, and it speaks.** Signals are
 a first-class AE2 key type computed by ten logic parts on a deterministic
 per-network scheduler, watched live on the ME Tracer Terminal, and bridged across
 networks by mesh endpoints. The ME Job Monitor turns crafting CPU activity, stalls,
@@ -12,7 +12,10 @@ and per-named-CPU progress into ordinary signals — and the Guarded Pattern Pro
 closes the control loop: signals hide recipes from the planner, hold running jobs,
 and move production between recipes via live priorities. The control tier is built
 from Regulus Crystal, formed AE2-style by dropping charged certus, redstone, and
-glowstone into water.
+glowstone into water. A query language ties it together: named per-network
+expressions (mod:/tag:/name:/count/craftable/damage, with live signals as terms)
+edited in a Query Terminal with live results, counted into signals by a Query
+Sensor, and exported by a Query Export Bus — the generalized tag-bus.
 Adaptive Processing Patterns match ingredients by tag, fuzzy identity, damage band,
 or explicit alternatives, with catalyst inputs credited back. Universal Mesh
 Endpoints carry redstone, items, fluids, energy, signals, and ME itself over named
@@ -23,7 +26,7 @@ linking with names that live on the tunnels themselves, lists every mesh frequen
 with live status (including cabled-loop detection), and renames a whole mesh in one
 action. Memory cards carry every part's settings. See [ROADMAP.md](ROADMAP.md) for
 whats next and the in-game guide (craft the AE2 Logistics Guide) for how to use
-everything. Verified by a 61-test in-game gametest suite on every push.
+everything. Verified by a 65-test in-game gametest suite on every push.
 
 ## Trying it
 

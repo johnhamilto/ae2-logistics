@@ -26,8 +26,8 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-27, v0.8.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (61 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-27, v0.9.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (65 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
 > **F3 complete** - Guarded Pattern Provider (plan-time hiding + toggleable push
 > gating, both layers) and Guarded Pattern wrappers, with dynamic priority bound to
@@ -442,6 +442,26 @@ demand, solved by proliferation instead of abstraction.
   follows.
 - Compile to a `Predicate<AEKey>` compatible with AE2's key filters (`NoOpKeyFilter`,
   `AEItemKey.filter()`, `AEFluidKey.filter()` are the existing shapes).
+
+> **As built (v0.9.0).** One expression engine, three consumers, no mixins. The
+> grammar shipped whole minus component/NBT predicates: mod:/tag:/name:, count with
+> k/m/b suffixes, craftable, stored, damage, signal(channel) OP N as first-class
+> terms, @name inclusion of saved queries (depth-capped), AND/OR/NOT/parens with
+> search-bar implicit AND. Hand-rolled recursive descent, ~300 lines, errors with
+> positions surfaced live in the editor. Named queries are **replicated across every
+> Query Terminal on the grid** (the stateless-names lesson generalized: any one
+> survivor preserves the library; edits write through the grid service to all).
+> Evaluation runs over `IStorageService.getCachedInventory()` - AE2 already pays for
+> the per-tick KeyCounter - through a per-tick QueryContext cached in the grid
+> service. Consumers: the **ME Query Terminal** (editor + live results browser), the
+> **Signal Query Sensor** (total matching amount onto a signal channel, evaluated in
+> scheduler order with same-tick signal() reads - queries feed thresholds feed
+> guards), and the **Query Export Bus** (the generalized tag-bus, @name-retargetable).
+> The doc's other bind sites - AE2 view cells, bus filters, cell partitions - need
+> mixins into terminal/bus internals and moved to the upstream-PR list (a
+> filter-provider API). One emergent bug worth remembering: F1 signals LIVE in the
+> network inventory, so `stored` matched the sensor's own output channel and fed
+> back - queries now range over item/fluid keys only, by contract.
 
 **Open questions.** Filters run in hot paths — compile once to a closure tree, never
 re-parse per evaluation. Decide early whether views live on the grid (shared, needs

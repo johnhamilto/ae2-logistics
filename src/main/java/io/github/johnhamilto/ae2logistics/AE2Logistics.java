@@ -240,6 +240,25 @@ public class AE2Logistics {
             MENUS.register("job_monitor", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.JobMonitorMenu::new));
 
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.QueryTerminalPart>> QUERY_TERMINAL_PART =
+            part("query_terminal", io.github.johnhamilto.ae2logistics.parts.QueryTerminalPart.class,
+                    io.github.johnhamilto.ae2logistics.parts.QueryTerminalPart::new);
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.QueryTerminalMenu>> QUERY_TERMINAL_MENU =
+            MENUS.register("query_terminal", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.QueryTerminalMenu::new));
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.QuerySensorPart>> QUERY_SENSOR_PART =
+            part("query_sensor", io.github.johnhamilto.ae2logistics.parts.QuerySensorPart.class,
+                    io.github.johnhamilto.ae2logistics.parts.QuerySensorPart::new);
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.QuerySensorMenu>> QUERY_SENSOR_MENU =
+            MENUS.register("query_sensor", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.QuerySensorMenu::new));
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.QueryExportBusPart>> QUERY_EXPORT_BUS_PART =
+            part("query_export_bus", io.github.johnhamilto.ae2logistics.parts.QueryExportBusPart.class,
+                    io.github.johnhamilto.ae2logistics.parts.QueryExportBusPart::new);
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.QueryExportBusMenu>> QUERY_EXPORT_BUS_MENU =
+            MENUS.register("query_export_bus", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.QueryExportBusMenu::new));
+
     public static final DeferredItem<PartItem<P2PFrequencyTerminalPart>> P2P_TERMINAL_PART = part(
             "p2p_frequency_terminal", P2PFrequencyTerminalPart.class, P2PFrequencyTerminalPart::new);
     public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_PART = part(
@@ -273,6 +292,9 @@ public class AE2Logistics {
                         output.accept(TIMER_PART.get());
                         output.accept(TRACER_TERMINAL_PART.get());
                         output.accept(JOB_MONITOR_PART.get());
+                        output.accept(QUERY_TERMINAL_PART.get());
+                        output.accept(QUERY_SENSOR_PART.get());
+                        output.accept(QUERY_EXPORT_BUS_PART.get());
                         output.accept(P2P_TERMINAL_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(REGULUS_CRYSTAL.get());
@@ -337,6 +359,15 @@ public class AE2Logistics {
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureGuardPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureGuardPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureGuardPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.QueryEditPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.QueryEditPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.QueryEditPayload::handle);
+            registrar.playToClient(io.github.johnhamilto.ae2logistics.menu.QueryPreviewPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.QueryPreviewPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.QueryPreviewPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureQueryPartPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureQueryPartPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureQueryPartPayload::handle);
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {
@@ -358,6 +389,8 @@ public class AE2Logistics {
         ContainerItemStrategy.register(SignalKeyType.TYPE, SignalKey.class, new SignalCardContainerStrategy());
 
         GridServices.register(SignalService.class, SignalGridService.class);
+        GridServices.register(io.github.johnhamilto.ae2logistics.query.QueryService.class,
+                io.github.johnhamilto.ae2logistics.query.QueryGridService.class);
 
         NeoForge.EVENT_BUS.addListener(SignalCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.MeshCommands::register);

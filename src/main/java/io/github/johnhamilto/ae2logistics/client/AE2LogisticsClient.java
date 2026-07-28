@@ -23,6 +23,9 @@ public final class AE2LogisticsClient {
             event.register(AE2Logistics.MESH_ENDPOINT_MENU.get(), MeshEndpointScreen::new);
             event.register(AE2Logistics.JOB_MONITOR_MENU.get(), JobMonitorScreen::new);
             event.register(AE2Logistics.GUARDED_PROVIDER_MENU.get(), GuardedProviderScreen::new);
+            event.register(AE2Logistics.QUERY_TERMINAL_MENU.get(), QueryTerminalScreen::new);
+            event.register(AE2Logistics.QUERY_SENSOR_MENU.get(), QuerySensorScreen::new);
+            event.register(AE2Logistics.QUERY_EXPORT_BUS_MENU.get(), QueryExportBusScreen::new);
         });
     }
 }
