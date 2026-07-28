@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:logic_core"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:logic_core"
+    },
+    "title": {
+      "text": "Factory in a Box"
+    },
+    "description": {
+      "text": "An ME Logic Core: eight logic nodes, one block, nine channels of pressure"
+    },
+    "frame": "goal"
+  },
+  "parent": "ae2logistics:logic_part"
+}

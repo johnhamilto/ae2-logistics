@@ -39,6 +39,8 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
     public final long[] batches = new long[JobSchedulerBlockEntity.RULES];
     public final byte[] classes = new byte[JobSchedulerBlockEntity.RULES];
     public final String[] guards = new String[JobSchedulerBlockEntity.RULES];
+    public final long[] deadlines = new long[JobSchedulerBlockEntity.RULES];
+    public final boolean[] preempts = new boolean[JobSchedulerBlockEntity.RULES];
 
     private final SimpleContainer ghosts = new SimpleContainer(JobSchedulerBlockEntity.RULES);
     private final int[] stateValues = new int[JobSchedulerBlockEntity.RULES];
@@ -53,6 +55,8 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
             batches[i] = rule.batch;
             classes[i] = rule.jobClass;
             guards[i] = rule.guard == null ? "" : rule.guard.toString();
+            deadlines[i] = rule.deadlineSeconds;
+            preempts[i] = rule.preempt;
             ghosts.setItem(i, displayStack(rule.target));
         }
         addSlots(inventory);
@@ -68,6 +72,8 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
             batches[i] = buffer.readLong();
             classes[i] = buffer.readByte();
             guards[i] = buffer.readUtf();
+            deadlines[i] = buffer.readLong();
+            preempts[i] = buffer.readBoolean();
             ghosts.setItem(i, ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
         }
         addSlots(inventory);
@@ -82,6 +88,8 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
             buffer.writeLong(rule.batch);
             buffer.writeByte(rule.jobClass);
             buffer.writeUtf(rule.guard == null ? "" : rule.guard.toString());
+            buffer.writeLong(rule.deadlineSeconds);
+            buffer.writeBoolean(rule.preempt);
             ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, displayStack(rule.target));
         }
     }

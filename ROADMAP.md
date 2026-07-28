@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.14.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (82 tests, run
+Status as of v0.15.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (87 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -28,6 +28,8 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Infra | Hardening: fluid/energy mesh E2E, scheduler completion loop, catalyst execution phase all gametested; /ae2logistics query command; upstream PR drafts in docs/upstream/ | 0.12.0 |
 | F8 | ME Logic Core: eight virtual logic entries on the host grid's scheduler, per-entry channel cost, TransferableSettings - F8 complete (virtual storage devices deferred) | 0.13.0 |
 | F11.5 | ME Wireless Bridge (coverage-gated grid joining, nearest-AP association, handover) + Dense Wireless Access Point; AE2 WAPs serve bridges - F11.5 complete | 0.14.0 |
+| F4 | Scheduler stretch: wall-clock deadlines with eviction, within-pool priority preemption, rules ride TransferableSettings | 0.15.0 |
+| Infra | Test debt closed: NBT round-trips for all five BEs, named-CPU pools + per-named-CPU monitor channels (custom-name reflection + cluster updateName); advancements; server config (scheduler interval, WAP range, bridge retune); publishing kit in docs/publishing/ | 0.15.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -35,14 +37,14 @@ representation).
 
 ## Next session
 
-1. **PLAYTEST.** Jack is testing when home. Fifteen GUI surfaces and two use-item
-   flows (blueprint corners, memory cards) are machine-verified and human-untouched;
-   the session should start from his notes and fix friction before anything new.
-   Everything programmatic is gametested, so GUI fixes sit on verified cores.
-2. In flight this session (2026-07-28): F11.5 wireless connectivity, scheduler
-   stretch (deadlines, preemption, rule transfer), test-debt burn-down, polish batch
-   (advancements, server config, publishing kit).
-3. Later: F8 slice 2 (virtual storage devices with face mapping), F11.6 tunnel types.
+1. **PLAYTEST.** Jack is testing when home. Fifteen GUI surfaces, two use-item flows
+   (blueprint corners, memory cards), and the bridge anchor click-flow are
+   machine-verified and human-untouched; the session should start from his notes and
+   fix friction before anything new. Everything programmatic is gametested.
+2. Publishing pass if the playtest holds: gallery screenshots (shot list in
+   docs/publishing/modrinth.md), then Modrinth + CurseForge uploads.
+3. Later: F8 slice 2 (virtual storage devices with face mapping), F11.6 tunnel
+   types, upstream PR implementations.
 
 ## Longer term
 - **F4 job scheduler/policy**: admission control is feasible today for jobs we
@@ -92,15 +94,22 @@ representation).
   previews cap at 6 sample rows; export bus scans up to 32 matching kinds per
   operation, 8 items per operation.
 - Scheduler rules poll every second and re-plan at most every ten; deferred reasons
-  stay visible through the retry window. Preemption and deadlines are unshipped
-  stretch goals. Only jobs the scheduler originates are steered - foreign jobs
-  (players, other mods) still use AE2's own CPU selection.
+  stay visible through the retry window. Only jobs the scheduler originates are
+  steered or preempted - foreign jobs (players, other mods) still use AE2's own CPU
+  selection and are never canceled. Running jobs are tracked by CPU + expected
+  output, NOT links: submitJob with a null requester returns no link
+  (CraftingSubmitResult.successful(null)) - if two jobs with the same output run on
+  the same CPU back to back, the tracker can briefly conflate them. Deadlines are
+  wall-clock from submission because AE2's elapsed tracker pauses while a job is
+  stalled (exactly when eviction matters).
 - Config Terminal writes gate on mayBuild + mayInteract because AE2 19.2.x has no
   security station or permission API (removed upstream in this line); if AE2 regains
   one, gate on it. Session device list is capped at 256 rows; settings detail shows
   the first four settings.
-- Untested by automation: GUI interactions, world save/load cycles, per-named-CPU
-  monitor channels (no programmatic path to name a crafting cluster in a gametest).
-  Fluid mesh (cauldron fixture), energy mesh (energy acceptor cross-grid), scheduler
-  completion, and catalyst execution are now covered. Gametest lore: IEnergyService
-  .getStoredPower caches for 90 ticks; ICraftingLink.isDone can lag CPU-free.
+- Untested by automation: GUI interactions only (a human problem). Save/load is
+  covered by NBT round-trip tests (saveWithFullMetadata -> loadWithComponents on a
+  fresh BE); named-CPU pools and per-named-CPU monitor channels are covered by
+  setting AEBaseBlockEntity.customName reflectively + CraftingCPUCluster.updateName.
+  Gametest lore: IEnergyService.getStoredPower caches for 90 ticks; a stalled job's
+  ElapsedTimeTracker pauses (deadlines must use wall-clock); submitJob with null
+  requester returns a null link (track CPU + expected output instead).

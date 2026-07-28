@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:guarded_pattern_provider"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:guarded_pattern_provider"
+    },
+    "title": {
+      "text": "Gatekeeper"
+    },
+    "description": {
+      "text": "A Guarded Pattern Provider only crafts when the signals say so"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:root"
+}

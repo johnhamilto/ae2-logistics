@@ -30,5 +30,20 @@ Every second, a rule below its floor attempts a craft - with **admission control
   parts, query sensors, or the Job Monitor for "only restock while the furnace array
   is idle".
 
+Each rule's second line adds two policy controls:
+
+- **Deadline** (seconds; 0 = off): a watchdog on wall-clock time since submission.
+  A job that overruns - typically because a machine jammed and the push stalled -
+  is **evicted**: canceled so its CPU frees, shown as `late`, and re-admitted on the
+  next attempt. Pairs naturally with the Job Monitor's stall channels.
+- **Preempt / polite**: a preempting rule that finds no free CPU in its pool may
+  cancel the **youngest** running job of a *lower-priority rule* (higher row) *in the
+  same class pool* - rule order is priority order. The victim shows `bumped` and
+  retries later. Only jobs this scheduler submitted are ever touched; other players'
+  and machines' jobs are not ours to cancel.
+
 The row status shows what each rule is doing: idle, plan, missing, no CPU, run, hold,
-wait - and the Job Monitor sees scheduler jobs like any others.
+wait, late, bumped - and the Job Monitor sees scheduler jobs like any others.
+
+Scheduler rules ride settings transfer: the Config Terminal copies them between
+schedulers and a Config Blueprint captures them with the rest of a region.

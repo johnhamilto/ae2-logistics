@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:signal_card"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:signal_card"
+    },
+    "title": {
+      "text": "Carrying the Signal"
+    },
+    "description": {
+      "text": "Bind a Signal Card so emitters and monitors can watch a channel"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:register_bank"
+}

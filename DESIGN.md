@@ -26,12 +26,14 @@ patternbetter). That axis is saturated. The control-plane axis is empty.
 **Design goal:** make network state programmable *in AE2's own idiom* — parts on cables,
 upgrade cards, terminals, keys in storage — rather than by bolting on a foreign computer.
 
-> **As-built status (2026-07-28, v0.14.0).** The architecture bet held everywhere it was
-> tested. Shipped and CI-verified (82 in-game gametests): **F1** signals + Register Bank
+> **As-built status (2026-07-28, v0.15.0).** The architecture bet held everywhere it was
+> tested. Shipped and CI-verified (87 in-game gametests): **F1** signals + Register Bank
 > + Signal Card; **F2** ten logic parts on a deterministic topological scheduler;
 > **F3 complete** - Guarded Pattern Provider (plan-time hiding + toggleable push
 > gating, both layers) and Guarded Pattern wrappers, with dynamic priority bound to
-> signal channels; **F5 complete** - Stock Sensor / Rate Meter / ME Tracer Terminal
+> signal channels; **F4 complete** - Job Scheduler with admission control, class
+> pools, wall-clock deadlines with eviction, and within-pool priority preemption
+> (foreign jobs never touched); **F5 complete** - Stock Sensor / Rate Meter / ME Tracer Terminal
 > with five-minute history, and job telemetry via the ME Job Monitor (crafting CPU
 > activity, stalls, and per-named-CPU detail as signal channels); **F9** adaptive
 > processing patterns (fuzzy, damage bands, tags, any-of, catalyst) + Pattern

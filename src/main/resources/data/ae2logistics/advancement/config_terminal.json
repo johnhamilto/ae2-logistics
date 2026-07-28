@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:config_terminal"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:config_terminal"
+    },
+    "title": {
+      "text": "Fleet Week"
+    },
+    "description": {
+      "text": "Audit every configurable device from one ME Config Terminal"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:root"
+}

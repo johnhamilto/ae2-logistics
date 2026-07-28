@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:pattern_workbench"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:pattern_workbench"
+    },
+    "title": {
+      "text": "Fuzzy Thinking"
+    },
+    "description": {
+      "text": "Craft a Pattern Workbench and stop caring which planks exactly"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:root"
+}

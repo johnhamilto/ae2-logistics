@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:mesh_endpoint"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:mesh_endpoint"
+    },
+    "title": {
+      "text": "Everything Everywhere"
+    },
+    "description": {
+      "text": "A Universal Mesh Endpoint moves six transports over named frequencies"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:root"
+}

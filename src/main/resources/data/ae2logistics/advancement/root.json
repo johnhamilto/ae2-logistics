@@ -1,0 +1,31 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:regulus_crystal"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:regulus_crystal"
+    },
+    "title": {
+      "text": "The Control Plane"
+    },
+    "description": {
+      "text": "Grow a Regulus Crystal: charged certus, redstone, and glowstone dust meet water"
+    },
+    "frame": "task",
+    "background": "ae2:textures/block/smooth_sky_stone_block.png",
+    "show_toast": true,
+    "announce_to_chat": false
+  }
+}

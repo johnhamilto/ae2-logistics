@@ -36,8 +36,6 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
  */
 public class WirelessBridgeBlockEntity extends BlockEntity implements IInWorldGridNodeHost {
 
-    private static final int RETUNE_INTERVAL_TICKS = 20;
-
     private static final IGridNodeListener<WirelessBridgeBlockEntity> NODE_LISTENER = new IGridNodeListener<>() {
         @Override
         public void onSaveChanges(WirelessBridgeBlockEntity owner, IGridNode node) {
@@ -88,7 +86,8 @@ public class WirelessBridgeBlockEntity extends BlockEntity implements IInWorldGr
     }
 
     public void serverTick() {
-        if (++tickCounter % RETUNE_INTERVAL_TICKS != 0) {
+        if (++tickCounter % io.github.johnhamilto.ae2logistics.AE2LogisticsConfig
+                .bridgeRetuneIntervalTicks() != 0) {
             return;
         }
         refreshLink();

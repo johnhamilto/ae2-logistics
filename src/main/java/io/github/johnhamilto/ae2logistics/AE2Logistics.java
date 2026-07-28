@@ -399,7 +399,9 @@ public class AE2Logistics {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
-    public AE2Logistics(IEventBus modBus) {
+    public AE2Logistics(IEventBus modBus, net.neoforged.fml.ModContainer modContainer) {
+        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER,
+                AE2LogisticsConfig.SPEC);
         BLOCKS.register(modBus);
         ITEMS.register(modBus);
         BLOCK_ENTITIES.register(modBus);

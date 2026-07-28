@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:adaptive_processing_pattern"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:adaptive_processing_pattern"
+    },
+    "title": {
+      "text": "Close Enough"
+    },
+    "description": {
+      "text": "Hold an Adaptive Processing Pattern"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:pattern_workbench"
+}

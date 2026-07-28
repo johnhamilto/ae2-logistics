@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:tracer_terminal"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:tracer_terminal"
+    },
+    "title": {
+      "text": "Scope Creep"
+    },
+    "description": {
+      "text": "Watch five minutes of signal history on an ME Tracer Terminal"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:logic_part"
+}

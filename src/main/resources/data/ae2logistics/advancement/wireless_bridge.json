@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:wireless_bridge"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:wireless_bridge"
+    },
+    "title": {
+      "text": "No Strings Attached"
+    },
+    "description": {
+      "text": "An ME Wireless Bridge joins machines to the network through access point coverage"
+    },
+    "frame": "goal"
+  },
+  "parent": "ae2logistics:mesh_endpoint"
+}

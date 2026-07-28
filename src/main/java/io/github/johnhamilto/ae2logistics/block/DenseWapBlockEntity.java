@@ -30,8 +30,6 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
  */
 public class DenseWapBlockEntity extends BlockEntity implements IInWorldGridNodeHost, IWirelessAccessPoint {
 
-    public static final int DEFAULT_RANGE = 32;
-
     private static final IGridNodeListener<DenseWapBlockEntity> NODE_LISTENER = new IGridNodeListener<>() {
         @Override
         public void onSaveChanges(DenseWapBlockEntity owner, IGridNode node) {
@@ -45,10 +43,11 @@ public class DenseWapBlockEntity extends BlockEntity implements IInWorldGridNode
             .setFlags(GridFlags.REQUIRE_CHANNEL, GridFlags.DENSE_CAPACITY)
             .setIdlePowerUsage(4.0);
 
-    private int range = DEFAULT_RANGE;
+    private int range;
 
     public DenseWapBlockEntity(BlockPos pos, BlockState state) {
         super(AE2Logistics.DENSE_WAP_BE.get(), pos, state);
+        range = io.github.johnhamilto.ae2logistics.AE2LogisticsConfig.denseWapRange();
     }
 
     @Override
@@ -88,7 +87,8 @@ public class DenseWapBlockEntity extends BlockEntity implements IInWorldGridNode
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         mainNode.loadFromNBT(tag);
-        range = tag.contains("range") ? Math.max(1, tag.getInt("range")) : DEFAULT_RANGE;
+        range = tag.contains("range") ? Math.max(1, tag.getInt("range"))
+                : io.github.johnhamilto.ae2logistics.AE2LogisticsConfig.denseWapRange();
     }
 
     @Nullable

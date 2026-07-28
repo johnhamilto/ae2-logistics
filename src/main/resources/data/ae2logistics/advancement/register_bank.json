@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:register_bank"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:register_bank"
+    },
+    "title": {
+      "text": "Named Numbers"
+    },
+    "description": {
+      "text": "Craft an ME Register Bank and give your network something to remember"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:root"
+}

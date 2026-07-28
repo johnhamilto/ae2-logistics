@@ -23,7 +23,9 @@ public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu
     private final EditBox[] floorBoxes = new EditBox[JobSchedulerBlockEntity.RULES];
     private final EditBox[] batchBoxes = new EditBox[JobSchedulerBlockEntity.RULES];
     private final EditBox[] guardBoxes = new EditBox[JobSchedulerBlockEntity.RULES];
+    private final EditBox[] deadlineBoxes = new EditBox[JobSchedulerBlockEntity.RULES];
     private final byte[] classValues = new byte[JobSchedulerBlockEntity.RULES];
+    private final boolean[] preemptValues = new boolean[JobSchedulerBlockEntity.RULES];
 
     public JobSchedulerScreen(JobSchedulerMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -58,6 +60,17 @@ public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu
             guardBoxes[i].setMaxLength(80);
             guardBoxes[i].setValue(menu.guards[i]);
             addRenderableWidget(guardBoxes[i]);
+
+            deadlineBoxes[i] = new EditBox(font, leftPos + 76, y + 16, 34, 10, Component.empty());
+            deadlineBoxes[i].setMaxLength(6);
+            deadlineBoxes[i].setValue(Long.toString(menu.deadlines[i]));
+            addRenderableWidget(deadlineBoxes[i]);
+
+            preemptValues[i] = menu.preempts[i];
+            addRenderableWidget(Button.builder(preemptLabel(preemptValues[i]), b -> {
+                preemptValues[index] = !preemptValues[index];
+                b.setMessage(preemptLabel(preemptValues[index]));
+            }).bounds(leftPos + 114, y + 15, 36, 12).build());
         }
 
         addRenderableWidget(Button.builder(Component.literal("Apply"), b -> apply())
@@ -68,13 +81,21 @@ public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu
         var floors = new long[JobSchedulerBlockEntity.RULES];
         var batches = new long[JobSchedulerBlockEntity.RULES];
         var guards = new String[JobSchedulerBlockEntity.RULES];
+        var deadlines = new long[JobSchedulerBlockEntity.RULES];
+        var preempts = new byte[JobSchedulerBlockEntity.RULES];
         for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
             floors[i] = parse(floorBoxes[i].getValue(), 0);
             batches[i] = parse(batchBoxes[i].getValue(), 16);
             guards[i] = guardBoxes[i].getValue();
+            deadlines[i] = parse(deadlineBoxes[i].getValue(), 0);
+            preempts[i] = (byte) (preemptValues[i] ? 1 : 0);
         }
         PacketDistributor.sendToServer(new ConfigureSchedulerPayload(
-                menu.pos, floors, batches, classValues.clone(), guards));
+                menu.pos, floors, batches, classValues.clone(), guards, deadlines, preempts));
+    }
+
+    private static Component preemptLabel(boolean enabled) {
+        return Component.literal(enabled ? "preempt" : "polite");
     }
 
     private static long parse(String text, long fallback) {
@@ -93,15 +114,19 @@ public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu
             case JobSchedulerBlockEntity.STATE_NO_CPU -> "no CPU";
             case JobSchedulerBlockEntity.STATE_RUNNING -> "run";
             case JobSchedulerBlockEntity.STATE_RATE_WAIT -> "wait";
+            case JobSchedulerBlockEntity.STATE_DEADLINE -> "late";
+            case JobSchedulerBlockEntity.STATE_PREEMPTED -> "bumped";
             default -> "idle";
         };
     }
 
     private static int stateColor(int state) {
         return switch (state) {
-            case JobSchedulerBlockEntity.STATE_MISSING, JobSchedulerBlockEntity.STATE_NO_CPU -> 0xE0524E;
+            case JobSchedulerBlockEntity.STATE_MISSING, JobSchedulerBlockEntity.STATE_NO_CPU,
+                    JobSchedulerBlockEntity.STATE_DEADLINE -> 0xE0524E;
             case JobSchedulerBlockEntity.STATE_RUNNING -> 0x6FDB6F;
-            case JobSchedulerBlockEntity.STATE_GUARD_HOLD, JobSchedulerBlockEntity.STATE_RATE_WAIT -> 0xF5C542;
+            case JobSchedulerBlockEntity.STATE_GUARD_HOLD, JobSchedulerBlockEntity.STATE_RATE_WAIT,
+                    JobSchedulerBlockEntity.STATE_PREEMPTED -> 0xF5C542;
             default -> 0x8A9AA8;
         };
     }
@@ -145,7 +170,7 @@ public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu
                     JobSchedulerMenu.GHOST_Y + i * JobSchedulerMenu.ROW_STEP + 19,
                     stateColor(state), false);
         }
-        guiGraphics.drawString(font, "keep >= floor, craft in batches", 10, 126, 0x5A6B7C, false);
+        guiGraphics.drawString(font, "second line: deadline sec + preemption", 10, 126, 0x5A6B7C, false);
     }
 
     @Override

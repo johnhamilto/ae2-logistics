@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:constant"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:constant"
+    },
+    "title": {
+      "text": "It Computes"
+    },
+    "description": {
+      "text": "Craft any logic part and put a number to work"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:register_bank"
+}

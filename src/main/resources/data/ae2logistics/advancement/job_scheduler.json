@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:job_scheduler"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:job_scheduler"
+    },
+    "title": {
+      "text": "Admission Control"
+    },
+    "description": {
+      "text": "The ME Job Scheduler keeps stock without letting bulk work eat your CPUs"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:guarded_provider"
+}

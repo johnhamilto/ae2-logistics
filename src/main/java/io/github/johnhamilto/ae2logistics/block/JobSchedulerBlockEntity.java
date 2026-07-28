@@ -21,7 +21,6 @@ import appeng.api.networking.IInWorldGridNodeHost;
 import appeng.api.networking.IManagedGridNode;
 import appeng.api.networking.crafting.CalculationStrategy;
 import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingPlan;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.stacks.AEKey;
@@ -38,7 +37,9 @@ import io.github.johnhamilto.ae2logistics.signal.SignalService;
  * AE2's own Player-Only selection mode; bulk rules use unnamed or "bulk*" CPUs,
  * maintenance rules require "maint*" CPUs. Rate-limited so restocking never thunders.
  */
-public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGridNodeHost, IActionHost {
+public class JobSchedulerBlockEntity extends BlockEntity
+        implements IInWorldGridNodeHost, IActionHost,
+        io.github.johnhamilto.ae2logistics.config.TransferableSettings {
 
     public static final int RULES = 4;
     public static final int ATTEMPT_INTERVAL_TICKS = 200;
@@ -53,6 +54,8 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
     public static final byte STATE_NO_CPU = 4;
     public static final byte STATE_RUNNING = 5;
     public static final byte STATE_RATE_WAIT = 6;
+    public static final byte STATE_DEADLINE = 7;
+    public static final byte STATE_PREEMPTED = 8;
 
     public static final class Rule {
         @Nullable
@@ -62,14 +65,23 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
         public byte jobClass = CLASS_BULK;
         @Nullable
         public ResourceLocation guard;
+        /** Max runtime in seconds once submitted; 0 disables the watchdog. */
+        public long deadlineSeconds;
+        /** May cancel the youngest same-class job of a lower-priority (higher-index) rule. */
+        public boolean preempt;
 
         long lastAttemptTick = -ATTEMPT_INTERVAL_TICKS;
+        long runStartTick;
         byte state = STATE_IDLE;
         byte deferReason;
         @Nullable
         Future<ICraftingPlan> future;
+        // submitJob with a null requester returns NO link (CraftingSubmitResult
+        // .successful(null)), so running jobs are tracked by CPU + expected output.
         @Nullable
-        ICraftingLink link;
+        ICraftingCPU cpu;
+        @Nullable
+        AEKey runningOutput;
     }
 
     private static final IGridNodeListener<JobSchedulerBlockEntity> NODE_LISTENER =
@@ -107,10 +119,18 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
     public void applyRuleConfig(int index, long floor, long batch, byte jobClass,
             @Nullable ResourceLocation guard) {
         var rule = rules[index];
+        applyRuleConfig(index, floor, batch, jobClass, guard, rule.deadlineSeconds, rule.preempt);
+    }
+
+    public void applyRuleConfig(int index, long floor, long batch, byte jobClass,
+            @Nullable ResourceLocation guard, long deadlineSeconds, boolean preempt) {
+        var rule = rules[index];
         rule.floor = Math.max(0, floor);
         rule.batch = Math.max(1, batch);
         rule.jobClass = (byte) Math.floorMod(jobClass, 2);
         rule.guard = guard;
+        rule.deadlineSeconds = Math.max(0, deadlineSeconds);
+        rule.preempt = preempt;
         setChanged();
     }
 
@@ -127,21 +147,39 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
         if (node == null || node.getGrid() == null || !mainNode.isActive()) {
             return;
         }
-        for (var rule : rules) {
-            tickRule(rule, node);
+        for (int i = 0; i < RULES; i++) {
+            tickRule(i, rules[i], node);
         }
     }
 
-    private void tickRule(Rule rule, IGridNode node) {
+    private void tickRule(int index, Rule rule, IGridNode node) {
         if (rule.target == null) {
             rule.state = STATE_IDLE;
             return;
         }
         var grid = node.getGrid();
 
-        if (rule.link != null) {
-            if (rule.link.isDone() || rule.link.isCanceled()) {
-                rule.link = null;
+        if (rule.cpu != null) {
+            var status = rule.cpu.getJobStatus();
+            boolean ours = status != null && status.crafting() != null
+                    && rule.runningOutput != null
+                    && status.crafting().what().equals(rule.runningOutput);
+            if (!ours) {
+                // Finished, canceled, or the CPU moved on to someone else's job.
+                rule.cpu = null;
+                rule.runningOutput = null;
+            } else if (rule.deadlineSeconds > 0
+                    // Wall-clock since submission: AE2's own elapsed tracker pauses
+                    // while a job is stalled, which is exactly when eviction matters.
+                    && tickCounter - rule.runStartTick >= rule.deadlineSeconds * 20) {
+                // Watchdog: evict the overdue job so its CPU frees, then re-admit later.
+                rule.cpu.cancelJob();
+                rule.cpu = null;
+                rule.runningOutput = null;
+                rule.deferReason = STATE_DEADLINE;
+                rule.lastAttemptTick = tickCounter;
+                rule.state = STATE_DEADLINE;
+                return;
             } else {
                 rule.state = STATE_RUNNING;
                 return;
@@ -172,17 +210,21 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
             if (cpu == null) {
                 rule.state = STATE_NO_CPU;
                 rule.deferReason = STATE_NO_CPU;
+                tryPreempt(index, rule);
                 return;
             }
             var result = grid.getCraftingService().submitJob(plan, null, cpu, false,
                     new MachineSource(this));
             if (result.successful()) {
-                rule.link = result.link();
+                rule.cpu = cpu;
+                rule.runningOutput = plan.finalOutput().what();
+                rule.runStartTick = tickCounter;
                 rule.state = STATE_RUNNING;
                 rule.deferReason = 0;
             } else {
                 rule.state = STATE_NO_CPU;
                 rule.deferReason = STATE_NO_CPU;
+                tryPreempt(index, rule);
             }
             return;
         }
@@ -201,7 +243,8 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
             rule.deferReason = 0;
             return;
         }
-        if (tickCounter - rule.lastAttemptTick < ATTEMPT_INTERVAL_TICKS) {
+        if (tickCounter - rule.lastAttemptTick < io.github.johnhamilto.ae2logistics.AE2LogisticsConfig
+                .schedulerAttemptIntervalTicks()) {
             // Keep showing WHY the last attempt failed while the retry window runs.
             rule.state = rule.deferReason != 0 ? rule.deferReason : STATE_RATE_WAIT;
             return;
@@ -211,6 +254,40 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
         rule.future = grid.getCraftingService().beginCraftingCalculation(level,
                 () -> new MachineSource(this), rule.target.what(), rule.batch,
                 CalculationStrategy.REPORT_MISSING_ITEMS);
+    }
+
+    /**
+     * Within-pool priority preemption: a deferred rule with preempt enabled cancels the
+     * youngest running job of a lower-priority (higher-index) rule in the SAME class
+     * pool, freeing a CPU that pool can actually use. Only jobs this scheduler
+     * originated are ever touched - foreign jobs are not ours to cancel.
+     */
+    private void tryPreempt(int index, Rule rule) {
+        if (!rule.preempt) {
+            return;
+        }
+        Rule victim = null;
+        for (int i = index + 1; i < RULES; i++) {
+            var candidate = rules[i];
+            if (candidate.cpu == null || candidate.jobClass != rule.jobClass) {
+                continue;
+            }
+            // Youngest job = most recently submitted.
+            if (victim == null || candidate.runStartTick > victim.runStartTick) {
+                victim = candidate;
+            }
+        }
+        if (victim != null) {
+            victim.cpu.cancelJob();
+            victim.cpu = null;
+            victim.runningOutput = null;
+            victim.deferReason = STATE_PREEMPTED;
+            victim.lastAttemptTick = tickCounter;
+            // Retry within a second instead of waiting out the full rate window.
+            rule.lastAttemptTick = tickCounter
+                    - io.github.johnhamilto.ae2logistics.AE2LogisticsConfig.schedulerAttemptIntervalTicks()
+                    + 20;
+        }
     }
 
     /**
@@ -268,6 +345,17 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         mainNode.saveToNBT(tag);
+        tag.put("rules", saveRules(registries));
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        mainNode.loadFromNBT(tag);
+        loadRules(tag.getList("rules", net.minecraft.nbt.Tag.TAG_COMPOUND), registries);
+    }
+
+    private net.minecraft.nbt.ListTag saveRules(HolderLookup.Provider registries) {
         var list = new net.minecraft.nbt.ListTag();
         for (var rule : rules) {
             var ruleTag = new CompoundTag();
@@ -280,16 +368,14 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
             if (rule.guard != null) {
                 ruleTag.putString("guard", rule.guard.toString());
             }
+            ruleTag.putLong("deadline", rule.deadlineSeconds);
+            ruleTag.putBoolean("preempt", rule.preempt);
             list.add(ruleTag);
         }
-        tag.put("rules", list);
+        return list;
     }
 
-    @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
-        var list = tag.getList("rules", net.minecraft.nbt.Tag.TAG_COMPOUND);
+    private void loadRules(net.minecraft.nbt.ListTag list, HolderLookup.Provider registries) {
         for (int i = 0; i < RULES && i < list.size(); i++) {
             var ruleTag = list.getCompound(i);
             var rule = rules[i];
@@ -305,7 +391,37 @@ public class JobSchedulerBlockEntity extends BlockEntity implements IInWorldGrid
             rule.guard = ruleTag.contains("guard")
                     ? ResourceLocation.tryParse(ruleTag.getString("guard"))
                     : null;
+            rule.deadlineSeconds = Math.max(0, ruleTag.getLong("deadline"));
+            rule.preempt = ruleTag.getBoolean("preempt");
         }
+    }
+
+    @Override
+    public net.minecraft.core.component.DataComponentMap exportTransferSettings(
+            @Nullable net.minecraft.world.entity.player.Player player) {
+        if (level == null) {
+            return net.minecraft.core.component.DataComponentMap.EMPTY;
+        }
+        var tag = new CompoundTag();
+        tag.put("schedulerRules", saveRules(level.registryAccess()));
+        return net.minecraft.core.component.DataComponentMap.builder()
+                .set(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get(), tag)
+                .build();
+    }
+
+    @Override
+    public void importTransferSettings(net.minecraft.core.component.DataComponentMap settings,
+            @Nullable net.minecraft.world.entity.player.Player player) {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        var tag = settings.get(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get());
+        if (tag == null || !tag.contains("schedulerRules")) {
+            return;
+        }
+        loadRules(tag.getList("schedulerRules", net.minecraft.nbt.Tag.TAG_COMPOUND),
+                level.registryAccess());
+        setChanged();
     }
 
     // --- grid plumbing ---

@@ -1,0 +1,29 @@
+{
+  "criteria": {
+    "has_item": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2logistics:query_terminal"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "ae2logistics:query_terminal"
+    },
+    "title": {
+      "text": "Ask Nicely"
+    },
+    "description": {
+      "text": "Craft an ME Query Terminal and speak fluent expression"
+    },
+    "frame": "task"
+  },
+  "parent": "ae2logistics:root"
+}
