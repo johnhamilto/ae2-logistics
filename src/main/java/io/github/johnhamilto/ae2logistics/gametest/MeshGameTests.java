@@ -325,7 +325,7 @@ public class MeshGameTests {
                 .thenSucceed();
     }
 
-    /** Removing an endpoint from the frequency must split the fused grids again. */
+    /** Removing an endpoint from the frequency must split the carried grids again. */
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void meMeshSplitsWhenEndpointLeaves(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
@@ -334,6 +334,11 @@ public class MeshGameTests {
         helper.setBlock(new BlockPos(3, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(4, 1, 1));
+        // The networks FED into the endpoints' faces - these are what the mesh carries.
+        helper.setBlock(new BlockPos(1, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        helper.setBlock(new BlockPos(4, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
 
         var first = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "me-split",
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
@@ -341,29 +346,41 @@ public class MeshGameTests {
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
 
         helper.runAfterDelay(40, () -> {
-            helper.assertTrue(first.getMainNode().getNode().getGrid()
-                    == second.getMainNode().getNode().getGrid(), "grids should fuse first");
+            helper.assertTrue(first.carriedNode() != null && second.carriedNode() != null,
+                    "carried nodes missing");
+            helper.assertTrue(first.carriedNode().getGrid() == second.carriedNode().getGrid(),
+                    "carried grids should fuse first");
             second.applyMeshConfig("", MeshEndpointPart.ROLE_BOTH, 0, 0);
         });
         helper.runAfterDelay(80, () -> {
-            var firstNode = first.getMainNode().getNode();
-            var secondNode = second.getMainNode().getNode();
-            helper.assertTrue(firstNode != null && secondNode != null, "nodes missing after reconfig");
-            helper.assertTrue(firstNode.getGrid() != secondNode.getGrid(),
-                    "grids must split after the endpoint leaves the frequency");
+            helper.assertTrue(second.carriedNode() == null,
+                    "un-attuning ME must destroy the carried node");
+            var carried = first.carriedNode();
+            helper.assertTrue(carried != null && carried.getGrid() != null, "carried node missing");
+            helper.assertTrue(carried.getGrid().size() == 2,
+                    "first carried grid must shrink to endpoint + its fed cell, got "
+                            + carried.getGrid().size());
             helper.succeed();
         });
     }
 
-    /** ME-attuned endpoints on one frequency fuse their networks like a multi-point quantum bridge. */
+    /**
+     * ME tunneling is true P2P: the networks fed INTO the endpoints' faces fuse across
+     * the mesh, while the host networks the endpoints sit on stay separate.
+     */
     @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meMeshBridgesGrids(GameTestHelper helper) {
+    public void meMeshCarriesFedNetworks(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         helper.setBlock(new BlockPos(3, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(4, 1, 1));
+        // Fed networks touching the endpoint faces (endpoints face UP).
+        helper.setBlock(new BlockPos(1, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        helper.setBlock(new BlockPos(4, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
 
         var first = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "me-link",
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
@@ -371,13 +388,20 @@ public class MeshGameTests {
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
 
         helper.runAfterDelay(40, () -> {
-            var firstNode = first.getMainNode().getNode();
-            var secondNode = second.getMainNode().getNode();
-            helper.assertTrue(firstNode != null && secondNode != null, "endpoint nodes missing");
-            helper.assertTrue(firstNode.getGrid() == secondNode.getGrid(),
-                    "ME mesh must fuse both networks into one grid");
-            helper.assertTrue(firstNode.isActive() && secondNode.isActive(),
-                    "both endpoints should be active on the fused grid");
+            var firstCarried = first.carriedNode();
+            var secondCarried = second.carriedNode();
+            helper.assertTrue(firstCarried != null && secondCarried != null, "carried nodes missing");
+            helper.assertTrue(firstCarried.getGrid() == secondCarried.getGrid(),
+                    "carried grids must fuse into one");
+            helper.assertTrue(firstCarried.getGrid().size() == 4,
+                    "carried grid = 2 carried nodes + 2 fed cells, got "
+                            + firstCarried.getGrid().size());
+            var firstHost = first.getMainNode().getNode();
+            var secondHost = second.getMainNode().getNode();
+            helper.assertTrue(firstHost.getGrid() != secondHost.getGrid(),
+                    "host networks must NOT fuse");
+            helper.assertTrue(firstHost.getGrid() != firstCarried.getGrid(),
+                    "host and carried networks must stay separate");
             helper.succeed();
         });
     }

@@ -100,7 +100,7 @@ public class LogicCoreBlockEntity extends BlockEntity implements IInWorldGridNod
         if (hub == null || managed == null || managed.getNode() == null || entry.isConnected()) {
             return;
         }
-        appeng.me.GridConnection.create(hub, managed.getNode(), null);
+        appeng.api.networking.GridHelper.createConnection(hub, managed.getNode());
         entry.markConnected();
     }
 

@@ -144,7 +144,7 @@ public class SubnetCoreBlockEntity extends BlockEntity implements IInWorldGridNo
         if (star == null) {
             return;
         }
-        appeng.me.GridConnection.create(star, managed.getNode(), null);
+        appeng.api.networking.GridHelper.createConnection(star, managed.getNode());
         entry.markConnected();
     }
 

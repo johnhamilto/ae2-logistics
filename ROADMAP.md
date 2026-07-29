@@ -67,9 +67,12 @@ representation).
 
 ## Known debt and constraints
 
-- `appeng.me.GridConnection.create` and a handful of other internals (AEBasePart,
-  PartItem, PatternProviderBlockEntity in tests) are version-sensitive; the 26.x port
-  will mostly be the client/model layer plus these.
+- Grid connections now use the PUBLIC `GridHelper.createConnection(a, b)` - it
+  existed in 19.2 all along (docs/upstream/grid-connection-api.md is superseded).
+  Remaining internals: AEBasePart/PartItem/NodeListener, the GUI framework
+  (AEBaseMenu/AEBaseScreen/InitScreens/StyleManager), ExternalStorageFacade,
+  IEnergyOverlayGridConnection/EnergyService, PatternProviderLogic; the 26.x port is
+  mostly the client/model layer plus these.
 - Catalyst inputs use AE2's container-credit flow: correct for machines that hold or
   return the tool, dupe-prone if a pattern ALSO lists the tool as machine output.
   Documented in the guide; a damage-changing round-trip needs CPU-side fuzzy output

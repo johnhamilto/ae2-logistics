@@ -60,6 +60,16 @@ public class MeshEndpointPart extends AEBasePart {
     private int meshRedstone;
     /** Transient ME star state, maintained by {@link MeshRegistry#tick}. */
     private byte meLinkState;
+
+    /**
+     * ME tunneling is true P2P: this second node is exposed ONLY on the part's face, so
+     * whatever network touches the face is carried through the mesh star - the host
+     * network the endpoint sits on is never fused. Same two-node trick as AE2's own ME
+     * P2P tunnel; fresh instance per attunement because managed nodes are single-use.
+     */
+    @Nullable
+    private appeng.api.networking.IManagedGridNode carriedNode;
+    private boolean carriedCreated;
     @Nullable
     private SignalService publishedTo;
 
@@ -161,8 +171,59 @@ public class MeshEndpointPart extends AEBasePart {
         if (!attuned(MeshRegistry.TYPE_REDSTONE)) {
             setMeshRedstone(0);
         }
+        if (attuned(MeshRegistry.TYPE_ME)) {
+            ensureCarriedNode();
+        } else {
+            destroyCarriedNode();
+        }
         MeshRegistry.register(this);
         getHost().markForSave();
+    }
+
+    private appeng.api.networking.IManagedGridNode carriedInstance() {
+        if (carriedNode == null) {
+            carriedNode = appeng.api.networking.GridHelper
+                    .createManagedNode(this, NodeListener.INSTANCE)
+                    .setInWorldNode(true)
+                    .setTagName("carried")
+                    .setIdlePowerUsage(0)
+                    .setFlags(appeng.api.networking.GridFlags.DENSE_CAPACITY,
+                            appeng.api.networking.GridFlags.CANNOT_CARRY_COMPRESSED)
+                    .setVisualRepresentation(getPartItem().asItem());
+            carriedCreated = false;
+        }
+        return carriedNode;
+    }
+
+    private void ensureCarriedNode() {
+        if (isClientSide()) {
+            return;
+        }
+        var node = carriedInstance();
+        if (!carriedCreated && getLevel() != null && getSide() != null) {
+            node.setExposedOnSides(java.util.EnumSet.of(getSide()));
+            node.create(getLevel(), getBlockEntity().getBlockPos());
+            carriedCreated = true;
+        }
+    }
+
+    private void destroyCarriedNode() {
+        if (carriedNode != null) {
+            carriedNode.destroy();
+            carriedNode = null;
+            carriedCreated = false;
+        }
+    }
+
+    /** The node the mesh's ME star links; carries the fed network, never the host. */
+    @Nullable
+    public appeng.api.networking.IGridNode carriedNode() {
+        return carriedNode == null ? null : carriedNode.getNode();
+    }
+
+    @Override
+    public appeng.api.networking.IGridNode getExternalFacingNode() {
+        return carriedNode();
     }
 
     @Override
@@ -211,6 +272,9 @@ public class MeshEndpointPart extends AEBasePart {
     public void addToWorld() {
         super.addToWorld();
         if (!isClientSide()) {
+            if (attuned(MeshRegistry.TYPE_ME)) {
+                ensureCarriedNode();
+            }
             MeshRegistry.register(this);
         }
     }
@@ -219,6 +283,7 @@ public class MeshEndpointPart extends AEBasePart {
     public void removeFromWorld() {
         if (!isClientSide()) {
             MeshRegistry.unregister(this);
+            destroyCarriedNode();
         }
         super.removeFromWorld();
     }
@@ -535,6 +600,9 @@ public class MeshEndpointPart extends AEBasePart {
             filterList.add(tag);
         }
         data.put("filter", filterList);
+        if (carriedNode != null) {
+            carriedNode.saveToNBT(data);
+        }
     }
 
     @Override
@@ -554,6 +622,9 @@ public class MeshEndpointPart extends AEBasePart {
                     filter[i] = key == null ? null : new appeng.api.stacks.GenericStack(key, 1);
                 }
             }
+        }
+        if ((capabilities & MeshRegistry.TYPE_ME) != 0 && !isClientSide()) {
+            carriedInstance().loadFromNBT(data);
         }
     }
 

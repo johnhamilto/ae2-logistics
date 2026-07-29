@@ -42,10 +42,13 @@ Right-click to configure: type a frequency name, pick a role, toggle capabilitie
 Every transfer has a hop budget of one: a mesh delivery can never enter another mesh,
 which makes item loops structurally impossible rather than merely discouraged.
 
-- **ME Link** - endpoints with the ME Link capability fuse their networks like a
-  multi-point quantum bridge: one elected hub, a virtual star of dense connections, and
-  AE2's own pather carrying channels (up to 32 per spoke), power, and grid membership
-  through the mesh. Renaming or un-attuning an endpoint cleanly tears its links down.
+- **ME Link** - true ME P2P with quantum-bridge mechanics underneath. An ME-attuned
+  endpoint exposes a connection point on its **face**: the network touching that face
+  is **carried** through the mesh - fed in on one endpoint, it comes out at every
+  other endpoint on the frequency as one grid (channels up to 32 per spoke, power,
+  membership) - while the host network the endpoint sits on is **never fused**.
+  Exactly like AE2's ME P2P tunnel, at mesh scale. Renaming or un-attuning an
+  endpoint cleanly tears its links down and destroys its carried connection point.
 
 The mesh never creates channel capacity from nothing - every endpoint costs a channel
 and ME links route through AE2's normal pathing rules.

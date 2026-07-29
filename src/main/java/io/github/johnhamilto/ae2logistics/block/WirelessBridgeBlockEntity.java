@@ -148,7 +148,7 @@ public class WirelessBridgeBlockEntity extends BlockEntity implements IInWorldGr
             }
         }
         if (!directlyConnected) {
-            wirelessLink = appeng.me.GridConnection.create(bestNode, bridgeNode, null);
+            wirelessLink = appeng.api.networking.GridHelper.createConnection(bestNode, bridgeNode);
         }
         linkedApNode = bestNode;
         linkedApPos = best.getLocation().getPos();

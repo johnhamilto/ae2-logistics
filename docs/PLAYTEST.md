@@ -374,8 +374,10 @@ items + fluids; signal keys are excluded by contract.
   - Energy: FE spreads to outputs by priority.
   - Signals: the only cross-NETWORK transport — IN publishes its network's channels,
     OUT injects into its own; bridged values sum; re-publication is impossible.
-  - **ME link**: fuses networks like a multi-point quantum bridge (hub + star, up to
-    32 channels/spoke, power + membership through the mesh).
+  - **ME link**: true ME P2P — the network touching the endpoint's FACE is carried
+    through the mesh (one grid across all endpoints on the frequency, 32
+    channels/spoke); the host network the endpoint sits on is never fused. Endpoints
+    wear the P2P tunnel chassis now.
 - Filters: exact match (components included); IN refuses non-matching insertions;
   OUT is skipped for non-matching stacks; provider batches land only where the whole
   batch matches.

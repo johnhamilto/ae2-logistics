@@ -300,10 +300,12 @@ public final class MeshRegistry {
     private static final Map<String, Long> ME_MEMBERSHIP = new HashMap<>();
 
     /**
-     * Mesh-ME is a virtual quantum-bridge star: every ME-attuned endpoint's grid node is
-     * connected to the deterministically elected hub (lowest stableKey), so AE2's own
-     * pather carries channels, power, and grid membership through the mesh. Endpoint
-     * nodes are DENSE_CAPACITY, so each spoke carries up to 32 channels.
+     * Mesh-ME is true P2P with quantum-bridge mechanics underneath: every ME-attuned
+     * endpoint exposes a CARRIED node on its face, and the star (deterministically
+     * elected hub, lowest stableKey) connects those carried nodes - so the networks fed
+     * INTO the endpoints' faces fuse across the mesh, while the host networks the
+     * endpoints sit on are never touched. Carried nodes are DENSE_CAPACITY, so each
+     * spoke carries up to 32 channels of the carried network.
      */
     private static void manageMeStars() {
         ME_LINKS.keySet().removeIf(freq -> {
@@ -320,7 +322,7 @@ public final class MeshRegistry {
             var members = new ArrayList<MeshEndpointPart>();
             long membership = 0;
             for (var part : entry.getValue()) {
-                if (part.attuned(TYPE_ME) && part.getMainNode().getNode() != null) {
+                if (part.attuned(TYPE_ME) && part.carriedNode() != null) {
                     members.add(part);
                     membership = membership * 31 + part.stableKey();
                 }
@@ -342,17 +344,17 @@ public final class MeshRegistry {
             if (members.size() >= 2) {
                 members.sort(Comparator.comparingLong(MeshEndpointPart::stableKey));
                 var hubPart = members.get(0);
-                var hub = hubPart.getMainNode().getNode();
+                var hub = hubPart.carriedNode();
                 hubPart.setMeLinkState(ME_STATE_HUB);
                 for (int i = 1; i < members.size(); i++) {
                     var spokePart = members.get(i);
-                    var spoke = spokePart.getMainNode().getNode();
-                    // Sharing a grid before we link means a physical path already runs
+                    var spoke = spokePart.carriedNode();
+                    // Carried grids already sharing a grid means a physical path runs
                     // parallel to this mesh link. AE2 tolerates the loop; flag it anyway,
                     // because a redundant path is the classic half-a-base-offline trap.
                     boolean loop = hub.getGrid() == spoke.getGrid();
                     try {
-                        links.add(appeng.me.GridConnection.create(hub, spoke, null));
+                        links.add(appeng.api.networking.GridHelper.createConnection(hub, spoke));
                         spokePart.setMeLinkState(loop ? ME_STATE_LOOP : ME_STATE_LINKED);
                     } catch (IllegalStateException ignored) {
                         // already directly connected; the tightest possible loop

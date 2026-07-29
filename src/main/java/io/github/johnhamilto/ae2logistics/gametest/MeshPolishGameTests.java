@@ -358,20 +358,30 @@ public class MeshPolishGameTests {
         });
     }
 
-    /** Two ME endpoints already joined by cable must be flagged as a cabled loop. */
+    /** Two ME endpoints whose FED networks already touch must be flagged as a cabled loop. */
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void cabledLoopIsFlagged(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
+        // Fed cells above the endpoint faces, adjacent to EACH OTHER: the carried
+        // network already spans both endpoints before the mesh links it - a loop.
+        helper.setBlock(new BlockPos(1, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        helper.setBlock(new BlockPos(2, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
 
         var first = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "loop-flag",
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
         var second = placeEndpoint(helper, new BlockPos(2, 1, 1), Direction.UP, "loop-flag",
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
 
-        helper.runAfterDelay(40, () -> {
+        // Loop detection runs when a star (re)builds; the initial build can race the
+        // carried nodes' in-world connections, so force the documented re-check.
+        helper.runAfterDelay(20, () -> MeshRegistry.forceRelink("loop-flag"));
+
+        helper.runAfterDelay(60, () -> {
             int loops = 0;
             int hubs = 0;
             for (var endpoint : new MeshEndpointPart[] {first, second}) {

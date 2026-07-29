@@ -1,3 +1,7 @@
+> **SUPERSEDED (2026-07-28):** `GridHelper.createConnection(a, b)` is public API in
+> the 19.2 line after all - this draft proposed backporting a method that already
+> exists under a different name than 26.x uses. Kept for the record.
+
 # Proposal: public grid-connection API for the 1.21.1 line
 
 **Target:** AE2 19.2.x (Minecraft 1.21.1). The 26.x line already has
