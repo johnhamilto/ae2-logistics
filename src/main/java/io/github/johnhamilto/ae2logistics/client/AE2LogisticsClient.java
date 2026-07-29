@@ -17,10 +17,12 @@ public final class AE2LogisticsClient {
         modBus.addListener((RegisterMenuScreensEvent event) -> {
             event.register(AE2Logistics.LOGIC_PART_MENU.get(), LogicPartScreen::new);
             // Piloting AE2's own GUI framework: chrome comes from a screen style doc.
+            // Style docs live flat in /screens/ (prefixed filename): includes resolve
+            // relative to the doc's directory, so a subfolder breaks common/*.json.
             appeng.init.client.InitScreens.register(event,
                     AE2Logistics.PATTERN_WORKBENCH_MENU.get(),
                     PatternWorkbenchScreen::new,
-                    "/screens/ae2logistics/pattern_workbench.json");
+                    "/screens/ae2logistics_pattern_workbench.json");
             event.register(AE2Logistics.TRACER_TERMINAL_MENU.get(), TracerTerminalScreen::new);
             event.register(AE2Logistics.P2P_TERMINAL_MENU.get(), P2PFrequencyTerminalScreen::new);
             event.register(AE2Logistics.MESH_ENDPOINT_MENU.get(), MeshEndpointScreen::new);
