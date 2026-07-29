@@ -5,37 +5,41 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 import appeng.api.crafting.PatternDetailsHelper;
+import appeng.menu.AEBaseMenu;
+import appeng.menu.SlotSemantics;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.PatternWorkbenchBlockEntity;
 
-public class PatternWorkbenchMenu extends AbstractContainerMenu {
+/**
+ * Built on AE2's menu framework: slots carry semantics and are positioned by the
+ * screen's style document, and shift-click routing comes from the base class.
+ */
+public class PatternWorkbenchMenu extends AEBaseMenu {
 
     public final BlockPos pos;
     private final Container container;
 
     public PatternWorkbenchMenu(int containerId, Inventory inventory, PatternWorkbenchBlockEntity workbench) {
-        super(AE2Logistics.PATTERN_WORKBENCH_MENU.get(), containerId);
+        super(AE2Logistics.PATTERN_WORKBENCH_MENU.get(), containerId, inventory, workbench);
         this.pos = workbench.getBlockPos();
         this.container = workbench.inventory();
         buildSlots(inventory);
     }
 
     public PatternWorkbenchMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.PATTERN_WORKBENCH_MENU.get(), containerId);
+        super(AE2Logistics.PATTERN_WORKBENCH_MENU.get(), containerId, inventory, null);
         this.pos = buffer.readBlockPos();
         this.container = new SimpleContainer(1);
         buildSlots(inventory);
     }
 
     private void buildSlots(Inventory playerInventory) {
-        addSlot(new Slot(container, 0, 152, 21) {
+        addSlot(new Slot(container, 0, 0, 0) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return PatternDetailsHelper.isEncodedPattern(stack);
@@ -45,52 +49,12 @@ public class PatternWorkbenchMenu extends AbstractContainerMenu {
             public int getMaxStackSize() {
                 return 1;
             }
-        });
+        }, SlotSemantics.MACHINE_INPUT);
 
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 108 + row * 18));
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(playerInventory, col, 8 + col * 18, 166));
-        }
+        createPlayerInventorySlots(playerInventory);
     }
 
     public ItemStack patternStack() {
         return container.getItem(0);
-    }
-
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        var slot = slots.get(index);
-        if (!slot.hasItem()) {
-            return ItemStack.EMPTY;
-        }
-        var stack = slot.getItem();
-        var original = stack.copy();
-
-        if (index == 0) {
-            if (!moveItemStackTo(stack, 1, slots.size(), true)) {
-                return ItemStack.EMPTY;
-            }
-        } else {
-            if (!moveItemStackTo(stack, 0, 1, false)) {
-                return ItemStack.EMPTY;
-            }
-        }
-
-        if (stack.isEmpty()) {
-            slot.setByPlayer(ItemStack.EMPTY);
-        } else {
-            slot.setChanged();
-        }
-        return original;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
     }
 }

@@ -24,7 +24,7 @@
             16,
             16
           ],
-          "texture": "#housing"
+          "texture": "#front"
         },
         "south": {
           "uv": [
@@ -33,7 +33,7 @@
             16,
             16
           ],
-          "texture": "#front"
+          "texture": "#housing"
         },
         "east": {
           "uv": [

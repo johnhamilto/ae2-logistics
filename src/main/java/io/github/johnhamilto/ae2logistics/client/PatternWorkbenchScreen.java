@@ -6,38 +6,50 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.api.ids.AEComponents;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.style.ScreenStyle;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec;
 import io.github.johnhamilto.ae2logistics.crafting.EncodedAdaptivePattern;
+import io.github.johnhamilto.ae2logistics.crafting.GuardedPattern;
 import io.github.johnhamilto.ae2logistics.menu.CyclePatternSpecPayload;
 import io.github.johnhamilto.ae2logistics.menu.PatternWorkbenchMenu;
+import io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload;
 
-public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkbenchMenu> {
-
-    private static final ResourceLocation BACKGROUND = AE2Logistics.id("textures/gui/workbench_panel.png");
+/**
+ * First screen on AE2's own GUI framework: AE2 chrome (background, slots, labels)
+ * comes from the screen style; we paint the adaptive-spec grid and guard controls.
+ */
+public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
 
     private static final int GRID_X = 26;
     private static final int GRID_Y = 17;
+    private static final int TEXT_DARK = 0x404040;
+    private static final int TEXT_MUTED = 0x7b7b7b;
 
-    private net.minecraft.client.gui.components.EditBox guardChannelBox;
-    private net.minecraft.client.gui.components.EditBox guardValueBox;
-    private net.minecraft.client.gui.components.Button guardOpButton;
-    private net.minecraft.client.gui.components.Button wrapButton;
+    private EditBox guardChannelBox;
+    private EditBox guardValueBox;
+    private Button guardOpButton;
+    private Button wrapButton;
     private int guardOp = 4;
-    private net.minecraft.world.item.ItemStack lastSeenPattern = net.minecraft.world.item.ItemStack.EMPTY;
+    private ItemStack lastSeenPattern = ItemStack.EMPTY;
 
-    public PatternWorkbenchScreen(PatternWorkbenchMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+    public PatternWorkbenchScreen(PatternWorkbenchMenu menu, Inventory inventory, Component title,
+            ScreenStyle style) {
+        super(menu, inventory, title, style);
         this.imageWidth = 176;
         this.imageHeight = 190;
     }
@@ -45,40 +57,34 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
     @Override
     protected void init() {
         super.init();
-        guardChannelBox = new net.minecraft.client.gui.components.EditBox(font,
-                leftPos + 40, topPos + 74, 88, 14, Component.empty());
+        guardChannelBox = new EditBox(font, leftPos + 40, topPos + 74, 88, 14, Component.empty());
         guardChannelBox.setMaxLength(80);
         addRenderableWidget(guardChannelBox);
 
-        guardOpButton = net.minecraft.client.gui.components.Button.builder(
-                Component.literal(io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS[guardOp]),
-                b -> {
-                    guardOp = (guardOp + 1) % io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS.length;
-                    b.setMessage(Component.literal(
-                            io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS[guardOp]));
-                }).bounds(leftPos + 132, topPos + 72, 24, 16).build();
+        guardOpButton = Button.builder(Component.literal(GuardedPattern.OPS[guardOp]), b -> {
+            guardOp = (guardOp + 1) % GuardedPattern.OPS.length;
+            b.setMessage(Component.literal(GuardedPattern.OPS[guardOp]));
+        }).bounds(leftPos + 132, topPos + 72, 24, 16).build();
         addRenderableWidget(guardOpButton);
 
-        guardValueBox = new net.minecraft.client.gui.components.EditBox(font,
-                leftPos + 40, topPos + 90, 60, 14, Component.empty());
+        guardValueBox = new EditBox(font, leftPos + 40, topPos + 90, 60, 14, Component.empty());
         guardValueBox.setMaxLength(19);
         guardValueBox.setValue("0");
         addRenderableWidget(guardValueBox);
 
-        wrapButton = net.minecraft.client.gui.components.Button.builder(Component.literal("Wrap"),
-                b -> wrapOrUnwrap()).bounds(leftPos + 106, topPos + 88, 62, 16).build();
+        wrapButton = Button.builder(Component.literal("Wrap"), b -> wrapOrUnwrap())
+                .bounds(leftPos + 106, topPos + 88, 62, 16).build();
         addRenderableWidget(wrapButton);
 
-        lastSeenPattern = net.minecraft.world.item.ItemStack.EMPTY;
+        lastSeenPattern = ItemStack.EMPTY;
         refreshGuardWidgets();
     }
 
     private void wrapOrUnwrap() {
         var stack = menu.patternStack();
         if (stack.is(AE2Logistics.GUARDED_PATTERN.get())) {
-            PacketDistributor.sendToServer(new io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload(
-                    menu.pos, io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload.ACTION_UNWRAP,
-                    "", 0, 0));
+            PacketDistributor.sendToServer(new WrapPatternPayload(
+                    menu.pos, WrapPatternPayload.ACTION_UNWRAP, "", 0, 0));
         } else if (!stack.isEmpty()) {
             long value;
             try {
@@ -86,16 +92,16 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
             } catch (NumberFormatException e) {
                 value = 0;
             }
-            PacketDistributor.sendToServer(new io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload(
-                    menu.pos, io.github.johnhamilto.ae2logistics.menu.WrapPatternPayload.ACTION_WRAP,
+            PacketDistributor.sendToServer(new WrapPatternPayload(
+                    menu.pos, WrapPatternPayload.ACTION_WRAP,
                     guardChannelBox.getValue(), guardOp, value));
         }
     }
 
     @Override
-    protected void containerTick() {
-        super.containerTick();
-        if (!net.minecraft.world.item.ItemStack.matches(lastSeenPattern, menu.patternStack())) {
+    protected void updateBeforeRender() {
+        super.updateBeforeRender();
+        if (!ItemStack.matches(lastSeenPattern, menu.patternStack())) {
             lastSeenPattern = menu.patternStack().copy();
             refreshGuardWidgets();
         }
@@ -118,10 +124,8 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
             if (data != null) {
                 guardChannelBox.setValue(data.channel().toString());
                 guardValueBox.setValue(Long.toString(data.value()));
-                guardOp = Math.floorMod(data.op(),
-                        io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS.length);
-                guardOpButton.setMessage(Component.literal(
-                        io.github.johnhamilto.ae2logistics.crafting.GuardedPattern.OPS[guardOp]));
+                guardOp = Math.floorMod(data.op(), GuardedPattern.OPS.length);
+                guardOpButton.setMessage(Component.literal(GuardedPattern.OPS[guardOp]));
             }
         }
     }
@@ -147,57 +151,68 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
         return null;
     }
 
+    /** Gui-relative painting on top of the styled background. */
+    @Override
+    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        var encoded = decoded();
+        if (encoded == null) {
+            guiGraphics.drawString(font, "Insert an encoded pattern", GRID_X, GRID_Y + 20, TEXT_MUTED, false);
+            return;
+        }
+        guiGraphics.drawString(font, "Guard", 8, 76, TEXT_DARK, false);
+        if (menu.patternStack().is(AE2Logistics.GUARDED_PATTERN.get())) {
+            guiGraphics.drawString(font, "Unwrap to edit the recipe", 8, 60, TEXT_MUTED, false);
+        }
+
+        var inputs = encoded.sparseInputs();
+        for (int i = 0; i < 9 && i < inputs.size(); i++) {
+            var input = inputs.get(i);
+            if (input == null || !(input.what() instanceof AEItemKey itemKey)) {
+                continue;
+            }
+            int x = GRID_X + (i % 3) * 18;
+            int y = GRID_Y + (i / 3) * 18;
+            guiGraphics.renderItem(itemKey.toStack(), x, y);
+            var spec = encoded.specFor(i);
+            var badge = switch (spec.mode()) {
+                case EXACT -> "";
+                case FUZZY -> spec.fuzzyMode().map(m -> switch (m) {
+                    case PERCENT_99 -> "99";
+                    case PERCENT_75 -> "75";
+                    case PERCENT_50 -> "50";
+                    case PERCENT_25 -> "25";
+                    default -> "F";
+                }).orElse("F");
+                case TAG -> "#";
+                case ANY_OF -> "A" + (spec.alternatives().size() + 1);
+            };
+            if (!badge.isEmpty()) {
+                var color = switch (spec.mode()) {
+                    case FUZZY -> 0x5CE2FF;
+                    case TAG -> 0xF5C542;
+                    default -> 0xB08CFF;
+                };
+                guiGraphics.drawString(font, badge, x + 17 - font.width(badge), y + 8, color, true);
+            }
+            if (spec.catalyst()) {
+                guiGraphics.drawString(font, "C", x - 1, y - 2, 0xFFD24D, true);
+            }
+        }
+
+        var outputs = encoded.sparseOutputs();
+        if (!outputs.isEmpty() && outputs.get(0) != null
+                && outputs.get(0).what() instanceof AEItemKey outKey) {
+            guiGraphics.renderItem(outKey.toStack(), 116, 35);
+        }
+    }
+
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-
         var encoded = decoded();
         if (encoded != null) {
-            var inputs = encoded.sparseInputs();
-            for (int i = 0; i < 9 && i < inputs.size(); i++) {
-                var input = inputs.get(i);
-                if (input == null || !(input.what() instanceof AEItemKey itemKey)) {
-                    continue;
-                }
-                int x = leftPos + GRID_X + (i % 3) * 18;
-                int y = topPos + GRID_Y + (i / 3) * 18;
-                guiGraphics.renderItem(itemKey.toStack(), x, y);
-                var spec = encoded.specFor(i);
-                var badge = switch (spec.mode()) {
-                    case EXACT -> "";
-                    case FUZZY -> spec.fuzzyMode().map(m -> switch (m) {
-                        case PERCENT_99 -> "99";
-                        case PERCENT_75 -> "75";
-                        case PERCENT_50 -> "50";
-                        case PERCENT_25 -> "25";
-                        default -> "F";
-                    }).orElse("F");
-                    case TAG -> "#";
-                    case ANY_OF -> "A" + (spec.alternatives().size() + 1);
-                };
-                if (!badge.isEmpty()) {
-                    var color = switch (spec.mode()) {
-                        case FUZZY -> 0x5CE2FF;
-                        case TAG -> 0xF5C542;
-                        default -> 0xB08CFF;
-                    };
-                    guiGraphics.drawString(font, badge, x + 17 - font.width(badge), y + 8, color, true);
-                }
-                if (spec.catalyst()) {
-                    guiGraphics.drawString(font, "C", x - 1, y - 2, 0xFFD24D, true);
-                }
-            }
-
-            var outputs = encoded.sparseOutputs();
-            if (!outputs.isEmpty() && outputs.get(0) != null
-                    && outputs.get(0).what() instanceof AEItemKey outKey) {
-                guiGraphics.renderItem(outKey.toStack(), leftPos + 116, topPos + 35);
-            }
-
             renderGridTooltip(guiGraphics, encoded, mouseX, mouseY);
         }
-
-        renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
     private void renderGridTooltip(GuiGraphics guiGraphics, EncodedAdaptivePattern encoded, int mouseX, int mouseY) {
@@ -267,17 +282,5 @@ public class PatternWorkbenchScreen extends AbstractContainerScreen<PatternWorkb
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
-        if (!menu.patternStack().isEmpty()) {
-            guiGraphics.drawString(font, "Guard", leftPos + 8, topPos + 76, 0x9BB2C4, false);
-            if (menu.patternStack().is(AE2Logistics.GUARDED_PATTERN.get())) {
-                guiGraphics.drawString(font, "Unwrap to edit the recipe", leftPos + 8, topPos + 60,
-                        0x5A6B7C, false);
-            }
-        }
     }
 }
