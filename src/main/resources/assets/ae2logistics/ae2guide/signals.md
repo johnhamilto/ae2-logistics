@@ -21,6 +21,8 @@ There is exactly one value per channel per network. Every device sees the same n
 
 # ME Register Bank
 
+<BlockImage id="register_bank" scale="4" />
+
 The Register Bank stores manually-set signals so they survive restarts, and lets you
 inspect the network's signals:
 
@@ -28,6 +30,8 @@ inspect the network's signals:
 - **Click with a bound Signal Card** to read that card's channel on the action bar.
 
 Craft it from iron, certus quartz, redstone, and a logic processor.
+
+<RecipeFor id="register_bank" />
 
 Set values by hand while looking at a bank:
 
@@ -48,6 +52,8 @@ settle, spot oscillations, and confirm a hysteresis loop is actually latching.
 
 Craft it from an AE2 Terminal, a logic processor, and certus quartz.
 
+<RecipeFor id="tracer_terminal" />
+
 # Signal Card
 
 Level Emitters and Storage Monitors are configured by clicking them with an item — and
@@ -56,6 +62,8 @@ to fill any config slot.
 
 - Craft: an AE2 Basic Card plus a redstone torch.
 - Bind: `/ae2logistics signal card factory:iron_target`.
+
+<RecipeFor id="signal_card" />
 
 Put the bound card in a Level Emitter's config slot and the emitter thresholds on your
 computed value instead of an item count.

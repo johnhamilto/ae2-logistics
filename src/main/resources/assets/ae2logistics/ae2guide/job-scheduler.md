@@ -10,11 +10,15 @@ item_ids:
 
 # ME Job Scheduler
 
+<BlockImage id="job_scheduler" scale="4" />
+
 AE2 assigns crafting jobs to "the first free CPU that fits" - one bulk job monopolizes
 everything and interactive requests starve behind it. The Job Scheduler adds the
 missing policy layer for jobs it originates.
 
 Craft it from a Crafting Unit, a Regulus Crystal, and an Engineering Processor.
+
+<RecipeFor id="job_scheduler" />
 
 Four **stock rules**, each: a target item (click the slot with the item or a bucket),
 a **floor** to keep stocked, a **batch** size per job, a **class**, and an optional

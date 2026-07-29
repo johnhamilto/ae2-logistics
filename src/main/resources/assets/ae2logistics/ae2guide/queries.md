@@ -46,6 +46,8 @@ the saved list. **Every Query Terminal on the network carries the full library**
 any one surviving terminal preserves it, and editing a saved query updates every
 machine that references it by name.
 
+<RecipeFor id="query_terminal" />
+
 # Signal Query Sensor
 
 Writes the **total stored amount matching a query** to a signal channel, every tick,
@@ -53,8 +55,12 @@ in dependency order with the rest of the logic graph. This is the bridge from
 questions to control: `tag:c:ores AND stored` into a threshold into a guarded
 provider gates smelting on ore backlog - three parts, no code.
 
+<RecipeFor id="query_sensor" />
+
 # Query Export Bus
 
 Exports items matching its query (inline or `@named`) into the inventory it faces,
 eight items per operation, speeding up while it finds work. The generalized tag-bus:
 one part, any predicate, retargetable by editing one saved query.
+
+<RecipeFor id="query_export_bus" />

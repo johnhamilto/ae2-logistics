@@ -18,6 +18,8 @@ this mod - and edits them in place.
 
 Craft it from an AE2 Terminal, a Regulus Crystal, and an Engineering Processor.
 
+<RecipeFor id="config_terminal" />
+
 - **The list** shows each device's icon, name, position, priority, and a summary of
   its generic settings. The search box filters by name, type, or setting text -
   `redstone` finds every device with a redstone mode configured.
@@ -48,3 +50,5 @@ every AE2-based device in the box (positions, part sides, types, full settings),
 sneak-click the minimum corner of a rebuilt region to reapply everything to matching
 devices. Sneak-use in the air clears it. Craft it from paper, a Regulus Crystal, and
 a certus quartz crystal.
+
+<RecipeFor id="config_blueprint" />

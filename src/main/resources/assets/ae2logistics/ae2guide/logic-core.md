@@ -10,12 +10,16 @@ item_ids:
 
 # ME Logic Core
 
+<BlockImage id="logic_core" scale="4" />
+
 Forty cable parts of logic work, but they cost space, break when a cable is nudged,
 and read like spaghetti. The Logic Core holds up to **eight logic nodes as list
 entries** inside one block - the same evaluators as the physical parts, on the same
 deterministic scheduler, configured in one screen.
 
 Craft it from an ME Register Bank, a Regulus Crystal, and an Engineering Processor.
+
+<RecipeFor id="logic_core" />
 
 ## Entries
 

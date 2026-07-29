@@ -18,7 +18,11 @@ path, **but only inside coverage**.
 
 ## ME Wireless Bridge
 
+<BlockImage id="wireless_bridge" scale="4" />
+
 Craft it from a Wireless Receiver, a Regulus Crystal, and a Calculation Processor.
+
+<RecipeFor id="wireless_bridge" />
 
 **Anchor before placing**: click any access point (AE2's or a Dense one) with the
 bridge item to bind it to that access point's network, then place the bridge
@@ -41,11 +45,15 @@ network while coverage holds.
 
 ## Dense Wireless Access Point
 
+<BlockImage id="dense_wireless_access_point" scale="4" />
+
 AE2's access points serve bridges, but they are channel-starved carriers for machine
 work. The Dense Wireless Access Point (Wireless Access Point + Regulus + Engineering
 Processor) is the scaling tier: a **32-channel dense carrier** with a fixed 32-block
 range, built to be the cell tower your bridged outposts hang from. Feed it dense
 cable or a controller face, or the fat pipe chokes at its own uplink.
+
+<RecipeFor id="dense_wireless_access_point" />
 
 ## Composition
 

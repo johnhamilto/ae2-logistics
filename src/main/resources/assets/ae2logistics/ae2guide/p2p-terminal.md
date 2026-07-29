@@ -41,3 +41,5 @@ retags every loaded endpoint of that frequency in one action; endpoints in unloa
 chunks keep the old frequency until they load and are renamed again.
 
 Craft it from an AE2 Terminal, an ME P2P Tunnel, and a logic processor.
+
+<RecipeFor id="p2p_frequency_terminal" />

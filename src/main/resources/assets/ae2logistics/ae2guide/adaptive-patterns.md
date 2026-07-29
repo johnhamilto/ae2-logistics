@@ -37,8 +37,12 @@ crafting plans stay fast and predictable.
 
 # Pattern Workbench
 
+<BlockImage id="pattern_workbench" scale="4" />
+
 Craft the Pattern Workbench (a crafting table, an AE2 Fuzzy Card, certus quartz, and
 iron). Then:
+
+<RecipeFor id="pattern_workbench" />
 
 1. Encode a processing pattern normally in the ME Pattern Encoding Terminal.
 2. Put it in the workbench's pattern slot.

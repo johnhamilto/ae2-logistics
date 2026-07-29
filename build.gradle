@@ -70,6 +70,15 @@ neoForge {
             systemProperty('ae2logistics.tests', 'true')
             systemProperty('neoforge.enabledGameTestNamespaces', project.mod_id)
         }
+        guide {
+            client()
+            // Live-reloads guide pages from source while the game runs, and opens
+            // our category on startup - edit a page, see it instantly.
+            systemProperty('guideDev.ae2guide.sources',
+                    file('src/main/resources/assets/ae2logistics/ae2guide').absolutePath)
+            systemProperty('guideDev.ae2guide.sourcesNamespace', project.mod_id)
+            systemProperty('guideDev.ae2guide.startupPage', 'ae2logistics:ae2logistics-index.md')
+        }
     }
 
     mods {

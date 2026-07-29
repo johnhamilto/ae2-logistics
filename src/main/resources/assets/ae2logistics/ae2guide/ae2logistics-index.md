@@ -36,3 +36,8 @@ The systems, one page each:
 - **Universal Mesh Endpoints** — six transports over named many-to-many frequencies.
 
 Everything is server-computed, deterministic, and designed to sleep when idle.
+
+
+## The systems
+
+<SubPages />

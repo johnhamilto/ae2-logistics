@@ -27,6 +27,9 @@ test: ## Run in-game gametests on a headless server
 client: ## Launch a Minecraft client with the mod + AE2 loaded
 	$(GRADLE) runClient
 
+guide: ## Launch a client that opens our guide category and hot-reloads page edits
+	$(GRADLE) runGuide
+
 server: ## Launch a dedicated dev server with the mod + AE2 loaded
 	$(GRADLE) runServer
 

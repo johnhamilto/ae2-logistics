@@ -20,6 +20,19 @@ item_ids:
 
 # Logic Parts
 
+<ItemGrid>
+  <ItemIcon id="constant" />
+  <ItemIcon id="threshold" />
+  <ItemIcon id="hysteresis" />
+  <ItemIcon id="arithmetic" />
+  <ItemIcon id="logic_gate" />
+  <ItemIcon id="redstone_port" />
+  <ItemIcon id="stock_sensor" />
+  <ItemIcon id="rate" />
+  <ItemIcon id="counter" />
+  <ItemIcon id="timer" />
+</ItemGrid>
+
 Logic parts mount on cables like buses. Right-click one to configure it: which channels
 it reads, which channel it writes, and its constants. Parts use no AE2 channels and idle
 at almost no power.
@@ -50,6 +63,8 @@ tick. If two parts write the same channel, the values add.
 The Job Monitor turns autocrafting activity into signals. Mount one on a cable and it
 polls every crafting CPU on the network each tick, driving four channels under a
 configurable prefix (default `craft`):
+
+<RecipeFor id="job_monitor" />
 
 - `craft:active` — jobs currently running; `craft:idle` — CPUs with nothing to do.
 - `craft:stalled` — jobs that have made **no progress** for the configured window

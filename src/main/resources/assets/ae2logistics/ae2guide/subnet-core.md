@@ -10,11 +10,15 @@ item_ids:
 
 # ME Subnet Core
 
+<BlockImage id="subnet_core" scale="4" />
+
 Subnetworks are AE2's most powerful technique and its most tedious: real cable, real
 space, fragile to one wrong connection, unreadable to anyone who didn't build them.
 The Subnet Core holds an **entire subnet inside one block**, configured as a list.
 
 Craft it from a Storage Bus, a Regulus Crystal, and an Engineering Processor.
+
+<RecipeFor id="subnet_core" />
 
 ## How it works
 

@@ -18,6 +18,8 @@ for one channel.
 
 **Two endpoints on a frequency are a universal point-to-point tunnel. More are a mesh.**
 
+<RecipeFor id="mesh_endpoint" />
+
 Right-click to configure: type a frequency name, pick a role, toggle capabilities.
 
 # Per-type behavior

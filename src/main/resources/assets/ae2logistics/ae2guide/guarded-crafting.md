@@ -23,11 +23,17 @@ The control tier is built from **Regulus Crystal**, this mod's resource. It form
 way Fluix does: drop a **Charged Certus Quartz Crystal**, **Redstone**, and **Glowstone
 Dust** into water and they fuse into two Regulus Crystals.
 
+<RecipeFor id="regulus_crystal" />
+
 # The Guarded Pattern Provider
+
+<BlockImage id="guarded_pattern_provider" scale="4" />
 
 Craft it from a Pattern Provider, a Regulus Crystal, and a Logic Processor. It is a full
 pattern provider - nine pattern slots, pushes to adjacent machines, visible in pattern
 access terminals - with a gate in front:
+
+<RecipeFor id="guarded_pattern_provider" />
 
 - **Guard**: a signal channel compared against a constant (`<`, `<=`, `=`, `>=`, `>`).
   While the guard fails, every pattern in this provider is **invisible to the planner**:
