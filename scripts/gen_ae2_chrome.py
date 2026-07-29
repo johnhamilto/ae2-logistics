@@ -85,7 +85,10 @@ def main() -> None:
     stamp_slots(out, slot, grid(25, 16, 3, 3))
     stamp_slots(out, slot, [(115, 34)])
     stamp_slots(out, slot, player_inventory())
-    out.save(OUT / "pattern_workbench.png")
+    # AE2's Blitter samples against a 256x256 reference sheet; pad like AE2 does.
+    sheet = Image.new("RGBA", (256, 256))
+    sheet.paste(out, (0, 0))
+    sheet.save(OUT / "pattern_workbench.png")
     print("wrote", OUT / "pattern_workbench.png")
 
 
