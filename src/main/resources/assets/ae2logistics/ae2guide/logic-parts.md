@@ -1,7 +1,21 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: Logic Parts
   position: 20
+  icon: ae2logistics:logic_gate
+item_ids:
+- ae2logistics:constant
+- ae2logistics:threshold
+- ae2logistics:hysteresis
+- ae2logistics:arithmetic
+- ae2logistics:logic_gate
+- ae2logistics:redstone_port
+- ae2logistics:stock_sensor
+- ae2logistics:rate
+- ae2logistics:counter
+- ae2logistics:timer
+- ae2logistics:job_monitor
 ---
 
 # Logic Parts

@@ -1,7 +1,11 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: ME Job Scheduler
   position: 38
+  icon: ae2logistics:job_scheduler
+item_ids:
+- ae2logistics:job_scheduler
 ---
 
 # ME Job Scheduler

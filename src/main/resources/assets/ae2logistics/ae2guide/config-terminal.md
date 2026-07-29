@@ -1,7 +1,12 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: ME Config Terminal
   position: 48
+  icon: ae2logistics:config_terminal
+item_ids:
+- ae2logistics:config_terminal
+- ae2logistics:config_blueprint
 ---
 
 # ME Config Terminal

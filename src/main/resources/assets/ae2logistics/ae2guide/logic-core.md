@@ -1,7 +1,11 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: ME Logic Core
   position: 39
+  icon: ae2logistics:logic_core
+item_ids:
+- ae2logistics:logic_core
 ---
 
 # ME Logic Core

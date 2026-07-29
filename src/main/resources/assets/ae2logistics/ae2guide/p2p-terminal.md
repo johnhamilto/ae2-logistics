@@ -1,7 +1,11 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: P2P Frequency Terminal
   position: 40
+  icon: ae2logistics:p2p_frequency_terminal
+item_ids:
+- ae2logistics:p2p_frequency_terminal
 ---
 
 # P2P Frequency Terminal

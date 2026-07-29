@@ -223,7 +223,7 @@ public class SubnetCoreBlockEntity extends BlockEntity implements IInWorldGridNo
     }
 
     /** External inventories behind an entry's face, wrapped for ME. */
-    List<MEStorage> externalStoragesFor(SubnetCoreEntry entry) {
+    public List<MEStorage> externalStoragesFor(SubnetCoreEntry entry) {
         var result = new ArrayList<MEStorage>(2);
         if (level == null || !entry.type().faceBound()) {
             return result;

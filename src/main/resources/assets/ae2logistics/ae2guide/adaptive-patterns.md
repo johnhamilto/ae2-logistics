@@ -1,7 +1,12 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: Adaptive Patterns
   position: 30
+  icon: ae2logistics:pattern_workbench
+item_ids:
+- ae2logistics:adaptive_processing_pattern
+- ae2logistics:pattern_workbench
 ---
 
 # Adaptive Patterns

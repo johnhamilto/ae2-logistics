@@ -3,8 +3,6 @@ package io.github.johnhamilto.ae2logistics.client;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
-import guideme.Guide;
-
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 
 public final class AE2LogisticsClient {
@@ -13,7 +11,8 @@ public final class AE2LogisticsClient {
     }
 
     public static void initialize(IEventBus modBus) {
-        Guide.builder(AE2Logistics.id("guide")).folder("guide").build();
+        // Guide pages live in assets/ae2logistics/ae2guide/ and are contributed
+        // directly into AE2's own guide (GuideME collects that folder across mods).
         SignalRenderer.initialize(modBus);
         modBus.addListener((RegisterMenuScreensEvent event) -> {
             event.register(AE2Logistics.LOGIC_PART_MENU.get(), LogicPartScreen::new);

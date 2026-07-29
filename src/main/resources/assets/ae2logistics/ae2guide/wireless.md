@@ -1,7 +1,12 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: Wireless Bridging
   position: 40
+  icon: ae2logistics:wireless_bridge
+item_ids:
+- ae2logistics:wireless_bridge
+- ae2logistics:dense_wireless_access_point
 ---
 
 # Wireless Bridging

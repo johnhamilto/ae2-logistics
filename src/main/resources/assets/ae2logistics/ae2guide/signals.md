@@ -1,7 +1,13 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: Signals and the Register Bank
   position: 10
+  icon: ae2logistics:register_bank
+item_ids:
+- ae2logistics:register_bank
+- ae2logistics:signal_card
+- ae2logistics:tracer_terminal
 ---
 
 # Signals

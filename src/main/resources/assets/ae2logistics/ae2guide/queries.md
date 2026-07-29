@@ -1,7 +1,13 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: Query Language
   position: 45
+  icon: ae2logistics:query_terminal
+item_ids:
+- ae2logistics:query_terminal
+- ae2logistics:query_sensor
+- ae2logistics:query_export_bus
 ---
 
 # Query Language

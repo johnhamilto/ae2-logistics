@@ -1,7 +1,13 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: Guarded Crafting
   position: 35
+  icon: ae2logistics:guarded_pattern_provider
+item_ids:
+- ae2logistics:guarded_pattern_provider
+- ae2logistics:guarded_pattern
+- ae2logistics:regulus_crystal
 ---
 
 # Guarded Crafting

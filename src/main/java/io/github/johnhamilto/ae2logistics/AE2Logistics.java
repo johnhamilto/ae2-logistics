@@ -526,6 +526,7 @@ public class AE2Logistics {
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.MeshCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.QueryCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.WirelessCommands::register);
+        NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.SubnetCommands::register);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             AE2LogisticsClient.initialize(modBus);

@@ -1,7 +1,11 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: Universal Mesh Endpoints
   position: 50
+  icon: ae2logistics:mesh_endpoint
+item_ids:
+- ae2logistics:mesh_endpoint
 ---
 
 # Universal Mesh Endpoints

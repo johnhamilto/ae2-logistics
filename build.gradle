@@ -17,11 +17,19 @@ java {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://api.modrinth.com/maven")
+        content { includeGroup "maven.modrinth" }
+    }
 }
 
 dependencies {
     implementation "org.appliedenergistics:appliedenergistics2:${project.ae2_version}"
     compileOnly "org.appliedenergistics:guideme:${project.guideme_version}"
+
+    // Dev-environment QoL only; not shipped dependencies.
+    runtimeOnly "maven.modrinth:jade:${project.jade_version}"
+    runtimeOnly "maven.modrinth:jei:${project.jei_version}"
 }
 
 sourceSets {

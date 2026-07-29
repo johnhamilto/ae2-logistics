@@ -9,9 +9,10 @@ never been touched by a person. Each block/item/part has its own heading so note
 reference them directly. "Not a bug" boxes list known, deliberate, or documented
 limitations — note them if they *feel* wrong, but they are expected behavior.
 
-**The in-game guide** (craft the AE2 Logistics Guide tablet: book + certus) has a page
-per system and should agree with everything below. Where it doesn't, that's a doc bug —
-note it.
+**The in-game guide** now lives as the "AE2 Logistics" category inside **AE2's own
+guide** (open AE2's guide, or craft the Guide Tablet: book + certus — it opens the same
+guide). **Hold G while hovering any of our items** to jump to its page. A page per
+system; where it disagrees with this doc, that's a doc bug — note it.
 
 ---
 
@@ -448,7 +449,8 @@ Config Terminal + P2P Terminal + Mesh Endpoint), Config Blueprint, Regulus Cryst
 Guide Tablet. (Adaptive/Guarded patterns are made, not tabbed.)
 
 ### Guide
-12 pages via the Guide Tablet (book + certus). Index links every system.
+13 pages as the "AE2 Logistics" category inside AE2's guide; hold G on any of our
+items jumps to its page. The Guide Tablet (book + certus) opens AE2's guide.
 
 ### Known global limits (not bugs)
 - en_us only. Programmatic 16x16 art everywhere.

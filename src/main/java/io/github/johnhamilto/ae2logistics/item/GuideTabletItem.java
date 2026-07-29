@@ -10,9 +10,12 @@ import net.minecraft.world.level.Level;
 
 import guideme.GuidesCommon;
 
-import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import net.minecraft.resources.ResourceLocation;
 
 public class GuideTabletItem extends Item {
+
+    /** Our pages live inside AE2's own guide as the "AE2 Logistics" category. */
+    private static final ResourceLocation AE2_GUIDE = ResourceLocation.parse("ae2:guide");
 
     public GuideTabletItem(Properties properties) {
         super(properties);
@@ -22,7 +25,7 @@ public class GuideTabletItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         var stack = player.getItemInHand(hand);
         if (level.isClientSide()) {
-            GuidesCommon.openGuide(player, AE2Logistics.id("guide"));
+            GuidesCommon.openGuide(player, AE2_GUIDE);
         }
         return new InteractionResultHolder<>(InteractionResult.FAIL, stack);
     }

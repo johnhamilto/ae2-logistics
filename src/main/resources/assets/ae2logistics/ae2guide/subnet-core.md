@@ -1,7 +1,11 @@
 ---
 navigation:
+  parent: ae2logistics-index.md
   title: ME Subnet Core
   position: 41
+  icon: ae2logistics:subnet_core
+item_ids:
+- ae2logistics:subnet_core
 ---
 
 # ME Subnet Core
