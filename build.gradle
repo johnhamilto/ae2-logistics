@@ -21,6 +21,12 @@ repositories {
         url = uri("https://api.modrinth.com/maven")
         content { includeGroup "maven.modrinth" }
     }
+    maven {
+        // JEI's official maven; Modrinth's maven serves multi-loader versions'
+        // primary (Fabric) file, so JEI must come from here with an explicit loader.
+        url = uri("https://maven.blamejared.com")
+        content { includeGroup "mezz.jei" }
+    }
 }
 
 dependencies {
@@ -29,7 +35,7 @@ dependencies {
 
     // Dev-environment QoL only; not shipped dependencies.
     runtimeOnly "maven.modrinth:jade:${project.jade_version}"
-    runtimeOnly "maven.modrinth:jei:${project.jei_version}"
+    runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${project.jei_version}"
 }
 
 sourceSets {
