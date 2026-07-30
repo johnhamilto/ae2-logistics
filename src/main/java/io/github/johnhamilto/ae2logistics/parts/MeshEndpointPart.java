@@ -34,15 +34,42 @@ import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.signal.SignalService;
 
 /**
- * A universal mesh endpoint: joins a named frequency with a role (in/out/both), a
- * priority, and any subset of transport capabilities (redstone, items, fluids, energy,
- * signals). Two endpoints on one frequency are a universal point-to-point tunnel; more
- * make a many-to-many mesh. Costs one AE2 channel.
+ * A mesh endpoint: joins a named frequency with a role (in/out/both), a priority, and a
+ * set of transport capabilities (redstone, items, fluids, energy, signals, ME). Two
+ * endpoints on one frequency are a universal point-to-point tunnel; more make a
+ * many-to-many mesh. Costs one AE2 channel.
+ *
+ * <p>The universal part item exposes all six capabilities as GUI toggles; the typed part
+ * items lock the mask to a single transport (combine all six to craft the universal).
  */
 public class MeshEndpointPart extends AEBasePart {
 
     @PartModels
     public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/mesh_endpoint"));
+    @PartModels
+    public static final IPartModel MODEL_REDSTONE = new PartModel(AE2Logistics.id("part/mesh_endpoint_redstone"));
+    @PartModels
+    public static final IPartModel MODEL_ITEM = new PartModel(AE2Logistics.id("part/mesh_endpoint_item"));
+    @PartModels
+    public static final IPartModel MODEL_FLUID = new PartModel(AE2Logistics.id("part/mesh_endpoint_fluid"));
+    @PartModels
+    public static final IPartModel MODEL_ENERGY = new PartModel(AE2Logistics.id("part/mesh_endpoint_energy"));
+    @PartModels
+    public static final IPartModel MODEL_SIGNAL = new PartModel(AE2Logistics.id("part/mesh_endpoint_signal"));
+    @PartModels
+    public static final IPartModel MODEL_ME = new PartModel(AE2Logistics.id("part/mesh_endpoint_me"));
+
+    private record TypedVariant(int mask, IPartModel model) {
+    }
+
+    /** Part items whose capability mask is fixed; anything else is the universal part. */
+    private static final Map<ResourceLocation, TypedVariant> TYPED = Map.of(
+            AE2Logistics.id("mesh_endpoint_redstone"), new TypedVariant(MeshRegistry.TYPE_REDSTONE, MODEL_REDSTONE),
+            AE2Logistics.id("mesh_endpoint_item"), new TypedVariant(MeshRegistry.TYPE_ITEM, MODEL_ITEM),
+            AE2Logistics.id("mesh_endpoint_fluid"), new TypedVariant(MeshRegistry.TYPE_FLUID, MODEL_FLUID),
+            AE2Logistics.id("mesh_endpoint_energy"), new TypedVariant(MeshRegistry.TYPE_ENERGY, MODEL_ENERGY),
+            AE2Logistics.id("mesh_endpoint_signal"), new TypedVariant(MeshRegistry.TYPE_SIGNAL, MODEL_SIGNAL),
+            AE2Logistics.id("mesh_endpoint_me"), new TypedVariant(MeshRegistry.TYPE_ME, MODEL_ME));
 
     public static final byte ROLE_IN = 0;
     public static final byte ROLE_OUT = 1;
@@ -85,6 +112,21 @@ public class MeshEndpointPart extends AEBasePart {
         getMainNode()
                 .setFlags(GridFlags.REQUIRE_CHANNEL, GridFlags.DENSE_CAPACITY)
                 .setIdlePowerUsage(1.0);
+        var typed = typedVariant();
+        if (typed != null) {
+            capabilities = typed.mask();
+        }
+    }
+
+    @Nullable
+    private TypedVariant typedVariant() {
+        return TYPED.get(net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getKey(getPartItem().asItem()));
+    }
+
+    /** True for the typed part items, whose capability mask cannot be edited. */
+    public boolean capabilityLocked() {
+        return typedVariant() != null;
     }
 
     public String frequency() {
@@ -158,6 +200,10 @@ public class MeshEndpointPart extends AEBasePart {
     }
 
     public void applyMeshConfig(String newFrequency, byte newRole, int newPriority, int newCapabilities) {
+        var typed = typedVariant();
+        if (typed != null) {
+            newCapabilities = typed.mask();
+        }
         // Unregistering changes the old frequency's membership, so the registry tears
         // down and rebuilds that frequency's ME lanes without us on the next tick.
         MeshRegistry.unregister(this);
@@ -633,6 +679,10 @@ public class MeshEndpointPart extends AEBasePart {
         role = data.getByte("role");
         priority = data.getInt("priority");
         capabilities = data.getInt("capabilities");
+        var typed = typedVariant();
+        if (typed != null) {
+            capabilities = typed.mask();
+        }
         var filterList = data.getList("filter", net.minecraft.nbt.Tag.TAG_COMPOUND);
         for (int i = 0; i < FILTER_SLOTS; i++) {
             filter[i] = null;
@@ -651,6 +701,7 @@ public class MeshEndpointPart extends AEBasePart {
 
     @Override
     public IPartModel getStaticModels() {
-        return MODEL;
+        var typed = typedVariant();
+        return typed == null ? MODEL : typed.model();
     }
 }

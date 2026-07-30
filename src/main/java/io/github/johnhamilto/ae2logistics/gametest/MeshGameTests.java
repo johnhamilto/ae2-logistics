@@ -584,4 +584,66 @@ public class MeshGameTests {
             helper.succeed();
         });
     }
+
+    /** Typed part items lock the capability mask no matter what config arrives. */
+    @GameTest(template = "empty5", timeoutTicks = 100)
+    public void typedEndpointLocksCapabilityMask(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 1));
+
+        var typed = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
+                Direction.UP, null, AE2Logistics.MESH_ENDPOINT_ITEM_PART.get());
+        helper.assertTrue(typed != null, "typed endpoint placement failed");
+        helper.assertTrue(typed.capabilityLocked(), "typed endpoint must report a locked mask");
+        helper.assertTrue(typed.capabilityMask() == MeshRegistry.TYPE_ITEM,
+                "typed endpoint must place pre-attuned to its transport");
+        typed.applyMeshConfig("locked", MeshEndpointPart.ROLE_IN, 0, 63);
+        helper.assertTrue(typed.capabilityMask() == MeshRegistry.TYPE_ITEM,
+                "typed endpoint must ignore mask edits, got " + typed.capabilityMask());
+
+        var universal = placeEndpoint(helper, new BlockPos(2, 1, 1), Direction.UP, "locked",
+                MeshEndpointPart.ROLE_OUT, 63);
+        helper.assertTrue(!universal.capabilityLocked() && universal.capabilityMask() == 63,
+                "universal endpoint must keep an editable full mask");
+        helper.succeed();
+    }
+
+    /** A typed input/output pair forwards items even when the config carries mask 0. */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void typedEndpointsFormTunnel(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 1));
+
+        var input = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
+                Direction.NORTH, null, AE2Logistics.MESH_ENDPOINT_ITEM_PART.get());
+        var output = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
+                Direction.UP, null, AE2Logistics.MESH_ENDPOINT_ITEM_PART.get());
+        helper.assertTrue(input != null && output != null, "typed endpoint placement failed");
+        input.applyMeshConfig("typed-tunnel", MeshEndpointPart.ROLE_IN, 0, 0);
+        output.applyMeshConfig("typed-tunnel", MeshEndpointPart.ROLE_OUT, 0, 0);
+        helper.setBlock(new BlockPos(2, 2, 1), Blocks.CHEST);
+
+        helper.runAfterDelay(30, () -> {
+            var handler = input.exposedItemHandler();
+            helper.assertTrue(handler != null,
+                    "typed input endpoint must expose an item handler despite mask-0 config");
+            var rest = handler.insertItem(0, new ItemStack(Items.IRON_INGOT, 8), false);
+            helper.assertTrue(rest.isEmpty(), "typed tunnel must accept the stack");
+        });
+
+        helper.runAfterDelay(40, () -> {
+            int count = 0;
+            if (helper.getBlockEntity(new BlockPos(2, 2, 1)) instanceof ChestBlockEntity chest) {
+                for (int i = 0; i < chest.getContainerSize(); i++) {
+                    count += chest.getItem(i).getCount();
+                }
+            }
+            helper.assertTrue(count == 8, "all 8 items must arrive through the typed tunnel, got " + count);
+            helper.succeed();
+        });
+    }
 }

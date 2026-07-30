@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.21.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (91 tests, run
+Status as of v0.22.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (93 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -38,6 +38,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F8.3 | ME Subnet Link part: quartz fiber + empty interface + storage bus in one - the face carries a REAL subnet (build with normal AE2 devices), power passes through, storage window with mode (subnet sees main / main sees subnet / both, loop-safe), priority + 9-slot filter | 0.20.0 |
 | QoL | Guide knowledgebase (page per device + AE2 help button), right-click reverse on cycle buttons, JEI ghost drag onto filter/ghost slots | 0.18.0-0.18.1 |
 | Infra | Entire GUI layer on AE2's own framework: all 14 screens are AEBaseMenu/AEBaseScreen with style docs, chrome composed from AE2's me_chest dialog (scripts/gen_ae2_chrome.py), and AE2Button/AETextField widgets; mesh endpoint placement wireframe matches the P2P chassis | 0.17.0 |
+| F11 | Typed Mesh Endpoints: six single-transport part items sharing the endpoint class (mask locked by item id, pre-attuned on placement, per-type recolored chassis); fuse all six to craft the universal; provider P2P remains built into item/fluid inputs | 0.22.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer

@@ -21,9 +21,16 @@ on is the carrier, and the same frequency name on another network is a different
 unrelated frequency. To span distance, extend the carrier network (cables, quantum
 bridges, the ME Wireless Bridge) - not the frequency.
 
+Endpoints come in six single-transport flavors - the
+[Typed Mesh Endpoints](typed-mesh-endpoints.md) - and the universal part that
+carries any mix. Craft a typed endpoint from an ME P2P Tunnel, a logic processor,
+and an item matching the transport; fuse all six into the universal:
+
 <RecipeFor id="mesh_endpoint" />
 
-Right-click to configure: type a frequency name, pick a role, toggle capabilities.
+Right-click to configure: type a frequency name, pick a role, toggle capabilities
+(typed endpoints show their fixed attunement instead). Typed and universal endpoints
+mix freely on a frequency.
 
 # Per-type behavior
 
@@ -96,4 +103,5 @@ Each endpoint costs one channel and idles at one AE per tick.
 
 ## Devices
 
-<ItemLink id="mesh_endpoint" /> and the <ItemLink id="p2p_frequency_terminal" /> that lists and renames frequencies.
+<ItemLink id="mesh_endpoint" />, the six [Typed Mesh Endpoints](typed-mesh-endpoints.md),
+and the <ItemLink id="p2p_frequency_terminal" /> that lists and renames frequencies.

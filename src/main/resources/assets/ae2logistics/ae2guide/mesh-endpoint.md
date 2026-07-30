@@ -25,6 +25,9 @@ form a universal point-to-point tunnel - or, with more of them, a
 - Costs one channel and idles at 1 AE/t. Frequencies never cross networks - the
   network the endpoints sit on is the carrier.
 
+Crafted by fusing all six [Typed Mesh Endpoints](typed-mesh-endpoints.md) - the
+single-transport versions you'll build first:
+
 <RecipeFor id="mesh_endpoint" />
 
 Transport semantics, ME lane bundling, and the diagnostics are all in

@@ -536,6 +536,20 @@ PART_MESH_ENDPOINT = """
 
 write_png(OUT / "part" / "mesh_endpoint.png", PART_MESH_ENDPOINT, PART)
 
+# Typed endpoints: the universal starburst with the accent recolored per transport.
+MESH_TYPE_COLORS = {
+    "redstone": ((240, 80, 48, 255), (130, 26, 12, 255)),
+    "item": ((255, 198, 72, 255), (148, 104, 28, 255)),
+    "fluid": ((84, 158, 250, 255), (28, 76, 150, 255)),
+    "energy": ((255, 226, 74, 255), (150, 126, 24, 255)),
+    "signal": ((238, 116, 255, 255), (134, 44, 158, 255)),
+    "me": ((193, 126, 255, 255), (104, 58, 160, 255)),
+}
+for mesh_type, (bright, dim) in MESH_TYPE_COLORS.items():
+    typed = dict(PART)
+    typed.update({"C": bright, "c": dim})
+    write_png(OUT / "part" / f"mesh_endpoint_{mesh_type}.png", PART_MESH_ENDPOINT, typed)
+
 # Subnet link: a split face - main network left, subnet right, bridged in the middle.
 PART_SUBNET_LINK = """
 ################

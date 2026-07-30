@@ -6,7 +6,13 @@
         "items": [
           {
             "items": [
-              "ae2logistics:mesh_endpoint"
+              "ae2logistics:mesh_endpoint",
+              "ae2logistics:mesh_endpoint_redstone",
+              "ae2logistics:mesh_endpoint_item",
+              "ae2logistics:mesh_endpoint_fluid",
+              "ae2logistics:mesh_endpoint_energy",
+              "ae2logistics:mesh_endpoint_signal",
+              "ae2logistics:mesh_endpoint_me"
             ]
           }
         ]
@@ -21,7 +27,7 @@
       "text": "Everything Everywhere"
     },
     "description": {
-      "text": "A Universal Mesh Endpoint moves six transports over named frequencies"
+      "text": "Mesh endpoints move six transports over named frequencies; the universal one moves them all"
     },
     "frame": "task"
   },

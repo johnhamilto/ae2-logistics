@@ -64,17 +64,29 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
                     b.setMessage(Component.literal(ROLES[roleValue]));
                 }));
 
-        for (int i = 0; i < TYPES.length; i++) {
-            int type = TYPES[i];
-            var name = TYPE_NAMES[i];
-            int x = leftPos + 10 + (i % 3) * 62;
-            int y = topPos + 68 + (i / 3) * 20;
-            addRenderableWidget(new AE2Button(x, y, 58, 18,
-                    Component.literal(toggleLabel(name, type)), b -> {
-                        maskValue ^= type;
-                        b.setMessage(Component.literal(toggleLabel(name, type)));
-                    }));
+        if (!menu.capabilitiesLocked) {
+            for (int i = 0; i < TYPES.length; i++) {
+                int type = TYPES[i];
+                var name = TYPE_NAMES[i];
+                int x = leftPos + 10 + (i % 3) * 62;
+                int y = topPos + 68 + (i / 3) * 20;
+                addRenderableWidget(new AE2Button(x, y, 58, 18,
+                        Component.literal(toggleLabel(name, type)), b -> {
+                            maskValue ^= type;
+                            b.setMessage(Component.literal(toggleLabel(name, type)));
+                        }));
+            }
         }
+    }
+
+    private String attunedNames() {
+        var names = new java.util.ArrayList<String>();
+        for (int i = 0; i < TYPES.length; i++) {
+            if ((maskValue & TYPES[i]) != 0) {
+                names.add(TYPE_NAMES[i]);
+            }
+        }
+        return names.isEmpty() ? "nothing" : String.join(", ", names);
     }
 
     private String toggleLabel(String name, int type) {
@@ -147,6 +159,11 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         guiGraphics.drawString(font, status, imageWidth - 10 - font.width(status), 6, statusColor(), false);
         guiGraphics.drawString(font, "Frequency", 10, 16, LABEL, false);
         guiGraphics.drawString(font, "Priority", 124, 16, LABEL, false);
+        if (menu.capabilitiesLocked) {
+            guiGraphics.drawString(font, "Attuned: " + attunedNames(), 10, 74, LABEL, false);
+            guiGraphics.drawString(font, "Fixed for this endpoint; craft the universal one to mix",
+                    10, 88, HINT, false);
+        }
         guiGraphics.drawString(font, "Filter - empty allows all; click with item or bucket", 10, 108,
                 HINT, false);
     }

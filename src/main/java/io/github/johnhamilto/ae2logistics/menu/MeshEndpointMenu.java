@@ -36,6 +36,7 @@ public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.Gho
     public final byte role;
     public final int priority;
     public final int capabilities;
+    public final boolean capabilitiesLocked;
 
     private final SimpleContainer filterContainer = new SimpleContainer(MeshEndpointPart.FILTER_SLOTS);
     private int filterSlotStart = -1;
@@ -54,6 +55,7 @@ public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.Gho
         this.role = part.role();
         this.priority = part.priority();
         this.capabilities = part.capabilityMask();
+        this.capabilitiesLocked = part.capabilityLocked();
 
         for (int i = 0; i < MeshEndpointPart.FILTER_SLOTS; i++) {
             filterContainer.setItem(i, displayStack(part.filterSlot(i)));
@@ -101,6 +103,7 @@ public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.Gho
         this.role = buffer.readByte();
         this.priority = buffer.readVarInt();
         this.capabilities = buffer.readVarInt();
+        this.capabilitiesLocked = buffer.readBoolean();
         for (int i = 0; i < MeshEndpointPart.FILTER_SLOTS; i++) {
             filterContainer.setItem(i, ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
         }
@@ -167,6 +170,7 @@ public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.Gho
         buffer.writeByte(part.role());
         buffer.writeVarInt(part.priority());
         buffer.writeVarInt(part.capabilityMask());
+        buffer.writeBoolean(part.capabilityLocked());
         for (int i = 0; i < MeshEndpointPart.FILTER_SLOTS; i++) {
             ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, displayStack(part.filterSlot(i)));
         }

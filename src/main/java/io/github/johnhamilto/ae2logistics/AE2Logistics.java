@@ -345,6 +345,19 @@ public class AE2Logistics {
             "p2p_frequency_terminal", P2PFrequencyTerminalPart.class, P2PFrequencyTerminalPart::new);
     public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_PART = part(
             "mesh_endpoint", MeshEndpointPart.class, MeshEndpointPart::new);
+    // Typed variants share the part class; MeshEndpointPart locks their mask by item id.
+    public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_REDSTONE_PART = part(
+            "mesh_endpoint_redstone", MeshEndpointPart.class, MeshEndpointPart::new);
+    public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_ITEM_PART = part(
+            "mesh_endpoint_item", MeshEndpointPart.class, MeshEndpointPart::new);
+    public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_FLUID_PART = part(
+            "mesh_endpoint_fluid", MeshEndpointPart.class, MeshEndpointPart::new);
+    public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_ENERGY_PART = part(
+            "mesh_endpoint_energy", MeshEndpointPart.class, MeshEndpointPart::new);
+    public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_SIGNAL_PART = part(
+            "mesh_endpoint_signal", MeshEndpointPart.class, MeshEndpointPart::new);
+    public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_ME_PART = part(
+            "mesh_endpoint_me", MeshEndpointPart.class, MeshEndpointPart::new);
     public static final Supplier<MenuType<MeshEndpointMenu>> MESH_ENDPOINT_MENU = MENUS.register(
             "mesh_endpoint", () -> IMenuTypeExtension.create(MeshEndpointMenu::new));
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart>> SUBNET_LINK_PART = part(
@@ -387,6 +400,12 @@ public class AE2Logistics {
                         output.accept(CONFIG_TERMINAL_PART.get());
                         output.accept(CONFIG_BLUEPRINT.get());
                         output.accept(P2P_TERMINAL_PART.get());
+                        output.accept(MESH_ENDPOINT_REDSTONE_PART.get());
+                        output.accept(MESH_ENDPOINT_ITEM_PART.get());
+                        output.accept(MESH_ENDPOINT_FLUID_PART.get());
+                        output.accept(MESH_ENDPOINT_ENERGY_PART.get());
+                        output.accept(MESH_ENDPOINT_SIGNAL_PART.get());
+                        output.accept(MESH_ENDPOINT_ME_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(SUBNET_LINK_PART.get());
                         output.accept(REGULUS_CRYSTAL.get());
