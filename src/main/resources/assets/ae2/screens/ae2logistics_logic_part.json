@@ -1,0 +1,20 @@
+{
+  "includes": ["common/common.json", "common/player_inventory.json"],
+  "slots": {
+    "CONFIG": {
+      "left": 10,
+      "top": 44
+    }
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "text": ""
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

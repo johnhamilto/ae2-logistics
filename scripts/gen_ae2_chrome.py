@@ -76,6 +76,14 @@ def player_inventory(height: int, x: int = 7):
     return grid(x, height - 85, 9, 3) + grid(x, height - 27, 9, 1)
 
 
+def emit(name: str, out: Image.Image) -> None:
+    # AE2's Blitter samples against a 256x256 reference sheet; pad like AE2 does.
+    sheet = Image.new("RGBA", (256, 256))
+    sheet.paste(out, (0, 0))
+    sheet.save(OUT / f"{name}.png")
+    print("wrote", OUT / f"{name}.png")
+
+
 def main() -> None:
     source = Image.open(SOURCE).convert("RGBA").crop(ART_RECT)
     slot = source.crop(SLOT_FRAME)
@@ -88,11 +96,23 @@ def main() -> None:
     stamp_slots(out, slot, grid(25, 16, 3, 3))
     stamp_slots(out, slot, [(115, 34)])
     stamp_slots(out, slot, player_inventory(200))
-    # AE2's Blitter samples against a 256x256 reference sheet; pad like AE2 does.
-    sheet = Image.new("RGBA", (256, 256))
-    sheet.paste(out, (0, 0))
-    sheet.save(OUT / "pattern_workbench.png")
-    print("wrote", OUT / "pattern_workbench.png")
+    emit("pattern_workbench", out)
+
+    # Plain slotless part panels (Job Monitor, Query Sensor, Query Export Bus, and
+    # the plain logic-part variant via LogicPartScreen's own drawBG).
+    emit("panel_200x166", dialog(source, 200, 166))
+
+    # Stock Sensor variant of the logic-part screen: ghost slot + player inventory.
+    out = dialog(source, 200, 222)
+    stamp_slots(out, slot, [(9, 43)])
+    stamp_slots(out, slot, player_inventory(222))
+    emit("logic_sensor", out)
+
+    # Mesh Endpoint: control stack, 9 filter ghosts, player inventory.
+    out = dialog(source, 200, 231)
+    stamp_slots(out, slot, grid(18, 116, 9, 1))
+    stamp_slots(out, slot, player_inventory(231))
+    emit("mesh_endpoint", out)
 
 
 if __name__ == "__main__":

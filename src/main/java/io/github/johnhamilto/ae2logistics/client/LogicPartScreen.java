@@ -6,23 +6,32 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.style.Blitter;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AE2Button;
+import appeng.client.gui.widgets.AETextField;
+
 import io.github.johnhamilto.ae2logistics.menu.ConfigurePartPayload;
 import io.github.johnhamilto.ae2logistics.menu.LogicPartMenu;
 import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
 
-public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
+public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
 
-    private static final ResourceLocation BACKGROUND = AE2Logistics.id("textures/gui/logic_panel.png");
-    private static final ResourceLocation TALL_BACKGROUND = AE2Logistics.id("textures/gui/mesh_panel.png");
+    // One menu type, two dialog sizes: the style doc carries no background, and this
+    // screen blits the right composed chrome per variant instead.
+    private static final Blitter PANEL_BG =
+            Blitter.texture("guis/ae2logistics/panel_200x166.png", 256, 256).src(0, 0, 200, 166);
+    private static final Blitter SENSOR_BG =
+            Blitter.texture("guis/ae2logistics/logic_sensor.png", 256, 256).src(0, 0, 200, 222);
+
+    private static final int LABEL = 0x404040;
+    private static final int HINT = 0x7b7b7b;
+    private static final int VALUE = 0x2E6E9E;
 
     private static final String[] THRESHOLD_OPS = {"<", "<=", "=", ">=", ">"};
     private static final String[] ARITHMETIC_OPS = {"+", "-", "x", "/", "min", "max", "mod"};
@@ -36,13 +45,14 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
     }
 
     private final List<Row> rows = new ArrayList<>();
-    private final List<EditBox> rowBoxes = new ArrayList<>();
+    private final List<AETextField> rowBoxes = new ArrayList<>();
 
     private int opValue;
     private boolean flagValue;
 
-    public LogicPartScreen(LogicPartMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+    public LogicPartScreen(LogicPartMenu menu, Inventory inventory, Component title,
+            ScreenStyle style) {
+        super(menu, inventory, title, style);
         this.imageWidth = 200;
         // The sensor variant carries a player inventory (to feed the ghost slot by hand).
         this.imageHeight = menu.type == LogicPartType.STOCK_SENSOR ? 222 : 166;
@@ -103,6 +113,11 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
     @Override
     protected void init() {
         super.init();
+        setTextContent("dialog_title", getTitle());
+        if (menu.type != LogicPartType.STOCK_SENSOR) {
+            setTextHidden("player_inventory_title", true);
+        }
+
         opValue = menu.op;
         flagValue = menu.flag;
         rows.clear();
@@ -112,7 +127,7 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
         int x = leftPos + 78;
         int y = topPos + 18;
         for (var row : rows) {
-            var box = new EditBox(font, x, y, 112, 16, Component.empty());
+            var box = new AETextField(style, font, x, y, 112, 16);
             box.setMaxLength(80);
             box.setValue(initialValue(row.field));
             rowBoxes.add(addRenderableWidget(box));
@@ -120,24 +135,24 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
         }
 
         if (opsFor(menu.type) != null) {
-            addRenderableWidget(Button.builder(
+            addRenderableWidget(new AE2Button(leftPos + 10, y, 60, 18,
                     Component.literal(opLabel()),
                     b -> {
                         opValue = (opValue + 1) % opsFor(menu.type).length;
                         b.setMessage(Component.literal(opLabel()));
-                    }).bounds(leftPos + 10, y, 60, 18).build());
+                    }));
         }
         if (usesFlag(menu.type)) {
-            addRenderableWidget(Button.builder(
+            addRenderableWidget(new AE2Button(leftPos + 78, y, 112, 18,
                     Component.literal(flagLabel()),
                     b -> {
                         flagValue = !flagValue;
                         b.setMessage(Component.literal(flagLabel()));
-                    }).bounds(leftPos + 78, y, 112, 18).build());
+                    }));
         }
 
-        addRenderableWidget(Button.builder(Component.literal("Apply"), b -> apply())
-                .bounds(leftPos + 10, topPos + controlY(), 60, 18).build());
+        addRenderableWidget(new AE2Button(leftPos + 10, topPos + controlY(), 60, 18,
+                Component.literal("Apply"), b -> apply()));
     }
 
     private static boolean usesFlag(LogicPartType type) {
@@ -198,49 +213,24 @@ public class LogicPartScreen extends AbstractContainerScreen<LogicPartMenu> {
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        var background = menu.type == LogicPartType.STOCK_SENSOR ? TALL_BACKGROUND : BACKGROUND;
-        guiGraphics.blit(background, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
-        if (menu.type == LogicPartType.STOCK_SENSOR) {
-            slotFrame(guiGraphics, LogicPartMenu.GHOST_SLOT_X, LogicPartMenu.GHOST_SLOT_Y);
-            for (int row = 0; row < 3; row++) {
-                for (int col = 0; col < 9; col++) {
-                    slotFrame(guiGraphics, LogicPartMenu.INV_X + col * 18, LogicPartMenu.INV_Y + row * 18);
-                }
-            }
-            for (int col = 0; col < 9; col++) {
-                slotFrame(guiGraphics, LogicPartMenu.INV_X + col * 18, LogicPartMenu.HOTBAR_Y);
-            }
-        }
-    }
-
-    private void slotFrame(GuiGraphics guiGraphics, int slotX, int slotY) {
-        int x = leftPos + slotX - 1;
-        int y = topPos + slotY - 1;
-        guiGraphics.fill(x, y, x + 18, y + 18, 0xFF1A1F27);
-        guiGraphics.fill(x + 1, y + 1, x + 17, y + 17, 0xFF2C333F);
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+            float partialTicks) {
+        var background = menu.type == LogicPartType.STOCK_SENSOR ? SENSOR_BG : PANEL_BG;
+        background.dest(offsetX, offsetY).blit(guiGraphics);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, title, 10, 6, 0xE0E6EB, false);
-
+    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         int y = 22;
         for (var row : rows) {
-            guiGraphics.drawString(font, row.label, 10, y, 0x9BB2C4, false);
+            guiGraphics.drawString(font, row.label, 10, y, LABEL, false);
             y += 22;
         }
         if (menu.type == LogicPartType.STOCK_SENSOR) {
-            guiGraphics.drawString(font, "Watch:", 10, LogicPartMenu.GHOST_SLOT_Y - 10, 0x9BB2C4, false);
-            guiGraphics.drawString(font, "click with an item", 32, LogicPartMenu.GHOST_SLOT_Y + 5, 0x5A6B7C, false);
+            guiGraphics.drawString(font, "Watch:", 10, 34, LABEL, false);
+            guiGraphics.drawString(font, "click with an item", 32, 49, HINT, false);
         }
 
-        guiGraphics.drawString(font, "Out: " + menu.outputValue(), 78, controlY() + 5, 0x5CE2FF, false);
-    }
-
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderTooltip(guiGraphics, mouseX, mouseY);
+        guiGraphics.drawString(font, "Out: " + menu.outputValue(), 78, controlY() + 5, VALUE, false);
     }
 }

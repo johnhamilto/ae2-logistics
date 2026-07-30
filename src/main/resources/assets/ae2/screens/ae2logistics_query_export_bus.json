@@ -1,0 +1,18 @@
+{
+  "includes": ["common/common.json"],
+  "background": {
+    "texture": "guis/ae2logistics/panel_200x166.png",
+    "srcRect": [0, 0, 200, 166]
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "item.ae2logistics.query_export_bus"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

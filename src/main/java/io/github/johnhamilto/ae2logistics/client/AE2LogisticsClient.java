@@ -15,7 +15,10 @@ public final class AE2LogisticsClient {
         // directly into AE2's own guide (GuideME collects that folder across mods).
         SignalRenderer.initialize(modBus);
         modBus.addListener((RegisterMenuScreensEvent event) -> {
-            event.register(AE2Logistics.LOGIC_PART_MENU.get(), LogicPartScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.LOGIC_PART_MENU.get(),
+                    LogicPartScreen::new,
+                    "/screens/ae2logistics_logic_part.json");
             // Piloting AE2's own GUI framework: chrome comes from a screen style doc.
             // Style docs live flat in /screens/ (prefixed filename): includes resolve
             // relative to the doc's directory, so a subfolder breaks common/*.json.
@@ -25,12 +28,24 @@ public final class AE2LogisticsClient {
                     "/screens/ae2logistics_pattern_workbench.json");
             event.register(AE2Logistics.TRACER_TERMINAL_MENU.get(), TracerTerminalScreen::new);
             event.register(AE2Logistics.P2P_TERMINAL_MENU.get(), P2PFrequencyTerminalScreen::new);
-            event.register(AE2Logistics.MESH_ENDPOINT_MENU.get(), MeshEndpointScreen::new);
-            event.register(AE2Logistics.JOB_MONITOR_MENU.get(), JobMonitorScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.MESH_ENDPOINT_MENU.get(),
+                    MeshEndpointScreen::new,
+                    "/screens/ae2logistics_mesh_endpoint.json");
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.JOB_MONITOR_MENU.get(),
+                    JobMonitorScreen::new,
+                    "/screens/ae2logistics_job_monitor.json");
             event.register(AE2Logistics.GUARDED_PROVIDER_MENU.get(), GuardedProviderScreen::new);
             event.register(AE2Logistics.QUERY_TERMINAL_MENU.get(), QueryTerminalScreen::new);
-            event.register(AE2Logistics.QUERY_SENSOR_MENU.get(), QuerySensorScreen::new);
-            event.register(AE2Logistics.QUERY_EXPORT_BUS_MENU.get(), QueryExportBusScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.QUERY_SENSOR_MENU.get(),
+                    QuerySensorScreen::new,
+                    "/screens/ae2logistics_query_sensor.json");
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.QUERY_EXPORT_BUS_MENU.get(),
+                    QueryExportBusScreen::new,
+                    "/screens/ae2logistics_query_export_bus.json");
             event.register(AE2Logistics.CONFIG_TERMINAL_MENU.get(), ConfigTerminalScreen::new);
             event.register(AE2Logistics.JOB_SCHEDULER_MENU.get(), JobSchedulerScreen::new);
             event.register(AE2Logistics.LOGIC_CORE_MENU.get(), LogicCoreScreen::new);

@@ -1,0 +1,25 @@
+{
+  "includes": ["common/common.json", "common/player_inventory.json"],
+  "background": {
+    "texture": "guis/ae2logistics/mesh_endpoint.png",
+    "srcRect": [0, 0, 200, 231]
+  },
+  "slots": {
+    "CONFIG": {
+      "left": 19,
+      "top": 117,
+      "grid": "HORIZONTAL"
+    }
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "item.ae2logistics.mesh_endpoint"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

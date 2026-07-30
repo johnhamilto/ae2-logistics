@@ -6,15 +6,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.DataSlot;
-import net.minecraft.world.item.ItemStack;
+
+import appeng.menu.AEBaseMenu;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.JobMonitorPart;
 
-public class JobMonitorMenu extends AbstractContainerMenu {
+public class JobMonitorMenu extends AEBaseMenu {
 
     @Nullable
     private final JobMonitorPart part;
@@ -29,7 +28,7 @@ public class JobMonitorMenu extends AbstractContainerMenu {
     private int pendingValue;
 
     public JobMonitorMenu(int containerId, Inventory inventory, JobMonitorPart part) {
-        super(AE2Logistics.JOB_MONITOR_MENU.get(), containerId);
+        super(AE2Logistics.JOB_MONITOR_MENU.get(), containerId, inventory, part);
         this.part = part;
         var host = part.getHost().getBlockEntity();
         this.pos = host.getBlockPos();
@@ -40,7 +39,7 @@ public class JobMonitorMenu extends AbstractContainerMenu {
     }
 
     public JobMonitorMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.JOB_MONITOR_MENU.get(), containerId);
+        super(AE2Logistics.JOB_MONITOR_MENU.get(), containerId, inventory, null);
         this.part = null;
         this.pos = buffer.readBlockPos();
         this.side = Direction.values()[buffer.readByte()];
@@ -107,16 +106,5 @@ public class JobMonitorMenu extends AbstractContainerMenu {
 
     public int pendingItems() {
         return pendingValue;
-    }
-
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
     }
 }

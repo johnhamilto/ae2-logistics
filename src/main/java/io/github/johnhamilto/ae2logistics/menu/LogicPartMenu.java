@@ -9,7 +9,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
@@ -17,6 +16,8 @@ import net.minecraft.world.item.ItemStack;
 
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import appeng.menu.AEBaseMenu;
+import appeng.menu.SlotSemantics;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
@@ -27,7 +28,7 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
  * buffer; edits return via {@link ConfigurePartPayload}; the live output value streams
  * through two int data slots.
  */
-public class LogicPartMenu extends AbstractContainerMenu {
+public class LogicPartMenu extends AEBaseMenu {
 
     @Nullable
     private final LogicPart part;
@@ -46,17 +47,11 @@ public class LogicPartMenu extends AbstractContainerMenu {
     private int outputHi;
     private int outputLo;
 
-    public static final int GHOST_SLOT_X = 10;
-    public static final int GHOST_SLOT_Y = 44;
-    public static final int INV_X = 19;
-    public static final int INV_Y = 140;
-    public static final int HOTBAR_Y = 198;
-
     private final SimpleContainer ghostContainer = new SimpleContainer(1);
     private int ghostSlotIndex = -1;
 
     public LogicPartMenu(int containerId, Inventory inventory, LogicPart part) {
-        super(AE2Logistics.LOGIC_PART_MENU.get(), containerId);
+        super(AE2Logistics.LOGIC_PART_MENU.get(), containerId, inventory, part);
         this.part = part;
         var host = part.getHost().getBlockEntity();
         this.pos = host.getBlockPos();
@@ -94,12 +89,12 @@ public class LogicPartMenu extends AbstractContainerMenu {
         if (type == LogicPartType.STOCK_SENSOR) {
             ghostContainer.setItem(0, displayStack(part.watchedKey()));
             addGhostSlot();
-            addPlayerSlots(inventory);
+            createPlayerInventorySlots(inventory);
         }
     }
 
     public LogicPartMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.LOGIC_PART_MENU.get(), containerId);
+        super(AE2Logistics.LOGIC_PART_MENU.get(), containerId, inventory, null);
         this.part = null;
         this.pos = buffer.readBlockPos();
         this.side = Direction.values()[buffer.readByte()];
@@ -138,13 +133,15 @@ public class LogicPartMenu extends AbstractContainerMenu {
         if (type == LogicPartType.STOCK_SENSOR) {
             ghostContainer.setItem(0, ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
             addGhostSlot();
-            addPlayerSlots(inventory);
+            // The ghost slot is set from the carried stack, so the player needs
+            // somewhere to pick one up from.
+            createPlayerInventorySlots(inventory);
         }
     }
 
     private void addGhostSlot() {
         ghostSlotIndex = slots.size();
-        addSlot(new Slot(ghostContainer, 0, GHOST_SLOT_X, GHOST_SLOT_Y) {
+        addSlot(new Slot(ghostContainer, 0, 0, 0) {
             @Override
             public boolean mayPickup(Player player) {
                 return false;
@@ -154,20 +151,7 @@ public class LogicPartMenu extends AbstractContainerMenu {
             public boolean mayPlace(ItemStack stack) {
                 return false;
             }
-        });
-    }
-
-    // The ghost slot is set from the carried stack, so the player needs somewhere to
-    // pick one up from - without these slots the ghost slot is unusable by hand.
-    private void addPlayerSlots(Inventory inventory) {
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(inventory, 9 + row * 9 + col, INV_X + col * 18, INV_Y + row * 18));
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, col, INV_X + col * 18, HOTBAR_Y));
-        }
+        }, SlotSemantics.CONFIG);
     }
 
     @Override
@@ -226,16 +210,5 @@ public class LogicPartMenu extends AbstractContainerMenu {
 
     public long outputValue() {
         return (long) outputHi << 32 | outputLo & 0xFFFFFFFFL;
-    }
-
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
     }
 }

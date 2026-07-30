@@ -8,7 +8,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
@@ -19,18 +18,14 @@ import appeng.api.behaviors.ContainerItemStrategies;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import appeng.menu.AEBaseMenu;
+import appeng.menu.SlotSemantics;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 
-public class MeshEndpointMenu extends AbstractContainerMenu {
-
-    public static final int FILTER_X = 10;
-    public static final int FILTER_Y = 118;
-    public static final int INV_X = 19;
-    public static final int INV_Y = 140;
-    public static final int HOTBAR_Y = 198;
+public class MeshEndpointMenu extends AEBaseMenu {
 
     @Nullable
     private final MeshEndpointPart part;
@@ -50,7 +45,7 @@ public class MeshEndpointMenu extends AbstractContainerMenu {
     private int meStateValue;
 
     public MeshEndpointMenu(int containerId, Inventory inventory, MeshEndpointPart part) {
-        super(AE2Logistics.MESH_ENDPOINT_MENU.get(), containerId);
+        super(AE2Logistics.MESH_ENDPOINT_MENU.get(), containerId, inventory, part);
         this.part = part;
         var host = part.getHost().getBlockEntity();
         this.pos = host.getBlockPos();
@@ -98,7 +93,7 @@ public class MeshEndpointMenu extends AbstractContainerMenu {
     }
 
     public MeshEndpointMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.MESH_ENDPOINT_MENU.get(), containerId);
+        super(AE2Logistics.MESH_ENDPOINT_MENU.get(), containerId, inventory, null);
         this.part = null;
         this.pos = buffer.readBlockPos();
         this.side = Direction.values()[buffer.readByte()];
@@ -149,7 +144,7 @@ public class MeshEndpointMenu extends AbstractContainerMenu {
     private void addSlots(Inventory inventory) {
         filterSlotStart = slots.size();
         for (int i = 0; i < MeshEndpointPart.FILTER_SLOTS; i++) {
-            addSlot(new Slot(filterContainer, i, FILTER_X + i * 18, FILTER_Y) {
+            addSlot(new Slot(filterContainer, i, 0, 0) {
                 @Override
                 public boolean mayPickup(Player player) {
                     return false;
@@ -159,16 +154,9 @@ public class MeshEndpointMenu extends AbstractContainerMenu {
                 public boolean mayPlace(ItemStack stack) {
                     return false;
                 }
-            });
+            }, SlotSemantics.CONFIG);
         }
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(inventory, 9 + row * 9 + col, INV_X + col * 18, INV_Y + row * 18));
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, col, INV_X + col * 18, HOTBAR_Y));
-        }
+        createPlayerInventorySlots(inventory);
     }
 
     public static void writeOpenData(RegistryFriendlyByteBuf buffer, MeshEndpointPart part) {
@@ -248,16 +236,5 @@ public class MeshEndpointMenu extends AbstractContainerMenu {
             return new ItemStack(fluidKey.getFluid().getBucket());
         }
         return GenericStack.wrapInItemStack(stack);
-    }
-
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
     }
 }

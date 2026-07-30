@@ -575,7 +575,10 @@ public class MeshEndpointPart extends AEBasePart {
 
     @Override
     public void getBoxes(IPartCollisionHelper bch) {
-        bch.addBox(5, 5, 11, 11, 11, 16);
+        // AE2's P2P tunnel chassis boxes - the placement wireframe must match the model.
+        bch.addBox(5, 5, 12, 11, 11, 13);
+        bch.addBox(3, 3, 13, 13, 13, 14);
+        bch.addBox(2, 2, 14, 14, 14, 16);
     }
 
     @Override
