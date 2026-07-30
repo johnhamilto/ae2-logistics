@@ -1,36 +1,41 @@
 package io.github.johnhamilto.ae2logistics.client;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AE2Button;
+import appeng.client.gui.widgets.AETextField;
+
 import io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity;
 import io.github.johnhamilto.ae2logistics.menu.ConfigureSchedulerPayload;
 import io.github.johnhamilto.ae2logistics.menu.JobSchedulerMenu;
 
-public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu> {
+public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
 
-    private static final ResourceLocation BACKGROUND = AE2Logistics.id("textures/gui/mesh_panel.png");
+    private static final int HINT = 0x7b7b7b;
+    private static final int IDLE = 0x606A72;
+    private static final int RUN = 0x2E8B57;
+    private static final int WARN = 0xA8760B;
+    private static final int BAD = 0xB33A36;
 
     private static final String[] CLASS_NAMES = {"bulk", "maint"};
 
-    private final EditBox[] floorBoxes = new EditBox[JobSchedulerBlockEntity.RULES];
-    private final EditBox[] batchBoxes = new EditBox[JobSchedulerBlockEntity.RULES];
-    private final EditBox[] guardBoxes = new EditBox[JobSchedulerBlockEntity.RULES];
-    private final EditBox[] deadlineBoxes = new EditBox[JobSchedulerBlockEntity.RULES];
+    private final AETextField[] floorBoxes = new AETextField[JobSchedulerBlockEntity.RULES];
+    private final AETextField[] batchBoxes = new AETextField[JobSchedulerBlockEntity.RULES];
+    private final AETextField[] guardBoxes = new AETextField[JobSchedulerBlockEntity.RULES];
+    private final AETextField[] deadlineBoxes = new AETextField[JobSchedulerBlockEntity.RULES];
     private final byte[] classValues = new byte[JobSchedulerBlockEntity.RULES];
     private final boolean[] preemptValues = new boolean[JobSchedulerBlockEntity.RULES];
 
-    public JobSchedulerScreen(JobSchedulerMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+    public JobSchedulerScreen(JobSchedulerMenu menu, Inventory inventory, Component title,
+            ScreenStyle style) {
+        super(menu, inventory, title, style);
         this.imageWidth = 200;
-        this.imageHeight = 222;
+        this.imageHeight = 231;
     }
 
     @Override
@@ -41,40 +46,42 @@ public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu
             int y = topPos + JobSchedulerMenu.GHOST_Y + i * JobSchedulerMenu.ROW_STEP;
             classValues[i] = menu.classes[i];
 
-            floorBoxes[i] = new EditBox(font, leftPos + 32, y + 2, 40, 13, Component.empty());
+            floorBoxes[i] = new AETextField(style, font, leftPos + 32, y + 2, 40, 13);
             floorBoxes[i].setMaxLength(12);
             floorBoxes[i].setValue(Long.toString(menu.floors[i]));
             addRenderableWidget(floorBoxes[i]);
 
-            batchBoxes[i] = new EditBox(font, leftPos + 76, y + 2, 34, 13, Component.empty());
+            batchBoxes[i] = new AETextField(style, font, leftPos + 76, y + 2, 34, 13);
             batchBoxes[i].setMaxLength(9);
             batchBoxes[i].setValue(Long.toString(menu.batches[i]));
             addRenderableWidget(batchBoxes[i]);
 
-            addRenderableWidget(Button.builder(Component.literal(CLASS_NAMES[classValues[i]]), b -> {
-                classValues[index] = (byte) ((classValues[index] + 1) % 2);
-                b.setMessage(Component.literal(CLASS_NAMES[classValues[index]]));
-            }).bounds(leftPos + 114, y + 1, 36, 15).build());
+            addRenderableWidget(new AE2Button(leftPos + 114, y + 1, 36, 15,
+                    Component.literal(CLASS_NAMES[classValues[i]]), b -> {
+                        classValues[index] = (byte) ((classValues[index] + 1) % 2);
+                        b.setMessage(Component.literal(CLASS_NAMES[classValues[index]]));
+                    }));
 
-            guardBoxes[i] = new EditBox(font, leftPos + 154, y + 2, 36, 13, Component.empty());
+            guardBoxes[i] = new AETextField(style, font, leftPos + 154, y + 2, 36, 13);
             guardBoxes[i].setMaxLength(80);
             guardBoxes[i].setValue(menu.guards[i]);
             addRenderableWidget(guardBoxes[i]);
 
-            deadlineBoxes[i] = new EditBox(font, leftPos + 76, y + 16, 34, 10, Component.empty());
+            deadlineBoxes[i] = new AETextField(style, font, leftPos + 76, y + 16, 34, 10);
             deadlineBoxes[i].setMaxLength(6);
             deadlineBoxes[i].setValue(Long.toString(menu.deadlines[i]));
             addRenderableWidget(deadlineBoxes[i]);
 
             preemptValues[i] = menu.preempts[i];
-            addRenderableWidget(Button.builder(preemptLabel(preemptValues[i]), b -> {
-                preemptValues[index] = !preemptValues[index];
-                b.setMessage(preemptLabel(preemptValues[index]));
-            }).bounds(leftPos + 114, y + 15, 36, 12).build());
+            addRenderableWidget(new AE2Button(leftPos + 114, y + 15, 36, 12,
+                    preemptLabel(preemptValues[i]), b -> {
+                        preemptValues[index] = !preemptValues[index];
+                        b.setMessage(preemptLabel(preemptValues[index]));
+                    }));
         }
 
-        addRenderableWidget(Button.builder(Component.literal("Apply"), b -> apply())
-                .bounds(leftPos + 140, topPos + 122, 50, 15).build());
+        addRenderableWidget(new AE2Button(leftPos + 140, topPos + 120, 50, 15,
+                Component.literal("Apply"), b -> apply()));
     }
 
     private void apply() {
@@ -123,46 +130,20 @@ public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu
     private static int stateColor(int state) {
         return switch (state) {
             case JobSchedulerBlockEntity.STATE_MISSING, JobSchedulerBlockEntity.STATE_NO_CPU,
-                    JobSchedulerBlockEntity.STATE_DEADLINE -> 0xE0524E;
-            case JobSchedulerBlockEntity.STATE_RUNNING -> 0x6FDB6F;
+                    JobSchedulerBlockEntity.STATE_DEADLINE -> BAD;
+            case JobSchedulerBlockEntity.STATE_RUNNING -> RUN;
             case JobSchedulerBlockEntity.STATE_GUARD_HOLD, JobSchedulerBlockEntity.STATE_RATE_WAIT,
-                    JobSchedulerBlockEntity.STATE_PREEMPTED -> 0xF5C542;
-            default -> 0x8A9AA8;
+                    JobSchedulerBlockEntity.STATE_PREEMPTED -> WARN;
+            default -> IDLE;
         };
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
-        for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
-            slotFrame(guiGraphics, JobSchedulerMenu.GHOST_X,
-                    JobSchedulerMenu.GHOST_Y + i * JobSchedulerMenu.ROW_STEP);
-        }
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                slotFrame(guiGraphics, JobSchedulerMenu.INV_X + col * 18,
-                        JobSchedulerMenu.INV_Y + row * 18);
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            slotFrame(guiGraphics, JobSchedulerMenu.INV_X + col * 18, JobSchedulerMenu.HOTBAR_Y);
-        }
-    }
-
-    private void slotFrame(GuiGraphics guiGraphics, int slotX, int slotY) {
-        int x = leftPos + slotX - 1;
-        int y = topPos + slotY - 1;
-        guiGraphics.fill(x, y, x + 18, y + 18, 0xFF1A1F27);
-        guiGraphics.fill(x + 1, y + 1, x + 17, y + 17, 0xFF2C333F);
-    }
-
-    @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, title, 10, 6, 0xE0E6EB, false);
-        guiGraphics.drawString(font, "floor", 34, 12, 0x5A6B7C, false);
-        guiGraphics.drawString(font, "batch", 78, 12, 0x5A6B7C, false);
-        guiGraphics.drawString(font, "class", 116, 12, 0x5A6B7C, false);
-        guiGraphics.drawString(font, "guard", 156, 12, 0x5A6B7C, false);
+    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.drawString(font, "floor", 34, 12, HINT, false);
+        guiGraphics.drawString(font, "batch", 78, 12, HINT, false);
+        guiGraphics.drawString(font, "class", 116, 12, HINT, false);
+        guiGraphics.drawString(font, "guard", 156, 12, HINT, false);
 
         for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
             int state = menu.ruleStateValue(i);
@@ -170,12 +151,6 @@ public class JobSchedulerScreen extends AbstractContainerScreen<JobSchedulerMenu
                     JobSchedulerMenu.GHOST_Y + i * JobSchedulerMenu.ROW_STEP + 19,
                     stateColor(state), false);
         }
-        guiGraphics.drawString(font, "second line: deadline sec + preemption", 10, 126, 0x5A6B7C, false);
-    }
-
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderTooltip(guiGraphics, mouseX, mouseY);
+        guiGraphics.drawString(font, "second line: deadline sec + preemption", 10, 124, HINT, false);
     }
 }

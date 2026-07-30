@@ -114,6 +114,18 @@ def main() -> None:
     stamp_slots(out, slot, player_inventory(231))
     emit("mesh_endpoint", out)
 
+    # Guarded Pattern Provider: 9 pattern slots up top, guard strip, player inventory.
+    out = dialog(source, 200, 231)
+    stamp_slots(out, slot, grid(18, 19, 9, 1))
+    stamp_slots(out, slot, player_inventory(231))
+    emit("guarded_provider", out)
+
+    # Job Scheduler: four rule rows (ghost target slot each, 26px step), player inventory.
+    out = dialog(source, 200, 231)
+    stamp_slots(out, slot, [(9, 19 + i * 26) for i in range(4)])
+    stamp_slots(out, slot, player_inventory(231))
+    emit("job_scheduler", out)
+
 
 if __name__ == "__main__":
     main()

@@ -8,23 +8,18 @@ import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 import appeng.api.crafting.PatternDetailsHelper;
+import appeng.menu.AEBaseMenu;
+import appeng.menu.SlotSemantics;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlockEntity;
 
-public class GuardedProviderMenu extends AbstractContainerMenu {
-
-    public static final int PATTERN_X = 19;
-    public static final int PATTERN_Y = 20;
-    public static final int INV_X = 19;
-    public static final int INV_Y = 140;
-    public static final int HOTBAR_Y = 198;
+public class GuardedProviderMenu extends AEBaseMenu {
 
     @Nullable
     private final GuardedPatternProviderBlockEntity provider;
@@ -42,7 +37,7 @@ public class GuardedProviderMenu extends AbstractContainerMenu {
     private int priorityValue;
 
     public GuardedProviderMenu(int containerId, Inventory inventory, GuardedPatternProviderBlockEntity provider) {
-        super(AE2Logistics.GUARDED_PROVIDER_MENU.get(), containerId);
+        super(AE2Logistics.GUARDED_PROVIDER_MENU.get(), containerId, inventory, provider);
         this.provider = provider;
         this.pos = provider.getBlockPos();
         this.guardChannel = provider.guardChannel() == null ? "" : provider.guardChannel().toString();
@@ -57,7 +52,7 @@ public class GuardedProviderMenu extends AbstractContainerMenu {
     }
 
     public GuardedProviderMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.GUARDED_PROVIDER_MENU.get(), containerId);
+        super(AE2Logistics.GUARDED_PROVIDER_MENU.get(), containerId, inventory, null);
         this.provider = null;
         this.pos = buffer.readBlockPos();
         this.guardChannel = buffer.readUtf();
@@ -83,7 +78,7 @@ public class GuardedProviderMenu extends AbstractContainerMenu {
 
     private void buildSlots(Inventory inventory) {
         for (int i = 0; i < 9; i++) {
-            addSlot(new Slot(patterns, i, PATTERN_X + i * 18, PATTERN_Y) {
+            addSlot(new Slot(patterns, i, 0, 0) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
                     return PatternDetailsHelper.isEncodedPattern(stack);
@@ -93,16 +88,9 @@ public class GuardedProviderMenu extends AbstractContainerMenu {
                 public int getMaxStackSize() {
                     return 1;
                 }
-            });
+            }, SlotSemantics.ENCODED_PATTERN);
         }
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(inventory, 9 + row * 9 + col, INV_X + col * 18, INV_Y + row * 18));
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, col, INV_X + col * 18, HOTBAR_Y));
-        }
+        createPlayerInventorySlots(inventory);
     }
 
     private void addLiveSlots() {
@@ -168,11 +156,5 @@ public class GuardedProviderMenu extends AbstractContainerMenu {
             slot.setChanged();
         }
         return original;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
     }
 }

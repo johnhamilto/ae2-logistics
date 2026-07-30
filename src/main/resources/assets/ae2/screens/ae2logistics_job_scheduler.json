@@ -1,0 +1,18 @@
+{
+  "includes": ["common/common.json", "common/player_inventory.json"],
+  "background": {
+    "texture": "guis/ae2logistics/job_scheduler.png",
+    "srcRect": [0, 0, 200, 231]
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "block.ae2logistics.job_scheduler"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

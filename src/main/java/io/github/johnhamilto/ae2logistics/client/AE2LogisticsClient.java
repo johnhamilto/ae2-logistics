@@ -36,7 +36,10 @@ public final class AE2LogisticsClient {
                     AE2Logistics.JOB_MONITOR_MENU.get(),
                     JobMonitorScreen::new,
                     "/screens/ae2logistics_job_monitor.json");
-            event.register(AE2Logistics.GUARDED_PROVIDER_MENU.get(), GuardedProviderScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.GUARDED_PROVIDER_MENU.get(),
+                    GuardedProviderScreen::new,
+                    "/screens/ae2logistics_guarded_provider.json");
             event.register(AE2Logistics.QUERY_TERMINAL_MENU.get(), QueryTerminalScreen::new);
             appeng.init.client.InitScreens.register(event,
                     AE2Logistics.QUERY_SENSOR_MENU.get(),
@@ -47,7 +50,10 @@ public final class AE2LogisticsClient {
                     QueryExportBusScreen::new,
                     "/screens/ae2logistics_query_export_bus.json");
             event.register(AE2Logistics.CONFIG_TERMINAL_MENU.get(), ConfigTerminalScreen::new);
-            event.register(AE2Logistics.JOB_SCHEDULER_MENU.get(), JobSchedulerScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.JOB_SCHEDULER_MENU.get(),
+                    JobSchedulerScreen::new,
+                    "/screens/ae2logistics_job_scheduler.json");
             event.register(AE2Logistics.LOGIC_CORE_MENU.get(), LogicCoreScreen::new);
             event.register(AE2Logistics.SUBNET_CORE_MENU.get(), SubnetCoreScreen::new);
         });

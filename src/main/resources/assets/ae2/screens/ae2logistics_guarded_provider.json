@@ -1,0 +1,25 @@
+{
+  "includes": ["common/common.json", "common/player_inventory.json"],
+  "background": {
+    "texture": "guis/ae2logistics/guarded_provider.png",
+    "srcRect": [0, 0, 200, 231]
+  },
+  "slots": {
+    "ENCODED_PATTERN": {
+      "left": 19,
+      "top": 20,
+      "grid": "HORIZONTAL"
+    }
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "block.ae2logistics.guarded_pattern_provider"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

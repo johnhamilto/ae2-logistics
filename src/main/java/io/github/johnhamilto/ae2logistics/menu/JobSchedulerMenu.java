@@ -7,7 +7,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
@@ -18,18 +17,16 @@ import appeng.api.behaviors.ContainerItemStrategies;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import appeng.menu.AEBaseMenu;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity;
 
-public class JobSchedulerMenu extends AbstractContainerMenu {
+public class JobSchedulerMenu extends AEBaseMenu {
 
     public static final int GHOST_X = 10;
     public static final int GHOST_Y = 20;
     public static final int ROW_STEP = 26;
-    public static final int INV_X = 19;
-    public static final int INV_Y = 140;
-    public static final int HOTBAR_Y = 198;
 
     @Nullable
     private final JobSchedulerBlockEntity scheduler;
@@ -46,7 +43,7 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
     private final int[] stateValues = new int[JobSchedulerBlockEntity.RULES];
 
     public JobSchedulerMenu(int containerId, Inventory inventory, JobSchedulerBlockEntity scheduler) {
-        super(AE2Logistics.JOB_SCHEDULER_MENU.get(), containerId);
+        super(AE2Logistics.JOB_SCHEDULER_MENU.get(), containerId, inventory, scheduler);
         this.scheduler = scheduler;
         this.pos = scheduler.getBlockPos();
         for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
@@ -64,7 +61,7 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
     }
 
     public JobSchedulerMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.JOB_SCHEDULER_MENU.get(), containerId);
+        super(AE2Logistics.JOB_SCHEDULER_MENU.get(), containerId, inventory, null);
         this.scheduler = null;
         this.pos = buffer.readBlockPos();
         for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
@@ -95,6 +92,8 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
     }
 
     private void addSlots(Inventory inventory) {
+        // Rule rows step 26px, which no style slot-grid expresses; these ghost
+        // slots keep their own coordinates via the vanilla addSlot.
         for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
             addSlot(new Slot(ghosts, i, GHOST_X, GHOST_Y + i * ROW_STEP) {
                 @Override
@@ -108,14 +107,7 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
                 }
             });
         }
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(inventory, 9 + row * 9 + col, INV_X + col * 18, INV_Y + row * 18));
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, col, INV_X + col * 18, HOTBAR_Y));
-        }
+        createPlayerInventorySlots(inventory);
     }
 
     private void addStateSlots() {
@@ -184,16 +176,5 @@ public class JobSchedulerMenu extends AbstractContainerMenu {
             return new ItemStack(fluidKey.getFluid().getBucket());
         }
         return GenericStack.wrapInItemStack(stack);
-    }
-
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
     }
 }
