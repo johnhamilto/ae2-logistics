@@ -70,8 +70,10 @@ def grid(x: int, y: int, cols: int, rows: int, step: int = 18):
     return [(x + c * step, y + r * step) for r in range(rows) for c in range(cols)]
 
 
-def player_inventory(x: int = 7, inv_y: int = 107, hotbar_y: int = 165):
-    return grid(x, inv_y, 9, 3) + grid(x, hotbar_y, 9, 1)
+def player_inventory(height: int, x: int = 7):
+    # AE2's common/player_inventory.json anchors slots to the BOTTOM edge: slot y is
+    # height-84 (inventory) and height-26 (hotbar); frames sit one pixel above-left.
+    return grid(x, height - 85, 9, 3) + grid(x, height - 27, 9, 1)
 
 
 def main() -> None:
@@ -79,12 +81,13 @@ def main() -> None:
     slot = source.crop(SLOT_FRAME)
     OUT.mkdir(parents=True, exist_ok=True)
 
-    # Pattern Workbench: 176x190 - pattern slot, 3x3 display grid, output, guard strip.
-    out = dialog(source, 176, 190)
+    # Pattern Workbench: 176x200 - pattern slot, 3x3 display grid, output, guard strip
+    # (two widget rows at y72/y88), inventory title row at y105, slots from y116.
+    out = dialog(source, 176, 200)
     stamp_slots(out, slot, [(150, 20)])
     stamp_slots(out, slot, grid(25, 16, 3, 3))
     stamp_slots(out, slot, [(115, 34)])
-    stamp_slots(out, slot, player_inventory())
+    stamp_slots(out, slot, player_inventory(200))
     # AE2's Blitter samples against a 256x256 reference sheet; pad like AE2 does.
     sheet = Image.new("RGBA", (256, 256))
     sheet.paste(out, (0, 0))

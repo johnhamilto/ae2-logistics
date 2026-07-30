@@ -41,8 +41,9 @@ upgrade cards, terminals, keys in storage — rather than by bolting on a foreig
 > Terminal with tunnel-resident frequency names; **F11.2/3/4** as one Universal Mesh
 > Endpoint part (five transports, named frequencies, nine-slot whitelists, true
 > provider-P2P with per-machine blocking at range, mesh-ME as TRUE ME P2P (the
-> network fed into an endpoint's face is carried through a virtual quantum-bridge
-> star; hosts never fuse), and status diagnostics with cabled-loop detection); **F8** the
+> network fed into an endpoint's face is carried over paired quantum-bridge lanes,
+> 32 channels each, bundling across pairs; hosts never fuse), and status diagnostics
+> with cabled-loop detection); **F8** the
 > ME Logic Core - eight virtual logic nodes as list entries in one block, on the same
 > scheduler, each requiring a channel (the deliberate hard gate); **F11.5** wireless
 > bridging - the ME Wireless Bridge joins machines through WAP coverage (AE2's WAPs

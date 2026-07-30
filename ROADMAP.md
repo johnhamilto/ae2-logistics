@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.16.0 (2026-07-28). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (92 tests, run
+Status as of v0.16.2 (2026-07-29). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (93 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -31,6 +31,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F4 | Scheduler stretch: wall-clock deadlines with eviction, within-pool priority preemption, rules ride TransferableSettings | 0.15.0 |
 | Infra | Test debt closed: NBT round-trips for all five BEs, named-CPU pools + per-named-CPU monitor channels (custom-name reflection + cluster updateName); advancements; server config (scheduler interval, WAP range, bridge retune); publishing kit in docs/publishing/ | 0.15.0 |
 | F8.2 | ME Subnet Core: whole subnet in one block - face storage/import/export entries, uplink/downlink storage proxies with loop-safe reentrancy latches, quartz-fiber-style overlay power sharing - F8 fully complete | 0.16.0 |
+| F11 | ME mesh channel bundling: lane pairing replaces the star (disjoint lanes between carried-grid sides, 32 ch each - AE2 pathing never reroutes around a saturated node, so a hub caps everything at 32); workbench GUI on 200-tall chrome with AE2 widgets | 0.16.2 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -80,8 +81,10 @@ representation).
 - Provider blocking through the mesh is always per-machine ("smart"); the provider's
   own blocking toggle is effectively bypassed.
 - Mesh rename-all retags loaded endpoints only; endpoints in unloaded chunks keep the
-  old frequency until they load. Cabled-loop detection runs when a frequency's ME star
-  (re)builds, not continuously - `/ae2logistics mesh relink` forces a re-check.
+  old frequency until they load. ME sides/lanes (and the cabled-loop diagnosis) are
+  computed when a frequency's membership changes, not when fed-network CABLING
+  changes - `/ae2logistics mesh relink` forces a re-check after recabling. One lane
+  ceils at AE2's 32-channel dense node cap; capacity scales by adding endpoint pairs.
 - Endpoint filters match exactly (components included); no fuzzy/tag cards yet.
 - Mesh registry is server-global and rebuilt live; nothing persists beyond part NBT
   (P2P names persist as data attachments on the tunnels' cable-bus block entities).

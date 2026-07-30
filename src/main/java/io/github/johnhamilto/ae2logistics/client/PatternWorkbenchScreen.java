@@ -6,9 +6,7 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -20,6 +18,8 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AE2Button;
+import appeng.client.gui.widgets.AETextField;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec;
@@ -40,10 +40,10 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     private static final int TEXT_DARK = 0x404040;
     private static final int TEXT_MUTED = 0x7b7b7b;
 
-    private EditBox guardChannelBox;
-    private EditBox guardValueBox;
-    private Button guardOpButton;
-    private Button wrapButton;
+    private AETextField guardChannelBox;
+    private AETextField guardValueBox;
+    private AE2Button guardOpButton;
+    private AE2Button wrapButton;
     private int guardOp = 4;
     private ItemStack lastSeenPattern = ItemStack.EMPTY;
 
@@ -51,29 +51,30 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
             ScreenStyle style) {
         super(menu, inventory, title, style);
         this.imageWidth = 176;
-        this.imageHeight = 190;
+        this.imageHeight = 200;
     }
 
     @Override
     protected void init() {
         super.init();
-        guardChannelBox = new EditBox(font, leftPos + 40, topPos + 74, 88, 14, Component.empty());
+        guardChannelBox = new AETextField(style, font, leftPos + 40, topPos + 74, 88, 14);
         guardChannelBox.setMaxLength(80);
         addRenderableWidget(guardChannelBox);
 
-        guardOpButton = Button.builder(Component.literal(GuardedPattern.OPS[guardOp]), b -> {
-            guardOp = (guardOp + 1) % GuardedPattern.OPS.length;
-            b.setMessage(Component.literal(GuardedPattern.OPS[guardOp]));
-        }).bounds(leftPos + 132, topPos + 72, 24, 16).build();
+        guardOpButton = new AE2Button(leftPos + 132, topPos + 72, 24, 16,
+                Component.literal(GuardedPattern.OPS[guardOp]), b -> {
+                    guardOp = (guardOp + 1) % GuardedPattern.OPS.length;
+                    b.setMessage(Component.literal(GuardedPattern.OPS[guardOp]));
+                });
         addRenderableWidget(guardOpButton);
 
-        guardValueBox = new EditBox(font, leftPos + 40, topPos + 90, 60, 14, Component.empty());
+        guardValueBox = new AETextField(style, font, leftPos + 40, topPos + 90, 60, 14);
         guardValueBox.setMaxLength(19);
         guardValueBox.setValue("0");
         addRenderableWidget(guardValueBox);
 
-        wrapButton = Button.builder(Component.literal("Wrap"), b -> wrapOrUnwrap())
-                .bounds(leftPos + 106, topPos + 88, 62, 16).build();
+        wrapButton = new AE2Button(leftPos + 106, topPos + 88, 62, 16,
+                Component.literal("Wrap"), b -> wrapOrUnwrap());
         addRenderableWidget(wrapButton);
 
         lastSeenPattern = ItemStack.EMPTY;
@@ -119,6 +120,9 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
         guardValueBox.setEditable(!guarded);
         guardOpButton.active = !guarded;
         wrapButton.setMessage(Component.literal(guarded ? "Unwrap" : "Wrap"));
+        wrapButton.setTooltip(guarded
+                ? Tooltip.create(Component.literal("Unwrap to edit the recipe"))
+                : null);
         if (guarded) {
             var data = stack.get(AE2Logistics.GUARDED_PATTERN_DATA.get());
             if (data != null) {
@@ -156,13 +160,10 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         var encoded = decoded();
         if (encoded == null) {
-            guiGraphics.drawString(font, "Insert an encoded pattern", GRID_X, GRID_Y + 20, TEXT_MUTED, false);
+            guiGraphics.drawString(font, "Insert an encoded pattern", 8, 78, TEXT_MUTED, false);
             return;
         }
         guiGraphics.drawString(font, "Guard", 8, 76, TEXT_DARK, false);
-        if (menu.patternStack().is(AE2Logistics.GUARDED_PATTERN.get())) {
-            guiGraphics.drawString(font, "Unwrap to edit the recipe", 8, 60, TEXT_MUTED, false);
-        }
 
         var inputs = encoded.sparseInputs();
         for (int i = 0; i < 9 && i < inputs.size(); i++) {

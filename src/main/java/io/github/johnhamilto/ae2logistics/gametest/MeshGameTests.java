@@ -41,6 +41,11 @@ public class MeshGameTests {
         return part;
     }
 
+    private static void placeDenseCable(GameTestHelper helper, BlockPos pos) {
+        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_smart_dense_cable"));
+        PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
+    }
+
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void redstoneMeshIsWiredOr(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
@@ -402,6 +407,83 @@ public class MeshGameTests {
                     "host networks must NOT fuse");
             helper.assertTrue(firstHost.getGrid() != firstCarried.getGrid(),
                     "host and carried networks must stay separate");
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Channel bundling: one lane caps at a dense node's 32 channels, so two fed inputs
+     * must become two LANES (disjoint pairs, not a star) for 24 + 9 = 33 channels of
+     * interfaces to path across the mesh. Every interface must come online.
+     */
+    @GameTest(template = "empty12", timeoutTicks = 400)
+    public void meMeshBundlesChannelsAcrossLanes(GameTestHelper helper) {
+        var controllerBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:controller"));
+        var creativeCell = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell"));
+        var interfaceBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:interface"));
+
+        // Controller column feeding the mesh: 32 channels per controller face.
+        helper.setBlock(new BlockPos(1, 1, 4), controllerBlock);
+        helper.setBlock(new BlockPos(1, 1, 5), controllerBlock);
+        helper.setBlock(new BlockPos(1, 2, 5), creativeCell);
+
+        // The host network the four endpoints sit on; its faces do the carrying.
+        placeCable(helper, new BlockPos(2, 1, 4));
+        placeCable(helper, new BlockPos(2, 1, 5));
+        helper.setBlock(new BlockPos(2, 0, 4), creativeCell);
+
+        var feedA = placeEndpoint(helper, new BlockPos(2, 1, 4), Direction.WEST, "bundle",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
+        var feedB = placeEndpoint(helper, new BlockPos(2, 1, 5), Direction.WEST, "bundle",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
+        var outC = placeEndpoint(helper, new BlockPos(2, 1, 4), Direction.EAST, "bundle",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
+        var outD = placeEndpoint(helper, new BlockPos(2, 1, 5), Direction.SOUTH, "bundle",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
+
+        var interfaces = new java.util.ArrayList<BlockPos>();
+        // Farm C behind outC's face: dense spine east with 24 interfaces around it.
+        for (int x = 3; x <= 10; x++) {
+            placeDenseCable(helper, new BlockPos(x, 1, 4));
+            interfaces.add(new BlockPos(x, 2, 4));
+            interfaces.add(new BlockPos(x, 1, 3));
+            if (x >= 4) {
+                // x=3 at z=5 would touch the host cable and fuse the farm into it.
+                interfaces.add(new BlockPos(x, 1, 5));
+            }
+        }
+        interfaces.add(new BlockPos(11, 1, 4));
+        // Farm D behind outD's face: dense spine south with 9 interfaces.
+        for (int z = 6; z <= 9; z++) {
+            placeDenseCable(helper, new BlockPos(2, 1, z));
+            interfaces.add(new BlockPos(2, 2, z));
+            interfaces.add(new BlockPos(3, 1, z));
+        }
+        interfaces.add(new BlockPos(2, 1, 10));
+        for (var pos : interfaces) {
+            helper.setBlock(pos, interfaceBlock);
+        }
+
+        // Lane building can race the carried nodes' in-world connections; force the
+        // documented re-check once everything is connected, then let pathing settle.
+        helper.runAfterDelay(40, () -> MeshRegistry.forceRelink("bundle"));
+
+        helper.runAfterDelay(200, () -> {
+            for (var endpoint : new MeshEndpointPart[] {feedA, feedB, outC, outD}) {
+                helper.assertTrue(endpoint.carriedNode() != null, "carried node missing");
+                helper.assertTrue(endpoint.carriedNode().getGrid() == feedA.carriedNode().getGrid(),
+                        "all carried grids must fuse into one");
+            }
+            int online = 0;
+            for (var pos : interfaces) {
+                if (helper.getBlockEntity(pos) instanceof appeng.blockentity.misc.InterfaceBlockEntity iface
+                        && iface.getMainNode().isOnline()) {
+                    online++;
+                }
+            }
+            helper.assertTrue(online == 33,
+                    "33 channels must cross the mesh on two lanes (one lane ceils at 32), online: "
+                            + online);
             helper.succeed();
         });
     }

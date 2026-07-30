@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Generate the empty gametest structure template as a vanilla structure NBT file."""
+"""Generate an empty gametest structure template as a vanilla structure NBT file.
+
+Usage: gen_structures.py OUT [X Y Z]   (size defaults to 5 5 5)
+"""
 import gzip
 import struct
 import sys
 from pathlib import Path
 
 OUT = Path(sys.argv[1])
+SIZE = [int(v) for v in sys.argv[2:5]] if len(sys.argv) > 2 else [5, 5, 5]
 
 DATA_VERSION = 3955  # Minecraft 1.21.1
 
@@ -39,7 +43,7 @@ air_palette_entry = compound([named(8, "Name", tag_string("minecraft:air"))])
 palette_list = struct.pack(">Bi", 10, 1) + air_palette_entry
 
 root = named(10, "", compound([
-    named(9, "size", int_list([5, 5, 5])),
+    named(9, "size", int_list(SIZE)),
     named(9, "entities", empty_list()),
     named(9, "blocks", empty_list()),
     named(9, "palette", palette_list),

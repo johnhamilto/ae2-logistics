@@ -100,8 +100,8 @@ public final class MeshCommands {
             default -> "OK";
         };
         return switch (endpoint.meLinkState()) {
-            case MeshRegistry.ME_STATE_HUB -> status + ", ME hub";
-            case MeshRegistry.ME_STATE_LINKED -> status + ", ME spoke";
+            case MeshRegistry.ME_STATE_LINKED -> status + ", ME lane";
+            case MeshRegistry.ME_STATE_STANDBY -> status + ", ME standby";
             default -> status;
         };
     }

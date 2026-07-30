@@ -58,7 +58,7 @@ public class MeshEndpointPart extends AEBasePart {
             new appeng.api.stacks.GenericStack[FILTER_SLOTS];
 
     private int meshRedstone;
-    /** Transient ME star state, maintained by {@link MeshRegistry#tick}. */
+    /** Transient ME link state, maintained by {@link MeshRegistry#tick}. */
     private byte meLinkState;
 
     /**
@@ -159,7 +159,7 @@ public class MeshEndpointPart extends AEBasePart {
 
     public void applyMeshConfig(String newFrequency, byte newRole, int newPriority, int newCapabilities) {
         // Unregistering changes the old frequency's membership, so the registry tears
-        // down and rebuilds that frequency's ME star without us on the next tick.
+        // down and rebuilds that frequency's ME lanes without us on the next tick.
         MeshRegistry.unregister(this);
         this.frequency = newFrequency.length() > 32 ? newFrequency.substring(0, 32) : newFrequency;
         this.role = newRole;
@@ -215,7 +215,7 @@ public class MeshEndpointPart extends AEBasePart {
         }
     }
 
-    /** The node the mesh's ME star links; carries the fed network, never the host. */
+    /** The node the mesh's ME lanes link; carries the fed network, never the host. */
     @Nullable
     public appeng.api.networking.IGridNode carriedNode() {
         return carriedNode == null ? null : carriedNode.getNode();

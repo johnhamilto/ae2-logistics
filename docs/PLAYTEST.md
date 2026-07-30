@@ -363,7 +363,7 @@ items + fluids; signal keys are excluded by contract.
   1 AE/t. Two endpoints = universal P2P; more = mesh.
 - **GUI [HUMAN]**: frequency box, role cycle, six capability toggles, priority,
   9 ghost filter slots (item, or bucket→fluid; empty hand clears), live status line
-  (endpoint count, ME hub/spoke, status).
+  (endpoint count, ME lane/standby, status).
 - Transport expectations:
   - Redstone: wired-OR (outputs emit the highest input level).
   - Items/fluids: pushed into an IN endpoint, delivered to OUT endpoints' faced
@@ -375,9 +375,12 @@ items + fluids; signal keys are excluded by contract.
   - Signals: the only cross-NETWORK transport — IN publishes its network's channels,
     OUT injects into its own; bridged values sum; re-publication is impossible.
   - **ME link**: true ME P2P — the network touching the endpoint's FACE is carried
-    through the mesh (one grid across all endpoints on the frequency, 32
-    channels/spoke); the host network the endpoint sits on is never fused. Endpoints
-    wear the P2P tunnel chassis now.
+    through the mesh (one grid across all endpoints on the frequency); the host
+    network the endpoint sits on is never fused. Endpoints whose fed networks
+    already touch form one SIDE; the mesh builds min(|a|,|b|) parallel LANES
+    between sides, 32 channels each — two feeds + two exits = a 64-channel trunk
+    that AE2 pathing spreads by proximity (spread far-side cabling between exits).
+    Endpoints wear the P2P tunnel chassis now.
 - Filters: exact match (components included); IN refuses non-matching insertions;
   OUT is skipped for non-matching stacks; provider batches land only where the whole
   batch matches.
@@ -396,7 +399,12 @@ items + fluids; signal keys are excluded by contract.
 
 > **Not a bug**: provider blocking THROUGH a mesh is always per-machine — the
 > provider's own blocking toggle is effectively bypassed. Mesh rename skips
-> unloaded-chunk endpoints until they load. CABLED LOOP is a warning, not a failure.
+> unloaded-chunk endpoints until they load. CABLED LOOP now means the whole
+> frequency's fed networks are already one cabled grid (mesh has nothing to
+> bridge) — a warning, not a failure. One lane still ceils at 32 channels: that
+> is AE2's per-node dense cap, not a mesh bug; add an endpoint pair for another
+> lane. After recabling fed networks, `/ae2logistics mesh relink` re-computes
+> sides/lanes (they refresh on membership change, not continuously).
 
 ---
 

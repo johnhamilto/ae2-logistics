@@ -377,24 +377,21 @@ public class MeshPolishGameTests {
         var second = placeEndpoint(helper, new BlockPos(2, 1, 1), Direction.UP, "loop-flag",
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
 
-        // Loop detection runs when a star (re)builds; the initial build can race the
+        // Loop detection runs when lanes (re)build; the initial build can race the
         // carried nodes' in-world connections, so force the documented re-check.
         helper.runAfterDelay(20, () -> MeshRegistry.forceRelink("loop-flag"));
 
         helper.runAfterDelay(60, () -> {
+            // One pre-linked carried grid spans every endpoint, so the mesh has nothing
+            // to bridge: every endpoint is flagged, and no lanes exist.
             int loops = 0;
-            int hubs = 0;
             for (var endpoint : new MeshEndpointPart[] {first, second}) {
                 if (MeshRegistry.statusOf(endpoint) == MeshRegistry.STATUS_CABLED_LOOP) {
                     loops++;
                 }
-                if (endpoint.meLinkState() == MeshRegistry.ME_STATE_HUB) {
-                    hubs++;
-                }
             }
-            helper.assertTrue(hubs == 1, "exactly one endpoint must be the ME hub, got " + hubs);
-            helper.assertTrue(loops == 1,
-                    "the spoke must be flagged as a cabled loop, flagged " + loops);
+            helper.assertTrue(loops == 2,
+                    "both endpoints of an already-cabled frequency must be flagged, flagged " + loops);
             helper.succeed();
         });
     }

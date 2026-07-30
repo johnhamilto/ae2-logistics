@@ -95,8 +95,8 @@ public class MeshEndpointScreen extends AbstractContainerScreen<MeshEndpointMenu
             default -> "OK";
         };
         var me = switch (menu.meState()) {
-            case MeshRegistry.ME_STATE_HUB -> " hub";
-            case MeshRegistry.ME_STATE_LINKED -> " spoke";
+            case MeshRegistry.ME_STATE_LINKED -> " lane";
+            case MeshRegistry.ME_STATE_STANDBY -> " standby";
             default -> "";
         };
         return "x" + menu.endpointCount() + me + " " + status;

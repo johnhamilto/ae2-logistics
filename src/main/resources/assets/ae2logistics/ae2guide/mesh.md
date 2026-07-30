@@ -45,13 +45,19 @@ which makes item loops structurally impossible rather than merely discouraged.
 - **ME Link** - true ME P2P with quantum-bridge mechanics underneath. An ME-attuned
   endpoint exposes a connection point on its **face**: the network touching that face
   is **carried** through the mesh - fed in on one endpoint, it comes out at every
-  other endpoint on the frequency as one grid (channels up to 32 per spoke, power,
-  membership) - while the host network the endpoint sits on is **never fused**.
-  Exactly like AE2's ME P2P tunnel, at mesh scale. Renaming or un-attuning an
-  endpoint cleanly tears its links down and destroys its carried connection point.
+  other endpoint on the frequency as one grid (channels, power, membership) - while
+  the host network the endpoint sits on is **never fused**. Endpoints whose fed
+  networks already touch count as one **side**, and the mesh builds parallel
+  **lanes** between sides - as many as the smaller side has endpoints. Each lane
+  carries up to 32 channels, so channel capacity **bundles**: feed a controller
+  network in on two endpoints and pull it out on two elsewhere for a 64-channel
+  trunk. Renaming or un-attuning an endpoint cleanly tears its lanes down and
+  destroys its carried connection point.
 
-The mesh never creates channel capacity from nothing - every endpoint costs a channel
-and ME links route through AE2's normal pathing rules.
+The mesh never creates channel capacity from nothing - every endpoint costs a host
+channel, each lane tops out at AE2's 32-channel dense ceiling, and channels route by
+AE2's normal pathing. Pathing assigns each device the nearest lane, so spread far-side
+cabling between exit endpoints rather than funneling everything through one.
 
 # Filters
 
@@ -67,14 +73,16 @@ ingredient in it, and moves complete to another machine otherwise. Matching is e
 # Diagnostics
 
 The endpoint's own screen shows a live readout: how many endpoints share the frequency,
-this one's ME star role (hub or spoke), and a status. The status also appears per
-endpoint in the P2P Frequency Terminal's mesh rows.
+whether this one owns an ME lane (or sits on standby as a spare on a larger side), and
+a status. The status also appears per endpoint in the P2P Frequency Terminal's mesh
+rows.
 
-**CABLED LOOP** means the mesh link runs parallel to a physical cable path between the
-same networks. AE2 tolerates the loop, but redundant paths are the classic
-half-a-base-offline debugging trap - remove the cable or the extra endpoint. Loops are
-detected when a frequency's links (re)build; `/ae2logistics mesh relink <frequency>`
-forces a rebuild and a fresh diagnosis.
+**CABLED LOOP** means every fed network on the frequency is already one cabled
+network, so the mesh has nothing to bridge - its links would only add redundant
+parallel paths, the classic half-a-base-offline debugging trap. Remove the cable or
+retune an endpoint. Sides and lanes are computed when a frequency's links (re)build;
+after recabling, `/ae2logistics mesh relink <frequency>` forces a rebuild and a fresh
+diagnosis.
 
 For servers and bug reports: `/ae2logistics mesh list` prints every frequency with
 endpoint counts and capabilities, and `/ae2logistics mesh status <frequency>` prints

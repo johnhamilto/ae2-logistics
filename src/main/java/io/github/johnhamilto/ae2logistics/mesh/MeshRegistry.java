@@ -34,12 +34,12 @@ public final class MeshRegistry {
     public static final int TYPE_SIGNAL = 16;
     public static final int TYPE_ME = 32;
 
-    // ME star state per endpoint, evaluated whenever the star (re)builds.
+    // ME link state per endpoint, evaluated whenever the frequency's lanes (re)build.
     public static final byte ME_STATE_NONE = 0;
     public static final byte ME_STATE_WAITING = 1;
     public static final byte ME_STATE_LINKED = 2;
     public static final byte ME_STATE_LOOP = 3;
-    public static final byte ME_STATE_HUB = 4;
+    public static final byte ME_STATE_STANDBY = 4;
 
     // Overall endpoint status for UI and commands.
     public static final byte STATUS_OK = 0;
@@ -109,7 +109,7 @@ public final class MeshRegistry {
         }
     }
 
-    /** Forces the frequency's ME star to rebuild (and re-diagnose loops) next tick. */
+    /** Forces the frequency's ME lanes to rebuild (and re-diagnose loops) next tick. */
     public static void forceRelink(String frequency) {
         ME_MEMBERSHIP.remove(frequency);
     }
@@ -301,13 +301,20 @@ public final class MeshRegistry {
 
     /**
      * Mesh-ME is true P2P with quantum-bridge mechanics underneath: every ME-attuned
-     * endpoint exposes a CARRIED node on its face, and the star (deterministically
-     * elected hub, lowest stableKey) connects those carried nodes - so the networks fed
-     * INTO the endpoints' faces fuse across the mesh, while the host networks the
-     * endpoints sit on are never touched. Carried nodes are DENSE_CAPACITY, so each
-     * spoke carries up to 32 channels of the carried network.
+     * endpoint exposes a CARRIED node on its face, and the mesh links those carried
+     * nodes - the networks fed INTO the endpoints' faces fuse across the frequency,
+     * while the host networks the endpoints sit on are never touched.
+     *
+     * <p>The topology is pairing, not a star. AE2's pathfinder allocates channels
+     * along a BFS tree and never reroutes around a saturated node, so one node linked
+     * to everything caps the whole frequency at its own 32-channel dense ceiling.
+     * Instead, endpoints are grouped by the carried grid their faces already share,
+     * and every pair of groups gets min(|a|, |b|) disjoint lanes between least-loaded
+     * endpoints: each far-side region hangs under its own BFS branch, and capacity
+     * bundles at 32 channels per lane - exactly N parallel ME P2P tunnels, managed
+     * automatically.
      */
-    private static void manageMeStars() {
+    private static void manageMeLinks() {
         ME_LINKS.keySet().removeIf(freq -> {
             if (!BY_FREQUENCY.containsKey(freq)) {
                 ME_LINKS.getOrDefault(freq, List.of())
@@ -334,6 +341,8 @@ public final class MeshRegistry {
             }
             ME_MEMBERSHIP.put(entry.getKey(), membership);
 
+            // Destroying a connection splits grids synchronously (validateGrid runs the
+            // split detector), so the groups read below are the true pre-mesh grids.
             ME_LINKS.getOrDefault(entry.getKey(), List.of())
                     .forEach(appeng.api.networking.IGridConnection::destroy);
             var links = new ArrayList<appeng.api.networking.IGridConnection>();
@@ -343,22 +352,42 @@ public final class MeshRegistry {
             }
             if (members.size() >= 2) {
                 members.sort(Comparator.comparingLong(MeshEndpointPart::stableKey));
-                var hubPart = members.get(0);
-                var hub = hubPart.carriedNode();
-                hubPart.setMeLinkState(ME_STATE_HUB);
-                for (int i = 1; i < members.size(); i++) {
-                    var spokePart = members.get(i);
-                    var spoke = spokePart.carriedNode();
-                    // Carried grids already sharing a grid means a physical path runs
-                    // parallel to this mesh link. AE2 tolerates the loop; flag it anyway,
-                    // because a redundant path is the classic half-a-base-offline trap.
-                    boolean loop = hub.getGrid() == spoke.getGrid();
-                    try {
-                        links.add(appeng.api.networking.GridHelper.createConnection(hub, spoke));
-                        spokePart.setMeLinkState(loop ? ME_STATE_LOOP : ME_STATE_LINKED);
-                    } catch (IllegalStateException ignored) {
-                        // already directly connected; the tightest possible loop
-                        spokePart.setMeLinkState(ME_STATE_LOOP);
+                var groups = new java.util.LinkedHashMap<appeng.api.networking.IGrid, List<MeshEndpointPart>>();
+                for (var part : members) {
+                    groups.computeIfAbsent(part.carriedNode().getGrid(), g -> new ArrayList<>()).add(part);
+                }
+                if (groups.size() == 1) {
+                    // Cables already join every fed network; a lane would only add a
+                    // redundant parallel path - the classic half-a-base-offline trap.
+                    for (var part : members) {
+                        part.setMeLinkState(ME_STATE_LOOP);
+                    }
+                } else {
+                    var sides = new ArrayList<>(groups.values());
+                    var load = new HashMap<MeshEndpointPart, Integer>();
+                    for (int i = 0; i < sides.size(); i++) {
+                        for (int j = i + 1; j < sides.size(); j++) {
+                            int lanes = Math.min(sides.get(i).size(), sides.get(j).size());
+                            for (int lane = 0; lane < lanes; lane++) {
+                                var a = leastLoaded(sides.get(i), load);
+                                var b = leastLoaded(sides.get(j), load);
+                                try {
+                                    links.add(appeng.api.networking.GridHelper
+                                            .createConnection(a.carriedNode(), b.carriedNode()));
+                                    load.merge(a, 1, Integer::sum);
+                                    load.merge(b, 1, Integer::sum);
+                                    a.setMeLinkState(ME_STATE_LINKED);
+                                    b.setMeLinkState(ME_STATE_LINKED);
+                                } catch (IllegalStateException ignored) {
+                                    // the pair is already directly connected
+                                }
+                            }
+                        }
+                    }
+                    for (var part : members) {
+                        if (part.meLinkState() == ME_STATE_WAITING) {
+                            part.setMeLinkState(ME_STATE_STANDBY);
+                        }
                     }
                 }
             }
@@ -370,10 +399,24 @@ public final class MeshRegistry {
         }
     }
 
+    /** Lowest lane count wins; stableKey breaks ties so lane assignment is deterministic. */
+    private static MeshEndpointPart leastLoaded(List<MeshEndpointPart> side,
+            Map<MeshEndpointPart, Integer> load) {
+        var best = side.get(0);
+        for (var part : side) {
+            int candidate = load.getOrDefault(part, 0);
+            int current = load.getOrDefault(best, 0);
+            if (candidate < current || (candidate == current && part.stableKey() < best.stableKey())) {
+                best = part;
+            }
+        }
+        return best;
+    }
+
     /** Once per server tick: recompute redstone wired-OR and signal bridging per frequency. */
     public static void tick(long tick) {
         gameTick = tick;
-        manageMeStars();
+        manageMeLinks();
 
         for (var entry : BY_FREQUENCY.entrySet()) {
             int redstone = 0;
