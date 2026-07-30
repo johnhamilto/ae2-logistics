@@ -6,21 +6,27 @@ import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AE2Button;
+import appeng.client.gui.widgets.AETextField;
+
 import io.github.johnhamilto.ae2logistics.menu.ConfigureCoreEntryPayload;
 import io.github.johnhamilto.ae2logistics.menu.LogicCoreMenu;
 import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
 
-public class LogicCoreScreen extends AbstractContainerScreen<LogicCoreMenu> {
+public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
 
-    private static final ResourceLocation BACKGROUND = AE2Logistics.id("textures/gui/core_panel.png");
+    private static final int LABEL = 0x404040;
+    private static final int HINT = 0x7b7b7b;
+    private static final int MUTED = 0xA0A0A0;
+    private static final int OK = 0x2E8B57;
+    private static final int ALERT = 0xB33A36;
 
     /** Cycle order for the type button; REDSTONE_IO stays a physical part. */
     private static final LogicPartType[] TYPE_CYCLE = {
@@ -35,18 +41,19 @@ public class LogicCoreScreen extends AbstractContainerScreen<LogicCoreMenu> {
 
     private final List<AbstractWidget> detailWidgets = new ArrayList<>();
 
-    private EditBox outBox;
-    private EditBox inABox;
-    private EditBox inBBox;
-    private EditBox valueABox;
-    private EditBox valueBBox;
+    private AETextField outBox;
+    private AETextField inABox;
+    private AETextField inBBox;
+    private AETextField valueABox;
+    private AETextField valueBBox;
     private int opValue;
     private boolean flagValue;
 
-    public LogicCoreScreen(LogicCoreMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+    public LogicCoreScreen(LogicCoreMenu menu, Inventory inventory, Component title,
+            ScreenStyle style) {
+        super(menu, inventory, title, style);
         this.imageWidth = 200;
-        this.imageHeight = 240;
+        this.imageHeight = 252;
     }
 
     @Override
@@ -69,47 +76,48 @@ public class LogicCoreScreen extends AbstractContainerScreen<LogicCoreMenu> {
         opValue = menu.ops[selected];
         flagValue = menu.flags[selected];
 
-        addDetail(Button.builder(Component.literal(typeName(type)), b -> cycleType())
-                .bounds(leftPos + 8, topPos + 123, 46, 14).build());
+        addDetail(new AE2Button(leftPos + 8, topPos + 123, 46, 14,
+                Component.literal(typeName(type)), b -> cycleType()));
 
-        outBox = new EditBox(font, leftPos + 60, topPos + 124, 62, 12, Component.empty());
+        outBox = new AETextField(style, font, leftPos + 60, topPos + 124, 62, 12);
         outBox.setMaxLength(80);
         outBox.setValue(menu.outs[selected]);
         addDetail(outBox);
 
-        addDetail(Button.builder(Component.literal("Apply"), b -> apply())
-                .bounds(leftPos + 156, topPos + 123, 36, 14).build());
+        addDetail(new AE2Button(leftPos + 156, topPos + 123, 36, 14,
+                Component.literal("Apply"), b -> apply()));
 
         if (type == LogicPartType.STOCK_SENSOR.ordinal()) {
             inABox = inBBox = valueABox = valueBBox = null;
         } else if (type >= 0) {
-            inABox = new EditBox(font, leftPos + 8, topPos + 140, 44, 12, Component.empty());
+            inABox = new AETextField(style, font, leftPos + 8, topPos + 140, 44, 12);
             inABox.setMaxLength(80);
             inABox.setValue(menu.inAs[selected]);
             addDetail(inABox);
 
-            inBBox = new EditBox(font, leftPos + 56, topPos + 140, 44, 12, Component.empty());
+            inBBox = new AETextField(style, font, leftPos + 56, topPos + 140, 44, 12);
             inBBox.setMaxLength(80);
             inBBox.setValue(menu.inBs[selected]);
             addDetail(inBBox);
 
-            addDetail(Button.builder(Component.literal(opName(type, opValue)), b -> cycleOp(b))
-                    .bounds(leftPos + 104, topPos + 139, 26, 14).build());
+            addDetail(new AE2Button(leftPos + 104, topPos + 139, 26, 14,
+                    Component.literal(opName(type, opValue)), b -> cycleOp((Button) b)));
 
-            valueABox = new EditBox(font, leftPos + 134, topPos + 140, 28, 12, Component.empty());
+            valueABox = new AETextField(style, font, leftPos + 134, topPos + 140, 28, 12);
             valueABox.setMaxLength(12);
             valueABox.setValue(Long.toString(menu.valueAs[selected]));
             addDetail(valueABox);
 
-            valueBBox = new EditBox(font, leftPos + 166, topPos + 140, 28, 12, Component.empty());
+            valueBBox = new AETextField(style, font, leftPos + 166, topPos + 140, 28, 12);
             valueBBox.setMaxLength(12);
             valueBBox.setValue(Long.toString(menu.valueBs[selected]));
             addDetail(valueBBox);
 
-            addDetail(Button.builder(Component.literal(flagValue ? "b=ch" : "b=#"), b -> {
-                flagValue = !flagValue;
-                b.setMessage(Component.literal(flagValue ? "b=ch" : "b=#"));
-            }).bounds(leftPos + 126, topPos + 123, 26, 14).build());
+            addDetail(new AE2Button(leftPos + 126, topPos + 123, 26, 14,
+                    Component.literal(flagValue ? "b=ch" : "b=#"), b -> {
+                        flagValue = !flagValue;
+                        b.setMessage(Component.literal(flagValue ? "b=ch" : "b=#"));
+                    }));
         } else {
             inABox = inBBox = valueABox = valueBBox = null;
         }
@@ -234,64 +242,44 @@ public class LogicCoreScreen extends AbstractContainerScreen<LogicCoreMenu> {
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
-        int selY = topPos + LogicCoreMenu.ROW_Y + menu.selected() * LogicCoreMenu.ROW_STEP;
-        guiGraphics.fill(leftPos + 7, selY - 1, leftPos + 193, selY + 11, 0x30FFFFFF);
-
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+            float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        int selY = offsetY + LogicCoreMenu.ROW_Y + menu.selected() * LogicCoreMenu.ROW_STEP;
+        guiGraphics.fill(offsetX + 7, selY - 1, offsetX + 193, selY + 11, 0x30405A78);
         if (selectedType() == LogicPartType.STOCK_SENSOR.ordinal()) {
-            slotFrame(guiGraphics, LogicCoreMenu.GHOST_X, LogicCoreMenu.GHOST_Y);
+            Icon.SLOT_BACKGROUND.getBlitter()
+                    .dest(offsetX + LogicCoreMenu.GHOST_X - 1, offsetY + LogicCoreMenu.GHOST_Y - 1)
+                    .blit(guiGraphics);
         }
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                slotFrame(guiGraphics, LogicCoreMenu.INV_X + col * 18, LogicCoreMenu.INV_Y + row * 18);
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            slotFrame(guiGraphics, LogicCoreMenu.INV_X + col * 18, LogicCoreMenu.HOTBAR_Y);
-        }
-    }
-
-    private void slotFrame(GuiGraphics guiGraphics, int slotX, int slotY) {
-        int x = leftPos + slotX - 1;
-        int y = topPos + slotY - 1;
-        guiGraphics.fill(x, y, x + 18, y + 18, 0xFF1A1F27);
-        guiGraphics.fill(x + 1, y + 1, x + 17, y + 17, 0xFF2C333F);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, title, 10, 6, 0xE0E6EB, false);
+    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         guiGraphics.drawString(font, menu.coreActive() ? "online" : "offline", 160, 6,
-                menu.coreActive() ? 0x6FDB6F : 0xE0524E, false);
+                menu.coreActive() ? OK : ALERT, false);
 
         for (int i = 0; i < LogicCoreMenu.ROWS; i++) {
             int y = LogicCoreMenu.ROW_Y + i * LogicCoreMenu.ROW_STEP + 1;
             int type = menu.types[i];
             boolean active = menu.entryActive(i);
-            int labelColor = type < 0 ? 0x4A5866 : active ? 0xE0E6EB : 0xE0524E;
+            int labelColor = type < 0 ? MUTED : active ? LABEL : ALERT;
             guiGraphics.drawString(font, (i + 1) + " " + typeName(type), 10, y, labelColor, false);
             if (type >= 0) {
                 var out = menu.outs[i];
-                guiGraphics.drawString(font, truncate(out, 16), 62, y, 0x8A9AA8, false);
+                guiGraphics.drawString(font, truncate(out, 16), 62, y, HINT, false);
                 var value = Long.toString(menu.entryValue(i));
                 guiGraphics.drawString(font, value, 190 - font.width(value), y,
-                        active ? 0x6FDB6F : 0x4A5866, false);
+                        active ? OK : MUTED, false);
             }
         }
 
         if (selectedType() == LogicPartType.STOCK_SENSOR.ordinal()) {
-            guiGraphics.drawString(font, "click slot with held item to watch", 32, 141, 0x5A6B7C, false);
+            guiGraphics.drawString(font, "click slot with held item to watch", 32, 141, HINT, false);
         }
     }
 
     private String truncate(String text, int max) {
         return text.length() <= max ? text : text.substring(0, max - 1) + "~";
-    }
-
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderTooltip(guiGraphics, mouseX, mouseY);
     }
 }

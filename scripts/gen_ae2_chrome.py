@@ -126,6 +126,12 @@ def main() -> None:
     stamp_slots(out, slot, player_inventory(231))
     emit("job_scheduler", out)
 
+    # Logic Core + Subnet Core share this: 8 entry rows + detail strip + player
+    # inventory; the ghost slot frame is drawn by the screens (conditional for logic).
+    out = dialog(source, 200, 252)
+    stamp_slots(out, slot, player_inventory(252))
+    emit("core_panel", out)
+
 
 if __name__ == "__main__":
     main()

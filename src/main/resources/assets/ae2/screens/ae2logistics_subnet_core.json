@@ -1,0 +1,24 @@
+{
+  "includes": ["common/common.json", "common/player_inventory.json"],
+  "background": {
+    "texture": "guis/ae2logistics/core_panel.png",
+    "srcRect": [0, 0, 200, 252]
+  },
+  "slots": {
+    "CONFIG": {
+      "left": 10,
+      "top": 137
+    }
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "block.ae2logistics.subnet_core"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

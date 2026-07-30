@@ -54,8 +54,14 @@ public final class AE2LogisticsClient {
                     AE2Logistics.JOB_SCHEDULER_MENU.get(),
                     JobSchedulerScreen::new,
                     "/screens/ae2logistics_job_scheduler.json");
-            event.register(AE2Logistics.LOGIC_CORE_MENU.get(), LogicCoreScreen::new);
-            event.register(AE2Logistics.SUBNET_CORE_MENU.get(), SubnetCoreScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.LOGIC_CORE_MENU.get(),
+                    LogicCoreScreen::new,
+                    "/screens/ae2logistics_logic_core.json");
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.SUBNET_CORE_MENU.get(),
+                    SubnetCoreScreen::new,
+                    "/screens/ae2logistics_subnet_core.json");
         });
     }
 }

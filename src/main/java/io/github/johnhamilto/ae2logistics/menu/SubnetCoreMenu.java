@@ -7,7 +7,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
@@ -18,6 +17,8 @@ import appeng.api.behaviors.ContainerItemStrategies;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import appeng.menu.AEBaseMenu;
+import appeng.menu.SlotSemantics;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.SubnetCoreBlockEntity;
@@ -27,7 +28,7 @@ import io.github.johnhamilto.ae2logistics.block.SubnetCoreBlockEntity;
  * menu: snapshot in the open buffer, edits via {@link ConfigureSubnetEntryPayload},
  * one ghost filter slot bound server-side to the selection.
  */
-public class SubnetCoreMenu extends AbstractContainerMenu {
+public class SubnetCoreMenu extends AEBaseMenu {
 
     public static final int ROWS = SubnetCoreBlockEntity.ENTRIES;
 
@@ -35,9 +36,6 @@ public class SubnetCoreMenu extends AbstractContainerMenu {
     public static final int ROW_STEP = 13;
     public static final int GHOST_X = 10;
     public static final int GHOST_Y = 137;
-    public static final int INV_X = 19;
-    public static final int INV_Y = 158;
-    public static final int HOTBAR_Y = 216;
 
     @Nullable
     private final SubnetCoreBlockEntity core;
@@ -53,7 +51,7 @@ public class SubnetCoreMenu extends AbstractContainerMenu {
     private int activeMask;
 
     public SubnetCoreMenu(int containerId, Inventory inventory, SubnetCoreBlockEntity core) {
-        super(AE2Logistics.SUBNET_CORE_MENU.get(), containerId);
+        super(AE2Logistics.SUBNET_CORE_MENU.get(), containerId, inventory, core);
         this.core = core;
         this.pos = core.getBlockPos();
         for (int i = 0; i < ROWS; i++) {
@@ -70,7 +68,7 @@ public class SubnetCoreMenu extends AbstractContainerMenu {
     }
 
     public SubnetCoreMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.SUBNET_CORE_MENU.get(), containerId);
+        super(AE2Logistics.SUBNET_CORE_MENU.get(), containerId, inventory, null);
         this.core = null;
         this.pos = buffer.readBlockPos();
         for (int i = 0; i < ROWS; i++) {
@@ -96,7 +94,7 @@ public class SubnetCoreMenu extends AbstractContainerMenu {
 
     private int addGhostSlot() {
         int index = slots.size();
-        addSlot(new Slot(ghost, 0, GHOST_X, GHOST_Y) {
+        addSlot(new Slot(ghost, 0, 0, 0) {
             @Override
             public boolean mayPickup(Player player) {
                 return false;
@@ -106,19 +104,12 @@ public class SubnetCoreMenu extends AbstractContainerMenu {
             public boolean mayPlace(ItemStack stack) {
                 return false;
             }
-        });
+        }, SlotSemantics.CONFIG);
         return index;
     }
 
     private void addPlayerSlots(Inventory inventory) {
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(inventory, 9 + row * 9 + col, INV_X + col * 18, INV_Y + row * 18));
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, col, INV_X + col * 18, HOTBAR_Y));
-        }
+        createPlayerInventorySlots(inventory);
     }
 
     private void addSyncSlots() {
@@ -226,16 +217,5 @@ public class SubnetCoreMenu extends AbstractContainerMenu {
             return new ItemStack(fluidKey.getFluid().getBucket());
         }
         return GenericStack.wrapInItemStack(stack);
-    }
-
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
     }
 }
