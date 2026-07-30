@@ -4,10 +4,6 @@ navigation:
   title: Guarded Crafting
   position: 35
   icon: ae2logistics:guarded_pattern_provider
-item_ids:
-- ae2logistics:guarded_pattern_provider
-- ae2logistics:guarded_pattern
-- ae2logistics:regulus_crystal
 ---
 
 # Guarded Crafting
@@ -66,3 +62,7 @@ restores the original pattern.
 
 Per-pattern guards are enforced by the Guarded Pattern Provider. In a plain pattern
 provider a Guarded Pattern behaves exactly like its inner pattern - the guard is inert.
+
+## Devices
+
+<ItemLink id="guarded_pattern_provider" />, <ItemLink id="guarded_pattern" />, priced by <ItemLink id="regulus_crystal" />; conditions come from [Signals](signals.md).

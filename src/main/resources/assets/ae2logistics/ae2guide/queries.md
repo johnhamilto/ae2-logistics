@@ -4,10 +4,6 @@ navigation:
   title: Query Language
   position: 45
   icon: ae2logistics:query_terminal
-item_ids:
-- ae2logistics:query_terminal
-- ae2logistics:query_sensor
-- ae2logistics:query_export_bus
 ---
 
 # Query Language
@@ -64,3 +60,7 @@ eight items per operation, speeding up while it finds work. The generalized tag-
 one part, any predicate, retargetable by editing one saved query.
 
 <RecipeFor id="query_export_bus" />
+
+## Devices
+
+<ItemLink id="query_terminal" /> (write and save), <ItemLink id="query_sensor" /> (count to a signal), <ItemLink id="query_export_bus" /> (export by query).

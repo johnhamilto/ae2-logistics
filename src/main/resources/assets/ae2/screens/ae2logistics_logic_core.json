@@ -1,8 +1,17 @@
 {
-  "includes": ["common/common.json", "common/player_inventory.json"],
+  "helpTopic": "ae2logistics:logic-core.md",
+  "includes": [
+    "common/common.json",
+    "common/player_inventory.json"
+  ],
   "background": {
     "texture": "guis/ae2logistics/core_panel.png",
-    "srcRect": [0, 0, 200, 252]
+    "srcRect": [
+      0,
+      0,
+      200,
+      252
+    ]
   },
   "slots": {
     "CONFIG": {

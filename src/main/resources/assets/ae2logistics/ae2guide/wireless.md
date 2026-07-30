@@ -4,9 +4,6 @@ navigation:
   title: Wireless Bridging
   position: 40
   icon: ae2logistics:wireless_bridge
-item_ids:
-- ae2logistics:wireless_bridge
-- ae2logistics:dense_wireless_access_point
 ---
 
 # Wireless Bridging
@@ -62,3 +59,7 @@ energy, redstone, and signals to anywhere in coverage. A Logic Core on a bridged
 segment computes with the main network's signals. Coverage planning - how many
 towers, where, with what uplink - becomes part of factory design, which is the whole
 point.
+
+## Devices
+
+<ItemLink id="wireless_bridge" /> joins machines through coverage from AE2 WAPs or the <ItemLink id="dense_wireless_access_point" />.

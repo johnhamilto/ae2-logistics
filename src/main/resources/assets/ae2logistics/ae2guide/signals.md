@@ -1,13 +1,9 @@
 ---
 navigation:
   parent: ae2logistics-index.md
-  title: Signals and the Register Bank
+  title: Signals
   position: 10
   icon: ae2logistics:register_bank
-item_ids:
-- ae2logistics:register_bank
-- ae2logistics:signal_card
-- ae2logistics:tracer_terminal
 ---
 
 # Signals
@@ -67,3 +63,7 @@ to fill any config slot.
 
 Put the bound card in a Level Emitter's config slot and the emitter thresholds on your
 computed value instead of an item count.
+
+## Devices
+
+<ItemLink id="register_bank" /> - <ItemLink id="signal_card" /> - <ItemLink id="tracer_terminal" /> - <ItemLink id="job_monitor" /> - every page under [Devices](devices-index.md).

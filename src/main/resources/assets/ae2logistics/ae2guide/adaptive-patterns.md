@@ -4,9 +4,6 @@ navigation:
   title: Adaptive Patterns
   position: 30
   icon: ae2logistics:pattern_workbench
-item_ids:
-- ae2logistics:adaptive_processing_pattern
-- ae2logistics:pattern_workbench
 ---
 
 # Adaptive Patterns
@@ -55,3 +52,7 @@ iron). Then:
    exactly like the original.
 
 The conversion keeps inputs and outputs unchanged — only the matching rules differ.
+
+## Devices
+
+<ItemLink id="pattern_workbench" /> makes the <ItemLink id="adaptive_processing_pattern" />; any pattern provider runs it.

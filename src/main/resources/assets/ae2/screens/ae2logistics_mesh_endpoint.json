@@ -1,8 +1,17 @@
 {
-  "includes": ["common/common.json", "common/player_inventory.json"],
+  "helpTopic": "ae2logistics:mesh-endpoint.md",
+  "includes": [
+    "common/common.json",
+    "common/player_inventory.json"
+  ],
   "background": {
     "texture": "guis/ae2logistics/mesh_endpoint.png",
-    "srcRect": [0, 0, 200, 231]
+    "srcRect": [
+      0,
+      0,
+      200,
+      231
+    ]
   },
   "slots": {
     "CONFIG": {

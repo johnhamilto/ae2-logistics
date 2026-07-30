@@ -1,8 +1,16 @@
 {
-  "includes": ["common/common.json"],
+  "helpTopic": "ae2logistics:p2p-terminal.md",
+  "includes": [
+    "common/common.json"
+  ],
   "background": {
     "texture": "guis/ae2logistics/terminal_236x190.png",
-    "srcRect": [0, 0, 236, 190]
+    "srcRect": [
+      0,
+      0,
+      236,
+      190
+    ]
   },
   "text": {
     "dialog_title": {

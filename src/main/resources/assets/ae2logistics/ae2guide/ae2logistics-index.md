@@ -3,8 +3,6 @@ navigation:
   title: AE2 Logistics
   position: 900
   icon: ae2logistics:regulus_crystal
-item_ids:
-- ae2logistics:guide_tablet
 ---
 
 # AE2 Logistics

@@ -1,8 +1,17 @@
 {
-  "includes": ["common/common.json", "common/player_inventory.json"],
+  "helpTopic": "ae2logistics:pattern-workbench.md",
+  "includes": [
+    "common/common.json",
+    "common/player_inventory.json"
+  ],
   "background": {
     "texture": "guis/ae2logistics/pattern_workbench.png",
-    "srcRect": [0, 0, 176, 200]
+    "srcRect": [
+      0,
+      0,
+      176,
+      200
+    ]
   },
   "slots": {
     "MACHINE_INPUT": {

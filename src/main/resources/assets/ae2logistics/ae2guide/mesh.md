@@ -1,11 +1,9 @@
 ---
 navigation:
   parent: ae2logistics-index.md
-  title: Universal Mesh Endpoints
+  title: The Mesh
   position: 50
   icon: ae2logistics:mesh_endpoint
-item_ids:
-- ae2logistics:mesh_endpoint
 ---
 
 # Universal Mesh Endpoints
@@ -95,3 +93,7 @@ endpoint counts and capabilities, and `/ae2logistics mesh status <frequency>` pr
 each endpoint's position, dimension, role, and status.
 
 Each endpoint costs one channel and idles at one AE per tick.
+
+## Devices
+
+<ItemLink id="mesh_endpoint" /> and the <ItemLink id="p2p_frequency_terminal" /> that lists and renames frequencies.

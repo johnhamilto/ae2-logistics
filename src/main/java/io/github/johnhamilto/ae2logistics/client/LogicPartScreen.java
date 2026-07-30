@@ -220,6 +220,25 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
         background.dest(offsetX, offsetY).blit(guiGraphics);
     }
 
+    /** One screen serves ten part types, so the help button resolves per type. */
+    @Override
+    protected guideme.PageAnchor getHelpTopic() {
+        var page = switch (menu.type) {
+            case CONSTANT -> "constant.md";
+            case THRESHOLD -> "threshold.md";
+            case HYSTERESIS -> "hysteresis.md";
+            case ARITHMETIC -> "arithmetic.md";
+            case BOOLEAN -> "logic-gate.md";
+            case REDSTONE_IO -> "redstone-port.md";
+            case STOCK_SENSOR -> "stock-sensor.md";
+            case RATE -> "rate.md";
+            case COUNTER -> "counter.md";
+            case TIMER -> "timer.md";
+        };
+        return new guideme.PageAnchor(
+                io.github.johnhamilto.ae2logistics.AE2Logistics.id(page), null);
+    }
+
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         int y = 22;

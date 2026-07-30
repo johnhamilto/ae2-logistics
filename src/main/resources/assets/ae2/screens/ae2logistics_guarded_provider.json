@@ -1,8 +1,17 @@
 {
-  "includes": ["common/common.json", "common/player_inventory.json"],
+  "helpTopic": "ae2logistics:guarded-pattern-provider.md",
+  "includes": [
+    "common/common.json",
+    "common/player_inventory.json"
+  ],
   "background": {
     "texture": "guis/ae2logistics/guarded_provider.png",
-    "srcRect": [0, 0, 200, 231]
+    "srcRect": [
+      0,
+      0,
+      200,
+      231
+    ]
   },
   "slots": {
     "ENCODED_PATTERN": {

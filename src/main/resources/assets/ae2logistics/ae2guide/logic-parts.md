@@ -4,18 +4,6 @@ navigation:
   title: Logic Parts
   position: 20
   icon: ae2logistics:logic_gate
-item_ids:
-- ae2logistics:constant
-- ae2logistics:threshold
-- ae2logistics:hysteresis
-- ae2logistics:arithmetic
-- ae2logistics:logic_gate
-- ae2logistics:redstone_port
-- ae2logistics:stock_sensor
-- ae2logistics:rate
-- ae2logistics:counter
-- ae2logistics:timer
-- ae2logistics:job_monitor
 ---
 
 # Logic Parts
@@ -96,3 +84,7 @@ the same type.
 
 The farm turns on below 10k, off above 50k, and never chatters in between — the thing a
 plain Level Emitter cannot do.
+
+## Devices
+
+One page per part under [Devices](devices-index.md): <ItemLink id="constant" />, <ItemLink id="threshold" />, <ItemLink id="hysteresis" />, <ItemLink id="arithmetic" />, <ItemLink id="logic_gate" />, <ItemLink id="redstone_port" />, <ItemLink id="stock_sensor" />, <ItemLink id="rate" />, <ItemLink id="counter" />, <ItemLink id="timer" /> - plus the <ItemLink id="logic_core" /> that hosts eight entries in one block.
