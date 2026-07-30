@@ -193,11 +193,18 @@ Per part (craft = logic processor + certus + the listed vanilla item):
     with a filter, only that item. Items only.
   - **uplink**: subnet sees MAIN storage. Uplink + export = feed machines straight
     from main storage with no interface or cable.
-  - **downlink**: MAIN sees subnet storage at the entry's priority — and **costs a
-    main channel** like the physical storage bus it replaces.
+  - **to main** (was downlink): the subnet's storage appears ON main at the
+    entry's priority — and **costs a main channel** like the physical storage
+    bus it replaces.
 - Internal entries consume the internal ad-hoc grid's 8 channels (8 entries = the
   natural budget).
-- **Loop safety (verify!)**: uplink + downlink together must NOT freeze the game,
+- **THE ONE RULE**: import/export entries move items to/from the SUBNET's storage,
+  never main directly — a lone import entry does nothing (subnet has no storage).
+  Pair movers with storage: import + FROM-MAIN = chest into main; export +
+  from-main = machine fed from main; storage entries + TO-MAIN = chest wall as
+  one mount. `/ae2logistics subnet status` hints when items would have nowhere
+  to go.
+- **Loop safety (verify!)**: from-main + to-main together must NOT freeze the game,
   double-count, or dupe. Items inserted into main with only a subnet chest for
   storage land in that chest exactly once and extract exactly once.
 - Copy/paste + blueprint support, NBT persistence.

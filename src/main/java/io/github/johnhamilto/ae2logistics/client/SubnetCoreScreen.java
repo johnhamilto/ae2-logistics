@@ -103,8 +103,9 @@ public class SubnetCoreScreen extends AEBaseScreen<SubnetCoreMenu> {
             case STORAGE_BUS -> "storage";
             case IMPORT_BUS -> "import";
             case EXPORT_BUS -> "export";
-            case UPLINK -> "uplink";
-            case DOWNLINK -> "downlink";
+            // Named for whose storage appears where; enum names stay for NBT compat.
+            case UPLINK -> "from main";
+            case DOWNLINK -> "to main";
         };
     }
 

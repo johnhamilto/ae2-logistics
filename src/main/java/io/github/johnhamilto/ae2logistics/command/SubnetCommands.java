@@ -49,7 +49,7 @@ public final class SubnetCommands {
                 continue;
             }
             configured++;
-            var line = new StringBuilder("entry " + (i + 1) + ": " + entry.type().name().toLowerCase(java.util.Locale.ROOT));
+            var line = new StringBuilder("entry " + (i + 1) + ": " + typeLabel(entry.type()));
             if (entry.type().faceBound()) {
                 line.append(" face=").append(entry.face().getName());
                 int targets = core.externalStoragesFor(entry).size();
@@ -67,6 +67,47 @@ public final class SubnetCommands {
             context.getSource().sendSuccess(() -> Component.literal(
                     "no entries configured - open the GUI, click a row, cycle its type, Apply"), false);
         }
+
+        // Import/export entries move items to/from the SUBNET's storage; without a
+        // storage-capable entry the subnet has nowhere to put or take anything.
+        boolean movesItems = false;
+        boolean hasSubnetStorage = false;
+        boolean visibleFromMain = false;
+        for (int i = 0; i < SubnetCoreBlockEntity.ENTRIES; i++) {
+            var type = core.entry(i).type();
+            if (type == null) {
+                continue;
+            }
+            switch (type) {
+                case IMPORT_BUS, EXPORT_BUS -> movesItems = true;
+                case STORAGE_BUS, UPLINK -> hasSubnetStorage = true;
+                case DOWNLINK -> visibleFromMain = true;
+            }
+        }
+        if (movesItems && !hasSubnetStorage) {
+            context.getSource().sendSuccess(() -> Component.literal(
+                    "hint: the subnet has NO storage - import/export entries move items"
+                            + " to/from the SUBNET, not the main network. Add a FROM-MAIN"
+                            + " entry (main's storage appears inside the subnet) or a"
+                            + " STORAGE entry (a faced inventory becomes subnet storage)."), false);
+        }
+        if (hasSubnetStorage && !movesItems && !visibleFromMain) {
+            context.getSource().sendSuccess(() -> Component.literal(
+                    "hint: nothing reads this subnet - add import/export entries to move"
+                            + " items, or a TO-MAIN entry so the subnet's storage appears"
+                            + " on the main network."), false);
+        }
         return configured;
+    }
+
+    /** Named for whose storage appears where; enum names stay for NBT compat. */
+    private static String typeLabel(io.github.johnhamilto.ae2logistics.block.SubnetCoreEntry.Type type) {
+        return switch (type) {
+            case STORAGE_BUS -> "storage";
+            case IMPORT_BUS -> "import";
+            case EXPORT_BUS -> "export";
+            case UPLINK -> "from-main";
+            case DOWNLINK -> "to-main";
+        };
     }
 }
