@@ -432,6 +432,11 @@ public class JobSchedulerBlockEntity extends BlockEntity
         return mainNode.getNode();
     }
 
+    @Override
+    public appeng.api.util.AECableType getCableConnectionType(Direction dir) {
+        return appeng.api.util.AECableType.SMART;
+    }
+
     @Nullable
     @Override
     public IGridNode getActionableNode() {

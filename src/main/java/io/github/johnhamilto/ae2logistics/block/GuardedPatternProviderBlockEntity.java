@@ -308,4 +308,9 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
     public IGridNode getGridNode(Direction dir) {
         return mainNode.getNode();
     }
+
+    @Override
+    public appeng.api.util.AECableType getCableConnectionType(Direction dir) {
+        return appeng.api.util.AECableType.SMART;
+    }
 }

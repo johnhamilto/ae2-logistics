@@ -241,4 +241,10 @@ public class SubnetLinkPart extends StorageBusPart {
     public IPartModel getStaticModels() {
         return MODEL;
     }
+
+    /** Subnet cables connect with the full smart look, not the power-only stub. */
+    @Override
+    public appeng.api.util.AECableType getExternalCableConnectionType() {
+        return appeng.api.util.AECableType.SMART;
+    }
 }

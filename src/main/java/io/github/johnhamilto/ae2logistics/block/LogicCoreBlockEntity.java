@@ -229,6 +229,7 @@ public class LogicCoreBlockEntity extends BlockEntity implements IInWorldGridNod
 
     @Override
     public AECableType getCableConnectionType(Direction dir) {
-        return AECableType.SMART;
+        // The core's node is dense-capacity (nine channels through one face).
+        return AECableType.DENSE_SMART;
     }
 }
