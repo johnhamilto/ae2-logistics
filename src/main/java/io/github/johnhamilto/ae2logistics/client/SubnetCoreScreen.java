@@ -68,11 +68,15 @@ public class SubnetCoreScreen extends AEBaseScreen<SubnetCoreMenu> {
                         }));
             }
 
-            priorityBox = new AETextField(style, font, leftPos + 98, topPos + 124, 40, 12);
-            priorityBox.setBordered(false);
-            priorityBox.setMaxLength(9);
-            priorityBox.setValue(Integer.toString(menu.priorities[selected]));
-            addDetail(priorityBox);
+            if (entryType.filterable()) {
+                priorityBox = new AETextField(style, font, leftPos + 98, topPos + 124, 40, 12);
+                priorityBox.setBordered(false);
+                priorityBox.setMaxLength(9);
+                priorityBox.setValue(Integer.toString(menu.priorities[selected]));
+                addDetail(priorityBox);
+            } else {
+                priorityBox = null;
+            }
         } else {
             priorityBox = null;
         }
@@ -108,6 +112,7 @@ public class SubnetCoreScreen extends AEBaseScreen<SubnetCoreMenu> {
             // Named for whose storage appears where; enum names stay for NBT compat.
             case UPLINK -> "from main";
             case DOWNLINK -> "to main";
+            case PORT -> "port";
         };
     }
 
@@ -162,9 +167,16 @@ public class SubnetCoreScreen extends AEBaseScreen<SubnetCoreMenu> {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         int selY = offsetY + SubnetCoreMenu.ROW_Y + menu.selected() * SubnetCoreMenu.ROW_STEP;
         guiGraphics.fill(offsetX + 7, selY - 1, offsetX + 193, selY + 11, 0x30405A78);
-        Icon.SLOT_BACKGROUND.getBlitter()
-                .dest(offsetX + SubnetCoreMenu.GHOST_X - 1, offsetY + SubnetCoreMenu.GHOST_Y - 1)
-                .blit(guiGraphics);
+        if (selectedFilterable()) {
+            Icon.SLOT_BACKGROUND.getBlitter()
+                    .dest(offsetX + SubnetCoreMenu.GHOST_X - 1, offsetY + SubnetCoreMenu.GHOST_Y - 1)
+                    .blit(guiGraphics);
+        }
+    }
+
+    private boolean selectedFilterable() {
+        int type = menu.types[menu.selected()];
+        return type >= 0 && SubnetCoreEntry.Type.byOrdinal(type).filterable();
     }
 
     @Override
@@ -186,6 +198,11 @@ public class SubnetCoreScreen extends AEBaseScreen<SubnetCoreMenu> {
                 guiGraphics.drawString(font, "p" + menu.priorities[i], 96, y, HINT, false);
             }
         }
-        guiGraphics.drawString(font, "filter: click slot with held item", 32, 141, HINT, false);
+        if (selectedFilterable()) {
+            guiGraphics.drawString(font, "entry " + (menu.selected() + 1)
+                    + " filter: click or drag an item (empty = all)", 32, 141, HINT, false);
+        } else if (menu.types[menu.selected()] >= 0) {
+            guiGraphics.drawString(font, "cable this face to build on the subnet", 32, 141, HINT, false);
+        }
     }
 }

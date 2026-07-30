@@ -178,7 +178,9 @@ public class SubnetCoreMenu extends AEBaseMenu implements GhostSlotPayload.Ghost
 
     @Override
     public boolean acceptsGhost(int slotIndex) {
-        return slotIndex == ghostSlotIndex && types[selected] >= 0;
+        return slotIndex == ghostSlotIndex && types[selected] >= 0
+                && io.github.johnhamilto.ae2logistics.block.SubnetCoreEntry.Type
+                        .byOrdinal(types[selected]).filterable();
     }
 
     @Override
@@ -193,7 +195,7 @@ public class SubnetCoreMenu extends AEBaseMenu implements GhostSlotPayload.Ghost
     @Override
     public void clicked(int slotId, int button, ClickType clickType, Player player) {
         if (slotId == ghostSlotIndex) {
-            if (core != null && types[selected] >= 0) {
+            if (core != null && acceptsGhost(slotId)) {
                 var stack = fromCarried(getCarried());
                 core.setEntryFilter(selected, stack);
                 ghost.setItem(0, displayStack(stack));

@@ -28,7 +28,9 @@ public class SubnetCoreEntry implements IStorageProvider {
         IMPORT_BUS,
         EXPORT_BUS,
         UPLINK,
-        DOWNLINK;
+        DOWNLINK,
+        /** Exposes the INTERNAL grid on the entry's face: cable it to hang real ME devices on the subnet. */
+        PORT;
 
         public static Type byOrdinal(int ordinal) {
             var values = values();
@@ -36,7 +38,11 @@ public class SubnetCoreEntry implements IStorageProvider {
         }
 
         public boolean faceBound() {
-            return this == STORAGE_BUS || this == IMPORT_BUS || this == EXPORT_BUS;
+            return this == STORAGE_BUS || this == IMPORT_BUS || this == EXPORT_BUS || this == PORT;
+        }
+
+        public boolean filterable() {
+            return this != PORT;
         }
     }
 
@@ -116,19 +122,22 @@ public class SubnetCoreEntry implements IStorageProvider {
 
     public void configure(@Nullable Type newType, Direction newFace, int newPriority) {
         boolean typeChanged = this.type != newType;
+        boolean faceChanged = this.face != newFace;
         this.type = newType;
         this.face = newFace;
         this.priority = newPriority;
         if (type == null) {
             disable();
-        } else if (typeChanged) {
-            // The star a node belongs to depends on its type; rebuild it.
+        } else if (typeChanged || (type == Type.PORT && faceChanged)) {
+            // The star a node belongs to depends on its type (and a port's in-world
+            // exposure on its face); rebuild it.
             disable();
             enable();
         } else {
             enable();
             requestRemount();
         }
+        core.updateExposedSides();
     }
 
     void enable() {
@@ -137,10 +146,16 @@ public class SubnetCoreEntry implements IStorageProvider {
             return;
         }
         node = GridHelper.createManagedNode(this, NODE_LISTENER)
-                .setInWorldNode(false)
-                .setFlags(GridFlags.REQUIRE_CHANNEL)
+                .setInWorldNode(type == Type.PORT)
+                .setTagName("entry" + slot)
                 .setIdlePowerUsage(0.5)
                 .addService(IStorageProvider.class, this);
+        if (type == Type.PORT) {
+            // A port is a conduit like cable, not a channel-using device.
+            node.setExposedOnSides(java.util.EnumSet.of(face));
+        } else {
+            node.setFlags(GridFlags.REQUIRE_CHANNEL);
+        }
         node.create(core.getLevel(), core.getBlockPos());
         core.connectEntry(this);
     }

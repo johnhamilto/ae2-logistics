@@ -201,6 +201,9 @@ Per part (craft = logic processor + certus + the listed vanilla item):
   - **to main** (was downlink): the subnet's storage appears ON main at the
     entry's priority — and **costs a main channel** like the physical storage
     bus it replaces.
+  - **port** (face): exposes the INTERNAL grid on that face — cable it and real
+    ME devices join the subnet (share its ad-hoc channels + power). The main
+    network stops connecting on a port face.
 - Internal entries consume the internal ad-hoc grid's 8 channels (8 entries = the
   natural budget).
 - **THE ONE RULE**: import/export entries move items to/from the SUBNET's storage,

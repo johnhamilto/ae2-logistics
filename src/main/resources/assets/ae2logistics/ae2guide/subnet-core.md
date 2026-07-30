@@ -39,6 +39,10 @@ fiber shares power - no cables, no accidental merging. Up to eight entries:
   of face inventories into one mount with its own priority. A to-main entry is a
   main-grid device and **costs a main channel**, exactly like the physical storage
   bus it replaces.
+- **port** (face-bound): the subnet made physical. The core exposes the INTERNAL
+  grid on that face instead of the main network - cable it to hang real ME devices
+  on the subnet: terminals, drives, buses, anything. They share the subnet's ad-hoc
+  channels and its power-through-the-core, and go dark with it.
 
 The two link types are named for whose storage appears where: *from main* pulls
 main's storage into the subnet's view; *to main* pushes the subnet's storage into
@@ -46,7 +50,9 @@ main's view. Both are windows, not conveyors - items flow through them in either
 direction when something inserts or extracts.
 
 Click a row to select it; set type, face, and priority below; click the filter slot
-with a held item (or bucket) to whitelist. Entries need internal channels (the
+with a held item or bucket - or drag from JEI - to whitelist **the selected
+entry**: buses move only the filtered thing, and a filtered from-main/to-main
+window shows only it. Ports take no filter. Entries need internal channels (the
 subnet is an ad-hoc grid - eight is the natural budget) and go dark when the main
 network loses power or the core loses its channel.
 

@@ -85,6 +85,39 @@ public class SubnetCoreGameTests {
                 .thenSucceed();
     }
 
+    /** A port entry exposes the INTERNAL grid on its face: cabled devices join the subnet. */
+    @GameTest(template = "empty5", timeoutTicks = 300)
+    public void subnetPortExtendsInternalGrid(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(1, 1, 0),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        helper.setBlock(new BlockPos(1, 1, 1), AE2Logistics.SUBNET_CORE.get());
+
+        helper.startSequence()
+                .thenExecuteAfter(20, () -> {
+                    var core = core(helper, new BlockPos(1, 1, 1));
+                    core.configureEntry(0, SubnetCoreEntry.Type.PORT.ordinal(),
+                            Direction.EAST.ordinal(), 0);
+                })
+                .thenExecuteAfter(5, () -> {
+                    var cable = BuiltInRegistries.ITEM
+                            .get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+                    appeng.api.parts.PartHelper.setPart(helper.getLevel(),
+                            helper.absolutePos(new BlockPos(2, 1, 1)), null, null,
+                            (appeng.api.parts.IPartItem<?>) cable);
+                })
+                .thenExecuteAfter(20, () -> {
+                    var core = core(helper, new BlockPos(1, 1, 1));
+                    var node = appeng.api.networking.GridHelper.getExposedNode(helper.getLevel(),
+                            helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST);
+                    helper.assertTrue(node != null && node.getGrid() != null, "cable node missing");
+                    helper.assertTrue(node.getGrid() == core.internalGrid(),
+                            "cabled port face must join the INTERNAL grid");
+                    helper.assertTrue(node.getGrid() != core.mainGrid(),
+                            "port face must not join the main grid");
+                })
+                .thenSucceed();
+    }
+
     /** Uplink + export: machines are fed straight from MAIN network storage, no cables. */
     @GameTest(template = "empty5", timeoutTicks = 600)
     public void subnetFeedsFromMainStorage(GameTestHelper helper) {

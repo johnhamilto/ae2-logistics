@@ -106,6 +106,7 @@ public class SubnetCoreBlockEntity extends BlockEntity implements IInWorldGridNo
                     // Entries configured before this tick have nodes but no star yet.
                     be.connectEntry(entry);
                 }
+                be.updateExposedSides();
                 // Both sides exist now; rebuild the shared energy overlay.
                 be.invalidateEnergyOverlays();
             });
@@ -407,7 +408,25 @@ public class SubnetCoreBlockEntity extends BlockEntity implements IInWorldGridNo
     @Nullable
     @Override
     public IGridNode getGridNode(Direction dir) {
+        // A port entry claims its face for the INTERNAL grid; every other face is main.
+        for (var entry : entries) {
+            if (entry.type() == SubnetCoreEntry.Type.PORT && entry.face() == dir
+                    && entry.managedNode() != null) {
+                return entry.managedNode().getNode();
+            }
+        }
         return mainNode.getNode();
+    }
+
+    /** The main node backs away from faces that port entries claim for the subnet. */
+    void updateExposedSides() {
+        var exposed = java.util.EnumSet.allOf(Direction.class);
+        for (var entry : entries) {
+            if (entry.type() == SubnetCoreEntry.Type.PORT) {
+                exposed.remove(entry.face());
+            }
+        }
+        mainNode.setExposedOnSides(exposed);
     }
 
     @Override

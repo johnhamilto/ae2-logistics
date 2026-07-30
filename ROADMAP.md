@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.17.0 (2026-07-29). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (94 tests, run
+Status as of v0.19.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (95 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -33,6 +33,8 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F8.2 | ME Subnet Core: whole subnet in one block - face storage/import/export entries, uplink/downlink storage proxies with loop-safe reentrancy latches, quartz-fiber-style overlay power sharing - F8 fully complete | 0.16.0 |
 | F11 | ME mesh channel bundling: lane pairing replaces the star (disjoint lanes between carried-grid sides, 32 ch each - AE2 pathing never reroutes around a saturated node, so a hub caps everything at 32); workbench GUI on 200-tall chrome with AE2 widgets | 0.16.2 |
 | F11 | Mesh frequencies are network-scoped like AE2 P2P (host grid = carrier, must be online; signals bridge subnets via FACES through the carrier); terminal mesh rows and rename scoped to the terminal's network | 0.16.3 |
+| F8.2 | Subnet port entries: the core exposes the INTERNAL grid on chosen faces (cable real ME devices onto the subnet); per-entry filter UI scoped to filterable types; uplink/downlink renamed from main/to main | 0.19.0 |
+| QoL | Guide knowledgebase (page per device + AE2 help button), right-click reverse on cycle buttons, JEI ghost drag onto filter/ghost slots | 0.18.0-0.18.1 |
 | Infra | Entire GUI layer on AE2's own framework: all 14 screens are AEBaseMenu/AEBaseScreen with style docs, chrome composed from AE2's me_chest dialog (scripts/gen_ae2_chrome.py), and AE2Button/AETextField widgets; mesh endpoint placement wireframe matches the P2P chassis | 0.17.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no

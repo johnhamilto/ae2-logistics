@@ -50,7 +50,9 @@ public final class SubnetCommands {
             }
             configured++;
             var line = new StringBuilder("entry " + (i + 1) + ": " + typeLabel(entry.type()));
-            if (entry.type().faceBound()) {
+            if (entry.type() == io.github.johnhamilto.ae2logistics.block.SubnetCoreEntry.Type.PORT) {
+                line.append(" face=").append(entry.face().getName()).append(" (subnet on that face)");
+            } else if (entry.type().faceBound()) {
                 line.append(" face=").append(entry.face().getName());
                 int targets = core.externalStoragesFor(entry).size();
                 line.append(targets > 0 ? " target=inventory found" : " target=NO INVENTORY on that face");
@@ -80,7 +82,8 @@ public final class SubnetCommands {
             }
             switch (type) {
                 case IMPORT_BUS, EXPORT_BUS -> movesItems = true;
-                case STORAGE_BUS, UPLINK -> hasSubnetStorage = true;
+                // A port can hang real storage devices on the subnet, so it counts.
+                case STORAGE_BUS, UPLINK, PORT -> hasSubnetStorage = true;
                 case DOWNLINK -> visibleFromMain = true;
             }
         }
@@ -108,6 +111,7 @@ public final class SubnetCommands {
             case EXPORT_BUS -> "export";
             case UPLINK -> "from-main";
             case DOWNLINK -> "to-main";
+            case PORT -> "port";
         };
     }
 }

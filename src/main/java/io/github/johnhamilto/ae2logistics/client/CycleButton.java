@@ -3,6 +3,7 @@ package io.github.johnhamilto.ae2logistics.client;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
+import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.widgets.AE2Button;
 
 /** An AE2Button for cycling settings: left-click steps forward, right-click backward. */
@@ -28,7 +29,12 @@ public class CycleButton extends AE2Button {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.active && this.visible && isValidClickButton(button) && this.clicked(mouseX, mouseY)) {
             this.playDownSound(Minecraft.getInstance().getSoundManager());
-            step.apply(this, button == 1 ? -1 : 1);
+            // AEBaseScreen re-dispatches right-clicks to widgets as button 0; the
+            // screen flag is the only trace of the real button.
+            boolean reverse = button == 1
+                    || Minecraft.getInstance().screen instanceof AEBaseScreen<?> screen
+                            && screen.isHandlingRightClick();
+            step.apply(this, reverse ? -1 : 1);
             return true;
         }
         return false;
