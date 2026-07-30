@@ -38,8 +38,31 @@ public class QueryExportBusScreen extends AEBaseScreen<QueryExportBusMenu> {
         expressionBox.setValue(menu.source);
         addRenderableWidget(expressionBox);
 
-        addRenderableWidget(new AE2Button(leftPos + 10, topPos + imageHeight - 26, 60, 18,
-                Component.literal("Apply"), b -> apply()));
+    }
+
+    private String snapshot() {
+        return expressionBox.getValue();
+    }
+
+    private final AutoApply autoApply = new AutoApply();
+
+    @Override
+    protected void updateBeforeRender() {
+        super.updateBeforeRender();
+        var current = snapshot();
+        if (autoApply.shouldSend(current,
+                getFocused() instanceof net.minecraft.client.gui.components.EditBox)) {
+            apply();
+            autoApply.sent(current);
+        }
+    }
+
+    @Override
+    public void removed() {
+        if (autoApply.dirty(snapshot())) {
+            apply();
+        }
+        super.removed();
     }
 
     private void apply() {

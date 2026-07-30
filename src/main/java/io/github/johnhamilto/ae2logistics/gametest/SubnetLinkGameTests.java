@@ -13,8 +13,6 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
-import appeng.api.config.Actionable;
-import appeng.api.networking.security.IActionSource;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
 import appeng.api.stacks.AEItemKey;
@@ -75,45 +73,9 @@ public class SubnetLinkGameTests {
         });
     }
 
-    /** Default mode: the subnet sees the main network's storage through the window. */
+    /** The storage-bus half: the main network mounts the subnet's storage. */
     @GameTest(template = "empty5", timeoutTicks = 300)
-    public void subnetLinkWindowsMainStorage(GameTestHelper helper) {
-        helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
-        placeCable(helper, new BlockPos(1, 1, 1));
-        placeCable(helper, new BlockPos(2, 1, 1));
-        // Main-side storage: a storage bus onto a chest holding iron.
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
-        PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
-                Direction.EAST, null, (IPartItem<?>) storageBus);
-        helper.setBlock(new BlockPos(3, 1, 1), Blocks.CHEST);
-        ((ChestBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1)))
-                .setItem(0, new ItemStack(Items.IRON_INGOT, 10));
-
-        var link = placeLink(helper, new BlockPos(1, 1, 1), Direction.UP);
-        placeCable(helper, new BlockPos(1, 2, 1));
-
-        helper.runAfterDelay(60, () -> {
-            var subnet = link.subnetGrid();
-            helper.assertTrue(subnet != null, "subnet grid missing");
-            var inventory = subnet.getStorageService().getInventory();
-            var counter = new KeyCounter();
-            inventory.getAvailableStacks(counter);
-            long seen = counter.get(AEItemKey.of(Items.IRON_INGOT));
-            helper.assertTrue(seen == 10, "subnet must see main's 10 iron, saw " + seen);
-
-            long extracted = inventory.extract(AEItemKey.of(Items.IRON_INGOT), 4,
-                    Actionable.MODULATE, IActionSource.empty());
-            helper.assertTrue(extracted == 4, "subnet must extract through the window, got " + extracted);
-            helper.assertTrue(chestCount(helper, new BlockPos(3, 1, 1), Items.IRON_INGOT) == 6,
-                    "main chest must drain to 6");
-            helper.succeed();
-        });
-    }
-
-    /** Flipped mode: the main network sees the subnet's storage. */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void subnetLinkExposesSubnetToMain(GameTestHelper helper) {
+    public void subnetLinkMountsSubnetOnMain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -126,8 +88,6 @@ public class SubnetLinkGameTests {
         helper.setBlock(new BlockPos(1, 2, 0), Blocks.CHEST);
         ((ChestBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0)))
                 .setItem(0, new ItemStack(Items.GOLD_INGOT, 7));
-
-        helper.runAfterDelay(20, () -> link.applyConfig(SubnetLinkPart.MODE_MAIN_SEES_SUBNET, 5));
 
         helper.runAfterDelay(60, () -> {
             var main = link.mainGrid();

@@ -1,7 +1,6 @@
 package io.github.johnhamilto.ae2logistics.block;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +14,7 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.MEStorage;
 
-/** Storage wrappers for the ME Subnet Core and the Subnet Link part. */
+/** Storage wrappers for the ME Subnet Link. */
 public final class SubnetStorages {
 
     private SubnetStorages() {
@@ -25,66 +24,6 @@ public final class SubnetStorages {
      * Gates a storage behind its entry's channel/power state and an optional single-key
      * whitelist, so channel starvation genuinely darkens a virtual device.
      */
-    public static final class Gated implements MEStorage {
-        private final MEStorage delegate;
-        private final BooleanSupplier active;
-        @Nullable
-        private final Predicate<AEKey> filter;
-
-        Gated(MEStorage delegate, BooleanSupplier active, @Nullable AEKey filterKey) {
-            this(delegate, active, filterKey == null ? null : filterKey::equals);
-        }
-
-        public Gated(MEStorage delegate, BooleanSupplier active, @Nullable Predicate<AEKey> filter) {
-            this.delegate = delegate;
-            this.active = active;
-            this.filter = filter;
-        }
-
-        private boolean allows(AEKey what) {
-            return filter == null || filter.test(what);
-        }
-
-        @Override
-        public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
-            if (!active.getAsBoolean() || !allows(what)) {
-                return 0;
-            }
-            return delegate.insert(what, amount, mode, source);
-        }
-
-        @Override
-        public long extract(AEKey what, long amount, Actionable mode, IActionSource source) {
-            if (!active.getAsBoolean() || !allows(what)) {
-                return 0;
-            }
-            return delegate.extract(what, amount, mode, source);
-        }
-
-        @Override
-        public void getAvailableStacks(KeyCounter out) {
-            if (!active.getAsBoolean()) {
-                return;
-            }
-            if (filter == null) {
-                delegate.getAvailableStacks(out);
-                return;
-            }
-            var all = new KeyCounter();
-            delegate.getAvailableStacks(all);
-            for (var entry : all) {
-                if (filter.test(entry.getKey())) {
-                    out.add(entry.getKey(), entry.getLongValue());
-                }
-            }
-        }
-
-        @Override
-        public Component getDescription() {
-            return Component.literal("Subnet Core device");
-        }
-    }
-
     /**
      * A view of another grid's network storage with a per-instance reentrancy latch:
      * when an uplink and a downlink form a cycle, the second visit to the same proxy on

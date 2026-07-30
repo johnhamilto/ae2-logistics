@@ -21,13 +21,18 @@ system; where it disagrees with this doc, that's a doc bug — note it.
 - **14 GUI screens**: Logic Part (x2 layouts: standard, Stock Sensor with inventory),
   Pattern Workbench, Tracer Terminal, P2P Frequency Terminal, Mesh Endpoint,
   Job Monitor, Guarded Provider, Query Terminal, Query Sensor, Query Export Bus,
-  Config Terminal, Job Scheduler, Logic Core, Subnet Core.
+  Config Terminal, Job Scheduler, Logic Core; the Subnet Link opens AE2's own
+  storage bus GUI.
 - **5 use-item flows**: Signal Card binding, memory cards on parts, Config Blueprint
   corners, Wireless Bridge anchoring, Register Bank right-click.
-- **Visuals**: 8 blocks now have 3D models (Register Bank, Pattern Workbench,
-  Job Scheduler, Guarded Provider, Logic Core, Subnet Core, Dense WAP, Wireless
-  Bridge) — check them in-world and as items in hand/inventory. All part models,
-  16x16 art, GUI panels.
+- **Visuals**: 7 blocks have 3D models (Register Bank, Pattern Workbench,
+  Job Scheduler, Guarded Provider, Logic Core, Dense WAP, Wireless Bridge) —
+  check them in-world and as items in hand/inventory. All part models, 16x16
+  art, GUI panels.
+- **Settings AUTO-APPLY** — no Apply buttons anywhere: button changes apply
+  instantly; typed fields apply after a ~0.75s pause, on click-away, and on
+  screen close. **[HUMAN]** verify a mesh frequency retunes shortly after you
+  stop typing.
 - **Cycle buttons reverse on right-click** (role, entry type, face, operator,
   config-terminal `>` cycles) — left forward, right back. **[HUMAN]**
 - **JEI ghost drag**: drag an item (or fluid) from JEI onto any filter/ghost slot
@@ -91,7 +96,7 @@ two writers of one channel add. Parts use **no AE2 channels**, idle at 0.5 AE/t.
 
 **Shared GUI** (right-click a part): out / in A / in B channel text boxes, an operator
 cycle button where relevant, two value boxes, a toggle switching operand B between the
-literal value and channel B, Apply, and a **live output readout**. **[HUMAN]** the
+literal value and channel B, and a **live output readout** (settings auto-apply). **[HUMAN]** the
 Stock Sensor's GUI variant additionally has a ghost slot AND a player inventory (click
 the slot with a held item to set the watched item).
 
@@ -178,46 +183,6 @@ Per part (craft = logic processor + certus + the listed vanilla item):
 
 ---
 
-## 5. ME Subnet Core (F8, slice 2)
-
-- Craft: Storage Bus + Regulus + engineering processor.
-- One block = one machine on your network (1 channel) containing a genuinely
-  **separate internal grid**, powered through the core (quartz-fiber-style): when the
-  main network loses power or the core loses its channel, every entry goes dark.
-- **GUI [HUMAN]**: same 8-row layout as the Logic Core. Detail: type cycle
-  (empty→storage→import→export→uplink→downlink), face cycle (D/U/N/S/E/W, only for
-  the three face-bound types), priority box, Apply, one ghost filter slot (click with
-  item or bucket; empty hand clears).
-- Entry behaviors:
-  - **storage** (face): mounts the block behind that face (items AND fluids) into the
-    subnet at its priority, through its filter. Breaking/replacing the neighbor
-    updates the mount.
-  - **import** (face): pulls items from the face inventory into subnet storage —
-    8 items per operation, every 10 ticks. Items only.
-  - **export** (face): pushes from subnet storage into the face inventory, same rate;
-    with a filter, only that item. Items only.
-  - **uplink**: subnet sees MAIN storage. Uplink + export = feed machines straight
-    from main storage with no interface or cable.
-  - **to main** (was downlink): the subnet's storage appears ON main at the
-    entry's priority — and **costs a main channel** like the physical storage
-    bus it replaces.
-  - **port** (face): exposes the INTERNAL grid on that face — cable it and real
-    ME devices join the subnet (share its ad-hoc channels + power). The main
-    network stops connecting on a port face.
-- Internal entries consume the internal ad-hoc grid's 8 channels (8 entries = the
-  natural budget).
-- **THE ONE RULE**: import/export entries move items to/from the SUBNET's storage,
-  never main directly — a lone import entry does nothing (subnet has no storage).
-  Pair movers with storage: import + FROM-MAIN = chest into main; export +
-  from-main = machine fed from main; storage entries + TO-MAIN = chest wall as
-  one mount. `/ae2logistics subnet status` hints when items would have nowhere
-  to go.
-- **Loop safety (verify!)**: from-main + to-main together must NOT freeze the game,
-  double-count, or dupe. Items inserted into main with only a subnet chest for
-  storage land in that chest exactly once and extract exactly once.
-- Copy/paste + blueprint support, NBT persistence.
-
----
 
 ## 6. Adaptive Patterns (F9)
 
@@ -405,16 +370,14 @@ items + fluids; signal keys are excluded by contract.
 - Hop budget 1: a mesh delivery can never enter another mesh.
 
 ### ME Subnet Link (part)
-- Craft: AE2 interface + storage bus + quartz fiber (shapeless) — literally the
-  three devices it replaces.
-- Cable part, one main channel. Its FACE carries a real, separate subnet: cable it
-  and build with normal AE2 devices; power passes through (subnet goes dark with
-  main).
-- **GUI [HUMAN]**: window mode cycle (*Subnet sees main* / *Main sees subnet* /
-  *Both ways* — right-click reverses), priority, Apply, 9 filter slots
-  (click/bucket/JEI drag), live "subnet: N nodes" readout.
-- Both-ways mode is loop-safe (same latches as the core). Filter narrows the
-  window; priority orders it in the target network's storage.
+- Craft: AE2 interface + storage bus + quartz fiber (shapeless).
+- A STORAGE BUS whose target is a subnet: the face carries a real, separate grid
+  (cable it, build with normal AE2 devices); power passes through; main mounts
+  the subnet's storage.
+- **GUI = AE2's storage bus GUI**, unmodified: partition slots, fuzzy / inverter /
+  capacity / void cards, access modes, filter-on-extract, priority button,
+  memory cards. "Connected to" line reads "Subnet - N devices". **[HUMAN]**
+- Subnet devices share power through the link and AE2's ad-hoc 8-channel limit.
 
 ### P2P Frequency Terminal (part)
 - Craft: AE2 terminal + ME P2P Tunnel + logic processor.

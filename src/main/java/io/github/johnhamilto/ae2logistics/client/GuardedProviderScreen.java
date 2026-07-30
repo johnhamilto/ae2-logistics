@@ -65,9 +65,6 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
                     b.setMessage(Component.literal(gateLabel()));
                 }));
 
-        addRenderableWidget(new AE2Button(leftPos + 136, topPos + 88, 54, 18,
-                Component.literal("Apply"), b -> apply()));
-
         priorityChannelBox = new AETextField(style, font, leftPos + 78, topPos + 112, 74, 16);
         priorityChannelBox.setBordered(false);
         priorityChannelBox.setMaxLength(80);
@@ -83,6 +80,33 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
 
     private String gateLabel() {
         return gateExecution ? "Gate: plan + push" : "Gate: plan only";
+    }
+
+    private String snapshot() {
+        return guardChannelBox.getValue() + '\0' + guardOp + '\0' + guardValueBox.getValue()
+                + '\0' + gateExecution + '\0' + priorityChannelBox.getValue()
+                + '\0' + basePriorityBox.getValue();
+    }
+
+    private final AutoApply autoApply = new AutoApply();
+
+    @Override
+    protected void updateBeforeRender() {
+        super.updateBeforeRender();
+        var current = snapshot();
+        if (autoApply.shouldSend(current,
+                getFocused() instanceof net.minecraft.client.gui.components.EditBox)) {
+            apply();
+            autoApply.sent(current);
+        }
+    }
+
+    @Override
+    public void removed() {
+        if (autoApply.dirty(snapshot())) {
+            apply();
+        }
+        super.removed();
     }
 
     private void apply() {

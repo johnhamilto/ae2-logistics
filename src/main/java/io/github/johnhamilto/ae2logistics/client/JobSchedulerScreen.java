@@ -84,8 +84,40 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
                     }));
         }
 
-        addRenderableWidget(new AE2Button(leftPos + 140, topPos + 120, 50, 15,
-                Component.literal("Apply"), b -> apply()));
+    }
+
+    private String snapshot() {
+        var sb = new StringBuilder();
+        for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
+            sb.append(floorBoxes[i].getValue()).append('\0')
+                    .append(batchBoxes[i].getValue()).append('\0')
+                    .append(classValues[i]).append('\0')
+                    .append(guardBoxes[i].getValue()).append('\0')
+                    .append(deadlineBoxes[i].getValue()).append('\0')
+                    .append(preemptValues[i]).append('\0');
+        }
+        return sb.toString();
+    }
+
+    private final AutoApply autoApply = new AutoApply();
+
+    @Override
+    protected void updateBeforeRender() {
+        super.updateBeforeRender();
+        var current = snapshot();
+        if (autoApply.shouldSend(current,
+                getFocused() instanceof net.minecraft.client.gui.components.EditBox)) {
+            apply();
+            autoApply.sent(current);
+        }
+    }
+
+    @Override
+    public void removed() {
+        if (autoApply.dirty(snapshot())) {
+            apply();
+        }
+        super.removed();
     }
 
     private void apply() {

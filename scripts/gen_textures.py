@@ -780,26 +780,6 @@ WIRELESS_BRIDGE_SIDE = """
 
 write_png(OUT / "block" / "wireless_bridge.png", WIRELESS_BRIDGE_SIDE, PART)
 
-SUBNET_CORE_SIDE = """
-################
-#DDDDDDDDDDDDDD#
-#DLMMMMMMMMMMLD#
-#DM..........MD#
-#DM.CC.MM.cc.MD#
-#DM.CC.MM.cc.MD#
-#DM..........MD#
-#DM.MMMMMMMM.MD#
-#DM.MM.CC.MM.MD#
-#DM.MMMMMMMM.MD#
-#DM..........MD#
-#DM.cc.MM.CC.MD#
-#DM.cc.MM.CC.MD#
-#DLMMMMMMMMMMLD#
-#DDDDDDDDDDDDDD#
-################
-"""
-
-write_png(OUT / "block" / "subnet_core.png", SUBNET_CORE_SIDE, PART)
 
 REGULUS = dict(PART)
 REGULUS.update({

@@ -152,8 +152,6 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
                     }));
         }
 
-        addRenderableWidget(new AE2Button(leftPos + 10, topPos + controlY(), 60, 18,
-                Component.literal("Apply"), b -> apply()));
     }
 
     private static boolean usesFlag(LogicPartType type) {
@@ -190,6 +188,35 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
             }
         }
         return field == Field.VALUE_A || field == Field.VALUE_B ? "0" : "";
+    }
+
+    private String snapshot() {
+        var sb = new StringBuilder();
+        for (var box : rowBoxes) {
+            sb.append(box.getValue()).append('\0');
+        }
+        return sb.append(opValue).append('\0').append(flagValue).toString();
+    }
+
+    private final AutoApply autoApply = new AutoApply();
+
+    @Override
+    protected void updateBeforeRender() {
+        super.updateBeforeRender();
+        var current = snapshot();
+        if (autoApply.shouldSend(current,
+                getFocused() instanceof net.minecraft.client.gui.components.EditBox)) {
+            apply();
+            autoApply.sent(current);
+        }
+    }
+
+    @Override
+    public void removed() {
+        if (autoApply.dirty(snapshot())) {
+            apply();
+        }
+        super.removed();
     }
 
     private void apply() {

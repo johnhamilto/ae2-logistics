@@ -67,6 +67,7 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
     }
 
     private void rebuildDetail() {
+        autoApply.reset();
         for (var widget : detailWidgets) {
             removeWidget(widget);
         }
@@ -85,8 +86,6 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
         outBox.setValue(menu.outs[selected]);
         addDetail(outBox);
 
-        addDetail(new AE2Button(leftPos + 156, topPos + 123, 36, 14,
-                Component.literal("Apply"), b -> apply()));
 
         if (type == LogicPartType.STOCK_SENSOR.ordinal()) {
             inABox = inBBox = valueABox = valueBBox = null;
@@ -147,6 +146,7 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
         }
         int next = Math.floorMod(pos + dir, len + 1);
         menu.types[selected] = (byte) (next == len ? -1 : TYPE_CYCLE[next].ordinal());
+        apply();
         rebuildDetail();
     }
 
@@ -200,6 +200,37 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
         };
     }
 
+    private String snapshot() {
+        return menu.selected() + "\0" + menu.types[menu.selected()]
+                + '\0' + (outBox == null ? "" : outBox.getValue())
+                + '\0' + (inABox == null ? "" : inABox.getValue())
+                + '\0' + (inBBox == null ? "" : inBBox.getValue())
+                + '\0' + (valueABox == null ? "" : valueABox.getValue())
+                + '\0' + (valueBBox == null ? "" : valueBBox.getValue())
+                + '\0' + opValue + '\0' + flagValue;
+    }
+
+    private final AutoApply autoApply = new AutoApply();
+
+    @Override
+    protected void updateBeforeRender() {
+        super.updateBeforeRender();
+        var current = snapshot();
+        if (autoApply.shouldSend(current,
+                getFocused() instanceof net.minecraft.client.gui.components.EditBox)) {
+            apply();
+            autoApply.sent(current);
+        }
+    }
+
+    @Override
+    public void removed() {
+        if (autoApply.dirty(snapshot())) {
+            apply();
+        }
+        super.removed();
+    }
+
     private void apply() {
         int selected = menu.selected();
         int type = menu.types[selected];
@@ -238,6 +269,9 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
                 && y < LogicCoreMenu.ROW_Y + LogicCoreMenu.ROWS * LogicCoreMenu.ROW_STEP) {
             int row = (y - LogicCoreMenu.ROW_Y) / LogicCoreMenu.ROW_STEP;
             if (row != menu.selected()) {
+                if (autoApply.dirty(snapshot())) {
+                    apply();
+                }
                 menu.setSelected(row);
                 PacketDistributor.sendToServer(ConfigureCoreEntryPayload.select(menu.pos, row));
                 rebuildDetail();

@@ -64,9 +64,6 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
                     b.setMessage(Component.literal(ROLES[roleValue]));
                 }));
 
-        addRenderableWidget(new AE2Button(leftPos + 104, topPos + 46, 86, 18,
-                Component.literal("Apply"), b -> apply()));
-
         for (int i = 0; i < TYPES.length; i++) {
             int type = TYPES[i];
             var name = TYPE_NAMES[i];
@@ -82,6 +79,31 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
 
     private String toggleLabel(String name, int type) {
         return ((maskValue & type) != 0 ? "[x] " : "[ ] ") + name;
+    }
+
+    private String snapshot() {
+        return frequencyBox.getValue() + '\0' + priorityBox.getValue() + '\0' + roleValue + '\0' + maskValue;
+    }
+
+    private final AutoApply autoApply = new AutoApply();
+
+    @Override
+    protected void updateBeforeRender() {
+        super.updateBeforeRender();
+        var current = snapshot();
+        if (autoApply.shouldSend(current,
+                getFocused() instanceof net.minecraft.client.gui.components.EditBox)) {
+            apply();
+            autoApply.sent(current);
+        }
+    }
+
+    @Override
+    public void removed() {
+        if (autoApply.dirty(snapshot())) {
+            apply();
+        }
+        super.removed();
     }
 
     private void apply() {
