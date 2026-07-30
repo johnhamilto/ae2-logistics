@@ -404,6 +404,18 @@ items + fluids; signal keys are excluded by contract.
   batch matches.
 - Hop budget 1: a mesh delivery can never enter another mesh.
 
+### ME Subnet Link (part)
+- Craft: AE2 interface + storage bus + quartz fiber (shapeless) — literally the
+  three devices it replaces.
+- Cable part, one main channel. Its FACE carries a real, separate subnet: cable it
+  and build with normal AE2 devices; power passes through (subnet goes dark with
+  main).
+- **GUI [HUMAN]**: window mode cycle (*Subnet sees main* / *Main sees subnet* /
+  *Both ways* — right-click reverses), priority, Apply, 9 filter slots
+  (click/bucket/JEI drag), live "subnet: N nodes" readout.
+- Both-ways mode is loop-safe (same latches as the core). Filter narrows the
+  window; priority orders it in the target network's storage.
+
 ### P2P Frequency Terminal (part)
 - Craft: AE2 terminal + ME P2P Tunnel + logic processor.
 - Lists every P2P tunnel (frequency, type, in/out, position, live). **Rename** names

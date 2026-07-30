@@ -82,6 +82,13 @@ sees main. The core cuts the loop at the second visit - counting, inserting, and
 extracting each resolve exactly once, so nothing duplicates and nothing hangs.
 Items inserted into a loop still land in exactly one real inventory.
 
+## Core or link?
+
+The [ME Subnet Link](subnet-link.md) part is this block's primitive: one part, one
+real subnet, one storage window. Reach for the LINK when you want to build the
+subnet out of real AE2 devices; reach for the CORE when you want the whole subnet
+as a configured list - stampable with blueprints, no cables at all.
+
 ## The trade
 
 Like the Logic Core, the Subnet Core converts space and fragility into channel

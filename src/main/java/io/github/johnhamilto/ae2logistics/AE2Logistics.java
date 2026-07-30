@@ -362,6 +362,12 @@ public class AE2Logistics {
             "mesh_endpoint", MeshEndpointPart.class, MeshEndpointPart::new);
     public static final Supplier<MenuType<MeshEndpointMenu>> MESH_ENDPOINT_MENU = MENUS.register(
             "mesh_endpoint", () -> IMenuTypeExtension.create(MeshEndpointMenu::new));
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart>> SUBNET_LINK_PART = part(
+            "subnet_link", io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart.class,
+            io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart::new);
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.SubnetLinkMenu>> SUBNET_LINK_MENU =
+            MENUS.register("subnet_link", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.SubnetLinkMenu::new));
     public static final Supplier<MenuType<P2PFrequencyTerminalMenu>> P2P_TERMINAL_MENU = MENUS.register(
             "p2p_frequency_terminal", () -> IMenuTypeExtension.create(P2PFrequencyTerminalMenu::new));
 
@@ -401,6 +407,7 @@ public class AE2Logistics {
                         output.accept(CONFIG_BLUEPRINT.get());
                         output.accept(P2P_TERMINAL_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
+                        output.accept(SUBNET_LINK_PART.get());
                         output.accept(REGULUS_CRYSTAL.get());
                         output.accept(GUIDE_TABLET.get());
                     })
@@ -456,6 +463,9 @@ public class AE2Logistics {
                     ConfigurePartPayload::handle);
             registrar.playToServer(GhostSlotPayload.TYPE, GhostSlotPayload.STREAM_CODEC,
                     GhostSlotPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureSubnetLinkPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureSubnetLinkPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.ConfigureSubnetLinkPayload::handle);
             registrar.playToServer(CyclePatternSpecPayload.TYPE, CyclePatternSpecPayload.STREAM_CODEC,
                     CyclePatternSpecPayload::handle);
             registrar.playToServer(SelectTracerChannelPayload.TYPE, SelectTracerChannelPayload.STREAM_CODEC,

@@ -39,6 +39,10 @@ public final class AE2LogisticsClient {
                     MeshEndpointScreen::new,
                     "/screens/ae2logistics_mesh_endpoint.json");
             appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.SUBNET_LINK_MENU.get(),
+                    SubnetLinkScreen::new,
+                    "/screens/ae2logistics_subnet_link.json");
+            appeng.init.client.InitScreens.register(event,
                     AE2Logistics.JOB_MONITOR_MENU.get(),
                     JobMonitorScreen::new,
                     "/screens/ae2logistics_job_monitor.json");

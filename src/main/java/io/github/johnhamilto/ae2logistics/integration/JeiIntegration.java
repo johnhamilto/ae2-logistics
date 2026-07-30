@@ -24,6 +24,7 @@ import io.github.johnhamilto.ae2logistics.client.LogicCoreScreen;
 import io.github.johnhamilto.ae2logistics.client.LogicPartScreen;
 import io.github.johnhamilto.ae2logistics.client.MeshEndpointScreen;
 import io.github.johnhamilto.ae2logistics.client.SubnetCoreScreen;
+import io.github.johnhamilto.ae2logistics.client.SubnetLinkScreen;
 import io.github.johnhamilto.ae2logistics.menu.GhostSlotPayload;
 
 /**
@@ -44,6 +45,7 @@ public class JeiIntegration implements IModPlugin {
         registration.addGhostIngredientHandler(LogicPartScreen.class, new GhostHandler<>());
         registration.addGhostIngredientHandler(LogicCoreScreen.class, new GhostHandler<>());
         registration.addGhostIngredientHandler(SubnetCoreScreen.class, new GhostHandler<>());
+        registration.addGhostIngredientHandler(SubnetLinkScreen.class, new GhostHandler<>());
         registration.addGhostIngredientHandler(JobSchedulerScreen.class, new GhostHandler<>());
     }
 

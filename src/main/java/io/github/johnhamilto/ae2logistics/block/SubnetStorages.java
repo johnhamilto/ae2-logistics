@@ -1,6 +1,7 @@
 package io.github.johnhamilto.ae2logistics.block;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
@@ -14,8 +15,8 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.MEStorage;
 
-/** Storage wrappers for the ME Subnet Core. */
-final class SubnetStorages {
+/** Storage wrappers for the ME Subnet Core and the Subnet Link part. */
+public final class SubnetStorages {
 
     private SubnetStorages() {
     }
@@ -24,20 +25,24 @@ final class SubnetStorages {
      * Gates a storage behind its entry's channel/power state and an optional single-key
      * whitelist, so channel starvation genuinely darkens a virtual device.
      */
-    static final class Gated implements MEStorage {
+    public static final class Gated implements MEStorage {
         private final MEStorage delegate;
         private final BooleanSupplier active;
         @Nullable
-        private final AEKey filter;
+        private final Predicate<AEKey> filter;
 
-        Gated(MEStorage delegate, BooleanSupplier active, @Nullable AEKey filter) {
+        Gated(MEStorage delegate, BooleanSupplier active, @Nullable AEKey filterKey) {
+            this(delegate, active, filterKey == null ? null : filterKey::equals);
+        }
+
+        public Gated(MEStorage delegate, BooleanSupplier active, @Nullable Predicate<AEKey> filter) {
             this.delegate = delegate;
             this.active = active;
             this.filter = filter;
         }
 
         private boolean allows(AEKey what) {
-            return filter == null || filter.equals(what);
+            return filter == null || filter.test(what);
         }
 
         @Override
@@ -67,9 +72,10 @@ final class SubnetStorages {
             }
             var all = new KeyCounter();
             delegate.getAvailableStacks(all);
-            var amount = all.get(filter);
-            if (amount > 0) {
-                out.add(filter, amount);
+            for (var entry : all) {
+                if (filter.test(entry.getKey())) {
+                    out.add(entry.getKey(), entry.getLongValue());
+                }
             }
         }
 
@@ -84,13 +90,13 @@ final class SubnetStorages {
      * when an uplink and a downlink form a cycle, the second visit to the same proxy on
      * the same thread is refused instead of recursing. Items still move exactly once.
      */
-    static final class GridProxy implements MEStorage {
+    public static final class GridProxy implements MEStorage {
         private final Supplier<IGrid> grid;
         private final BooleanSupplier active;
         private final String name;
         private final ThreadLocal<Boolean> entered = ThreadLocal.withInitial(() -> false);
 
-        GridProxy(Supplier<IGrid> grid, BooleanSupplier active, String name) {
+        public GridProxy(Supplier<IGrid> grid, BooleanSupplier active, String name) {
             this.grid = grid;
             this.active = active;
             this.name = name;

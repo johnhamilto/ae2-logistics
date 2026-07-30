@@ -536,6 +536,28 @@ PART_MESH_ENDPOINT = """
 
 write_png(OUT / "part" / "mesh_endpoint.png", PART_MESH_ENDPOINT, PART)
 
+# Subnet link: a split face - main network left, subnet right, bridged in the middle.
+PART_SUBNET_LINK = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.CC......cc.D#
+#D.CC......cc.D#
+#D....C..c....D#
+#D..CCCccccc..D#
+#D.CCrrrrrrcc.D#
+#D.CCrrrrrrcc.D#
+#D..CCCccccc..D#
+#D....C..c....D#
+#D.CC......cc.D#
+#D.CC......cc.D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "subnet_link.png", PART_SUBNET_LINK, PART)
+
 write_png(OUT / "part" / "p2p_frequency_terminal.png", PART_P2P_TERMINAL, PART)
 write_png(OUT / "item" / "guide_tablet.png", ITEM_GUIDE_TABLET, PART | CARD)
 
