@@ -341,9 +341,20 @@ public class MeshEndpointPart extends AEBasePart {
         }
     }
 
+    /**
+     * The FED network's signal service - the grid touching the part's face, like every
+     * other transport (the host network is only the carrier). Input faces read it,
+     * output faces inject into it, so logic graphs bridge subnets THROUGH the mesh.
+     */
     @Nullable
     public SignalService signalService() {
-        var node = getMainNode().getNode();
+        var host = getHost().getBlockEntity();
+        var level = host.getLevel();
+        if (level == null || level.isClientSide() || getSide() == null) {
+            return null;
+        }
+        var node = appeng.api.networking.GridHelper.getExposedNode(level,
+                host.getBlockPos().relative(getSide()), getSide().getOpposite());
         if (node == null || node.getGrid() == null) {
             return null;
         }

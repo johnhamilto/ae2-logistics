@@ -158,9 +158,16 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     /** Gui-relative painting on top of the styled background. */
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        if (menu.patternStack().isEmpty()) {
+            guiGraphics.drawString(font, "Insert an encoded pattern", 8, 78, TEXT_MUTED, false);
+            return;
+        }
         var encoded = decoded();
         if (encoded == null) {
-            guiGraphics.drawString(font, "Insert an encoded pattern", 8, 78, TEXT_MUTED, false);
+            // Crafting/smithing/stonecutting patterns match exactly; guards still apply.
+            guiGraphics.drawString(font, "No adaptive matching", 9, 31, TEXT_MUTED, false);
+            guiGraphics.drawString(font, "for this pattern type", 9, 43, TEXT_MUTED, false);
+            guiGraphics.drawString(font, "Guard", 8, 76, TEXT_DARK, false);
             return;
         }
         guiGraphics.drawString(font, "Guard", 8, 76, TEXT_DARK, false);

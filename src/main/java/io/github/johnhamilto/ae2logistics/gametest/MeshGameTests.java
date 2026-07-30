@@ -333,11 +333,12 @@ public class MeshGameTests {
     /** Removing an endpoint from the frequency must split the carried grids again. */
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void meMeshSplitsWhenEndpointLeaves(GameTestHelper helper) {
+        // One backbone network carries the frequency (frequencies never cross networks).
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
-        helper.setBlock(new BlockPos(3, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(2, 1, 1));
+        placeCable(helper, new BlockPos(3, 1, 1));
         placeCable(helper, new BlockPos(4, 1, 1));
         // The networks FED into the endpoints' faces - these are what the mesh carries.
         helper.setBlock(new BlockPos(1, 2, 1),
@@ -371,15 +372,16 @@ public class MeshGameTests {
 
     /**
      * ME tunneling is true P2P: the networks fed INTO the endpoints' faces fuse across
-     * the mesh, while the host networks the endpoints sit on stay separate.
+     * the mesh, carried by the host network - which itself is never fused into them.
      */
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void meMeshCarriesFedNetworks(GameTestHelper helper) {
+        // One backbone network carries the frequency (frequencies never cross networks).
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
-        helper.setBlock(new BlockPos(3, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(2, 1, 1));
+        placeCable(helper, new BlockPos(3, 1, 1));
         placeCable(helper, new BlockPos(4, 1, 1));
         // Fed networks touching the endpoint faces (endpoints face UP).
         helper.setBlock(new BlockPos(1, 2, 1),
@@ -403,10 +405,57 @@ public class MeshGameTests {
                             + firstCarried.getGrid().size());
             var firstHost = first.getMainNode().getNode();
             var secondHost = second.getMainNode().getNode();
-            helper.assertTrue(firstHost.getGrid() != secondHost.getGrid(),
-                    "host networks must NOT fuse");
+            helper.assertTrue(firstHost.getGrid() == secondHost.getGrid(),
+                    "both endpoints ride one backbone network");
             helper.assertTrue(firstHost.getGrid() != firstCarried.getGrid(),
                     "host and carried networks must stay separate");
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Frequencies never cross networks: two endpoints on the same frequency but
+     * different host networks must NOT link - the host network is the carrier,
+     * exactly like AE2's own P2P tunnels.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void meshFrequenciesAreNetworkScoped(GameTestHelper helper) {
+        // Two DISJOINT host networks (gap at x=2), each with a powered cable.
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        helper.setBlock(new BlockPos(3, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(4, 1, 1));
+        // Fed networks on the faces.
+        helper.setBlock(new BlockPos(1, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        helper.setBlock(new BlockPos(4, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+
+        var first = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "net-scope",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME | MeshRegistry.TYPE_ITEM);
+        var second = placeEndpoint(helper, new BlockPos(4, 1, 1), Direction.UP, "net-scope",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME | MeshRegistry.TYPE_ITEM);
+
+        helper.runAfterDelay(20, () -> MeshRegistry.forceRelink("net-scope"));
+
+        helper.runAfterDelay(60, () -> {
+            var firstHost = first.getMainNode().getNode();
+            var secondHost = second.getMainNode().getNode();
+            helper.assertTrue(firstHost != null && secondHost != null
+                    && firstHost.getGrid() != secondHost.getGrid(),
+                    "test requires two separate host networks");
+            var firstCarried = first.carriedNode();
+            var secondCarried = second.carriedNode();
+            helper.assertTrue(firstCarried != null && secondCarried != null, "carried nodes missing");
+            helper.assertTrue(firstCarried.getGrid() != secondCarried.getGrid(),
+                    "frequencies must not link across host networks");
+            helper.assertTrue(first.meLinkState() == MeshRegistry.ME_STATE_WAITING
+                    && second.meLinkState() == MeshRegistry.ME_STATE_WAITING,
+                    "endpoints without a same-network peer must report waiting");
+            helper.assertTrue(MeshRegistry.outputs("net-scope", MeshRegistry.TYPE_ITEM, first).isEmpty(),
+                    "item transport must not target endpoints on another network");
             helper.succeed();
         });
     }
@@ -488,18 +537,30 @@ public class MeshGameTests {
         });
     }
 
-    /** A signal written on one network appears on a second, unconnected network via the mesh. */
+    /**
+     * Signals bridge subnets THROUGH the mesh: the input face reads the subnet touching
+     * it, the output face injects into its subnet, and the host network carries.
+     */
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void signalMeshBridgesNetworks(GameTestHelper helper) {
+        // Backbone network carrying both endpoints.
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
-        helper.setBlock(new BlockPos(3, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(2, 1, 1));
+        placeCable(helper, new BlockPos(3, 1, 1));
         placeCable(helper, new BlockPos(4, 1, 1));
+        // Subnet A above the input face: its cable holds the constant writing 77.
+        placeCable(helper, new BlockPos(1, 2, 1));
+        helper.setBlock(new BlockPos(1, 3, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        // Subnet B above the output face receives the bridged channel.
+        placeCable(helper, new BlockPos(4, 2, 1));
+        helper.setBlock(new BlockPos(4, 3, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
 
         var constant = (LogicPart) PartHelper.setPart(helper.getLevel(),
-                helper.absolutePos(new BlockPos(1, 1, 1)), Direction.NORTH, null,
+                helper.absolutePos(new BlockPos(1, 2, 1)), Direction.NORTH, null,
                 AE2Logistics.CONSTANT_PART.get());
         constant.applyConfig(ResourceLocation.parse("test:bridged"), null, null, 0, 77, 0, false);
 
@@ -510,13 +571,16 @@ public class MeshGameTests {
 
         helper.runAfterDelay(40, () -> {
             var sourceNode = constant.getMainNode().getNode();
-            var receiverNode = receiver.getMainNode().getNode();
-            helper.assertTrue(sourceNode != null && receiverNode != null, "nodes missing");
-            helper.assertTrue(sourceNode.getGrid() != receiverNode.getGrid(),
-                    "test requires two separate networks");
-            var service = receiverNode.getGrid().getService(SignalService.class);
-            long value = service.get(ResourceLocation.parse("test:bridged"));
-            helper.assertTrue(value == 77, "bridged signal should be 77 on the second network, got " + value);
+            var receiverHost = receiver.getMainNode().getNode();
+            helper.assertTrue(sourceNode != null && receiverHost != null, "nodes missing");
+            helper.assertTrue(sourceNode.getGrid() != receiverHost.getGrid(),
+                    "subnet A must be separate from the backbone");
+            var subnetB = receiver.signalService();
+            helper.assertTrue(subnetB != null, "output face must resolve subnet B's signal service");
+            helper.assertTrue(subnetB != sourceNode.getGrid().getService(SignalService.class),
+                    "subnet B must be separate from subnet A");
+            long value = subnetB.get(ResourceLocation.parse("test:bridged"));
+            helper.assertTrue(value == 77, "bridged signal should be 77 on subnet B, got " + value);
             helper.succeed();
         });
     }

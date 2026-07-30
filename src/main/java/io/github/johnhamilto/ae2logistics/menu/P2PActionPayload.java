@@ -76,13 +76,8 @@ public record P2PActionPayload(byte action, BlockPos pos, byte side, short value
             if (newFrequency.isBlank() || payload.extra.isBlank()) {
                 return;
             }
-            for (var endpoint : MeshRegistry.endpoints(payload.extra)) {
-                var endpointNode = endpoint.getMainNode().getNode();
-                if (endpointNode != null && endpointNode.getGrid() == grid) {
-                    MeshRegistry.renameFrequency(payload.extra, newFrequency);
-                    return;
-                }
-            }
+            // Frequencies are network-scoped: rename only this network's endpoints.
+            MeshRegistry.renameFrequency(payload.extra, newFrequency, grid);
             return;
         }
 

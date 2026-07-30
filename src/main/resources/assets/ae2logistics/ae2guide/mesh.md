@@ -11,12 +11,17 @@ item_ids:
 # Universal Mesh Endpoints
 
 AE2's P2P tunnels are one-input, many-output, one transport type each. The Universal
-Mesh Endpoint generalizes all three limits: any number of endpoints share a **named
-frequency**, each with a role (input, output, or both), a priority, and any subset of
-transport capabilities - redstone, items, fluids, energy, and signals - on one part,
-for one channel.
+Mesh Endpoint generalizes all three limits: any number of endpoints **on one network**
+share a **named frequency**, each with a role (input, output, or both), a priority, and
+any subset of transport capabilities - redstone, items, fluids, energy, and signals -
+on one part, for one channel.
 
 **Two endpoints on a frequency are a universal point-to-point tunnel. More are a mesh.**
+
+Like AE2's own P2P, **frequencies never cross networks**: the network the endpoints sit
+on is the carrier, and the same frequency name on another network is a different,
+unrelated frequency. To span distance, extend the carrier network (cables, quantum
+bridges, the ME Wireless Bridge) - not the frequency.
 
 <RecipeFor id="mesh_endpoint" />
 
@@ -34,10 +39,11 @@ Right-click to configure: type a frequency name, pick a role, toggle capabilitie
   working, nothing is pushed until one frees up - true per-machine blocking, at range,
   over one face.
 - **Energy** - FE pushed into an input spreads across all outputs by priority.
-- **Signals** - the only transport that crosses networks: input endpoints publish their
-  network's channels onto the frequency and outputs inject them into their own network,
-  so logic graphs can finally span subnets. Bridged values sum; loops are impossible by
-  construction (a mesh never re-publishes what a mesh delivered).
+- **Signals** - bridge subnets THROUGH the mesh: an input endpoint reads the signal
+  channels of the network **touching its face**, and an output endpoint injects them
+  into the network touching its own face - so logic graphs span subnets, carried by
+  your backbone. Bridged values sum; loops are impossible by construction (a mesh
+  never re-publishes what a mesh delivered).
 
 Every transfer has a hop budget of one: a mesh delivery can never enter another mesh,
 which makes item loops structurally impossible rather than merely discouraged.

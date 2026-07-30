@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.16.2 (2026-07-29). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (93 tests, run
+Status as of v0.16.3 (2026-07-29). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (94 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -32,6 +32,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Infra | Test debt closed: NBT round-trips for all five BEs, named-CPU pools + per-named-CPU monitor channels (custom-name reflection + cluster updateName); advancements; server config (scheduler interval, WAP range, bridge retune); publishing kit in docs/publishing/ | 0.15.0 |
 | F8.2 | ME Subnet Core: whole subnet in one block - face storage/import/export entries, uplink/downlink storage proxies with loop-safe reentrancy latches, quartz-fiber-style overlay power sharing - F8 fully complete | 0.16.0 |
 | F11 | ME mesh channel bundling: lane pairing replaces the star (disjoint lanes between carried-grid sides, 32 ch each - AE2 pathing never reroutes around a saturated node, so a hub caps everything at 32); workbench GUI on 200-tall chrome with AE2 widgets | 0.16.2 |
+| F11 | Mesh frequencies are network-scoped like AE2 P2P (host grid = carrier, must be online; signals bridge subnets via FACES through the carrier); terminal mesh rows and rename scoped to the terminal's network | 0.16.3 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -86,7 +87,8 @@ representation).
   changes - `/ae2logistics mesh relink` forces a re-check after recabling. One lane
   ceils at AE2's 32-channel dense node cap; capacity scales by adding endpoint pairs.
 - Endpoint filters match exactly (components included); no fuzzy/tag cards yet.
-- Mesh registry is server-global and rebuilt live; nothing persists beyond part NBT
+- Mesh registry is server-global internally but every operation partitions by live
+  host grid (frequencies never cross networks); nothing persists beyond part NBT
   (P2P names persist as data attachments on the tunnels' cable-bus block entities).
 - Localization is en_us only; art is programmatic 16x16 (see scripts/gen_textures.py -
   run from the repo root).

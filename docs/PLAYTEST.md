@@ -360,7 +360,9 @@ items + fluids; signal keys are excluded by contract.
 - Craft: ME P2P Tunnel + logic processor + fluix.
 - Named frequency + role (in/out/both) + priority + capability toggles: **redstone,
   items, fluids, energy, signals, ME link**. Each endpoint costs 1 channel, idles
-  1 AE/t. Two endpoints = universal P2P; more = mesh.
+  1 AE/t. Two endpoints = universal P2P; more = mesh. **Frequencies never cross
+  networks** (like AE2 P2P): the network the endpoints sit on is the carrier and
+  must be online; the same name on another network is a different frequency.
 - **GUI [HUMAN]**: frequency box, role cycle, six capability toggles, priority,
   9 ghost filter slots (item, or bucket→fluid; empty hand clears), live status line
   (endpoint count, ME lane/standby, status).
@@ -372,8 +374,9 @@ items + fluids; signal keys are excluded by contract.
     complete to the first non-busy machine on the frequency; all busy = nothing
     pushed (true per-machine blocking at range).
   - Energy: FE spreads to outputs by priority.
-  - Signals: the only cross-NETWORK transport — IN publishes its network's channels,
-    OUT injects into its own; bridged values sum; re-publication is impossible.
+  - Signals: bridge subnets THROUGH the mesh — IN reads the channels of the network
+    touching its FACE, OUT injects into the network touching its face; the host
+    network carries. Bridged values sum; re-publication is impossible.
   - **ME link**: true ME P2P — the network touching the endpoint's FACE is carried
     through the mesh (one grid across all endpoints on the frequency); the host
     network the endpoint sits on is never fused. Endpoints whose fed networks
@@ -392,9 +395,9 @@ items + fluids; signal keys are excluded by contract.
   a frequency (stored ON the tunnels — every terminal shows the same names). **Mark
   target** + **Retune to target** re-links tunnels in two clicks; refuses to create
   a second input on a frequency.
-- **Mesh rows**: every mesh frequency touching the network, all endpoints
-  server-wide with role/caps/same-grid/status (`OK`/`off`/`wait`/`LOOP`); Rename
-  retags all LOADED endpoints.
+- **Mesh rows**: this network's mesh endpoints (frequencies are network-scoped)
+  with role/caps/status (`OK`/`off`/`wait`/`LOOP`); Rename retags this network's
+  LOADED endpoints.
 - Commands: `/ae2logistics mesh list | status <freq> | relink <freq>`.
 
 > **Not a bug**: provider blocking THROUGH a mesh is always per-machine — the

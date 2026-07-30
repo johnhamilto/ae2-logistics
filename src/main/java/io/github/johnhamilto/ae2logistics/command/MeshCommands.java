@@ -39,14 +39,19 @@ public final class MeshCommands {
         for (var entry : frequencies.entrySet()) {
             int mask = 0;
             int flagged = 0;
+            var networks = new java.util.HashSet<Object>();
             for (var endpoint : entry.getValue()) {
                 mask |= endpoint.capabilityMask();
+                networks.add(networkTag(endpoint));
                 if (MeshRegistry.statusOf(endpoint) != MeshRegistry.STATUS_OK) {
                     flagged++;
                 }
             }
             var line = entry.getKey() + ": " + entry.getValue().size() + " endpoints ["
                     + MeshRegistry.describeTypes(mask) + "]"
+                    + (networks.size() > 1
+                            ? " across " + networks.size() + " networks (frequencies do not cross networks)"
+                            : "")
                     + (flagged > 0 ? " - " + flagged + " flagged" : "");
             context.getSource().sendSuccess(() -> Component.literal(line), false);
         }
@@ -68,6 +73,7 @@ public final class MeshCommands {
                     ? host.getLevel().dimension().location().toString()
                     : "?";
             var line = pos.getX() + "," + pos.getY() + "," + pos.getZ() + " (" + dimension + ") "
+                    + "net " + networkTag(endpoint) + " "
                     + roleLabel(endpoint.role()) + " ["
                     + MeshRegistry.describeTypes(endpoint.capabilityMask()) + "] "
                     + statusLabel(endpoint);
@@ -82,6 +88,15 @@ public final class MeshCommands {
         context.getSource().sendSuccess(
                 () -> Component.literal("Rebuilding ME links for '" + frequency + "' next tick"), false);
         return 1;
+    }
+
+    /** Short stable-ish tag distinguishing host networks in command output. */
+    private static String networkTag(MeshEndpointPart endpoint) {
+        var node = endpoint.getMainNode().getNode();
+        if (node == null || node.getGrid() == null) {
+            return "-";
+        }
+        return "#" + Integer.toHexString(System.identityHashCode(node.getGrid()) & 0xFFFF);
     }
 
     private static String roleLabel(byte role) {

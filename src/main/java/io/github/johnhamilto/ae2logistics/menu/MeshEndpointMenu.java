@@ -78,7 +78,7 @@ public class MeshEndpointMenu extends AbstractContainerMenu {
         addDataSlot(new DataSlot() {
             @Override
             public int get() {
-                return MeshRegistry.endpoints(part.frequency()).size();
+                return MeshRegistry.carrierEndpointCount(part);
             }
 
             @Override

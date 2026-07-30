@@ -20,10 +20,13 @@ import io.github.johnhamilto.ae2logistics.signal.SignalMath;
 import io.github.johnhamilto.ae2logistics.signal.SignalService;
 
 /**
- * Server-global registry of mesh endpoints, keyed by frequency name. Deliberately not a
- * grid service: signal frequencies bridge across networks. Item and fluid delivery is
- * sticky per tick so a pattern provider's batch lands on one machine; a thread-local
- * depth guard gives every transfer a hop budget of one, which makes loops impossible.
+ * Server-global registry of mesh endpoints, keyed by frequency name - but frequencies
+ * NEVER cross networks: every operation partitions endpoints by their live host grid,
+ * so the network an endpoint sits on is the carrier, exactly like AE2's own P2P.
+ * (A global map instead of a grid service only so partitions follow grid splits and
+ * merges for free.) Item and fluid delivery is sticky per tick so a pattern provider's
+ * batch lands on one machine; a thread-local depth guard gives every transfer a hop
+ * budget of one, which makes loops impossible.
  */
 public final class MeshRegistry {
 
@@ -94,6 +97,29 @@ public final class MeshRegistry {
         return set == null ? List.of() : List.copyOf(set);
     }
 
+    @Nullable
+    private static appeng.api.networking.IGrid hostGrid(MeshEndpointPart part) {
+        var node = part.getMainNode().getNode();
+        return node == null ? null : node.getGrid();
+    }
+
+    /** Frequencies never cross networks: two endpoints mesh only on one host grid. */
+    public static boolean sameCarrier(MeshEndpointPart a, MeshEndpointPart b) {
+        var grid = hostGrid(a);
+        return grid != null && grid == hostGrid(b);
+    }
+
+    /** How many endpoints share this part's frequency ON ITS NETWORK (itself included). */
+    public static int carrierEndpointCount(MeshEndpointPart part) {
+        int count = 0;
+        for (var candidate : endpoints(part.frequency())) {
+            if (candidate == part || sameCarrier(part, candidate)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public static java.util.SortedMap<String, List<MeshEndpointPart>> allFrequencies() {
         var map = new java.util.TreeMap<String, List<MeshEndpointPart>>();
         for (var entry : BY_FREQUENCY.entrySet()) {
@@ -102,10 +128,16 @@ public final class MeshRegistry {
         return map;
     }
 
-    /** Retags every loaded endpoint; endpoints in unloaded chunks keep the old frequency. */
-    public static void renameFrequency(String from, String to) {
+    /**
+     * Retags the frequency's loaded endpoints on the given carrier network (all
+     * networks when null); endpoints in unloaded chunks keep the old frequency.
+     */
+    public static void renameFrequency(String from, String to,
+            @Nullable appeng.api.networking.IGrid carrier) {
         for (var part : endpoints(from)) {
-            part.applyMeshConfig(to, part.role(), part.priority(), part.capabilityMask());
+            if (carrier == null || hostGrid(part) == carrier) {
+                part.applyMeshConfig(to, part.role(), part.priority(), part.capabilityMask());
+            }
         }
     }
 
@@ -149,14 +181,15 @@ public final class MeshRegistry {
         CURSORS.clear();
     }
 
-    public static List<MeshEndpointPart> outputs(String frequency, int type, @Nullable MeshEndpointPart exclude) {
+    /** Valid targets on the SOURCE endpoint's own network, priority-ordered. */
+    public static List<MeshEndpointPart> outputs(String frequency, int type, MeshEndpointPart from) {
         var set = BY_FREQUENCY.get(frequency);
         if (set == null) {
             return List.of();
         }
         var list = new ArrayList<MeshEndpointPart>();
         for (var part : set) {
-            if (part != exclude && part.isValidTarget(type)) {
+            if (part != from && part.isValidTarget(type) && sameCarrier(from, part)) {
                 list.add(part);
             }
         }
@@ -167,8 +200,8 @@ public final class MeshRegistry {
 
     /** Priority-ordered valid targets, narrowed to those whose filter accepts the key. */
     private static List<MeshEndpointPart> targets(String frequency, int type,
-            @Nullable MeshEndpointPart exclude, @Nullable appeng.api.stacks.AEKey key) {
-        var list = outputs(frequency, type, exclude);
+            MeshEndpointPart from, @Nullable appeng.api.stacks.AEKey key) {
+        var list = outputs(frequency, type, from);
         if (key == null) {
             return list;
         }
@@ -183,22 +216,22 @@ public final class MeshRegistry {
 
     /** The endpoint the next item/fluid transfer would go to; used for blocking-mode mirroring. */
     @Nullable
-    public static MeshEndpointPart peekTarget(String frequency, int type, @Nullable MeshEndpointPart exclude) {
-        return peekTarget(frequency, type, exclude, null);
+    public static MeshEndpointPart peekTarget(String frequency, int type, MeshEndpointPart from) {
+        return peekTarget(frequency, type, from, null);
     }
 
     @Nullable
-    public static MeshEndpointPart peekTarget(String frequency, int type, @Nullable MeshEndpointPart exclude,
+    public static MeshEndpointPart peekTarget(String frequency, int type, MeshEndpointPart from,
             @Nullable appeng.api.stacks.AEKey key) {
         var sticky = type == TYPE_FLUID ? STICKY_FLUID : STICKY_ITEM;
         var stickyTick = type == TYPE_FLUID ? STICKY_FLUID_TICK : STICKY_ITEM_TICK;
         var current = sticky.get(frequency);
         if (current != null && stickyTick.getOrDefault(frequency, -1L) == gameTick
-                && current.isValidTarget(type) && current != exclude
+                && current.isValidTarget(type) && current != from && sameCarrier(from, current)
                 && (key == null || current.filterAccepts(key))) {
             return current;
         }
-        var candidates = targets(frequency, type, exclude, key);
+        var candidates = targets(frequency, type, from, key);
         if (candidates.isEmpty()) {
             return null;
         }
@@ -207,17 +240,17 @@ public final class MeshRegistry {
     }
 
     @Nullable
-    private static MeshEndpointPart claimTarget(String frequency, int type, @Nullable MeshEndpointPart exclude,
+    private static MeshEndpointPart claimTarget(String frequency, int type, MeshEndpointPart from,
             @Nullable appeng.api.stacks.AEKey key) {
         var sticky = type == TYPE_FLUID ? STICKY_FLUID : STICKY_ITEM;
         var stickyTick = type == TYPE_FLUID ? STICKY_FLUID_TICK : STICKY_ITEM_TICK;
         var current = sticky.get(frequency);
         if (current != null && stickyTick.getOrDefault(frequency, -1L) == gameTick
-                && current.isValidTarget(type) && current != exclude
+                && current.isValidTarget(type) && current != from && sameCarrier(from, current)
                 && (key == null || current.filterAccepts(key))) {
             return current;
         }
-        var candidates = targets(frequency, type, exclude, key);
+        var candidates = targets(frequency, type, from, key);
         if (candidates.isEmpty()) {
             return null;
         }
@@ -326,12 +359,16 @@ public final class MeshRegistry {
         });
 
         for (var entry : BY_FREQUENCY.entrySet()) {
+            // Frequencies never cross networks: only endpoints whose ONLINE host grid
+            // matches can lane together, so membership folds in the carrier identity -
+            // host splits, merges, and power changes all trigger a rebuild.
             var members = new ArrayList<MeshEndpointPart>();
             long membership = 0;
             for (var part : entry.getValue()) {
-                if (part.attuned(TYPE_ME) && part.carriedNode() != null) {
+                if (part.attuned(TYPE_ME) && part.carriedNode() != null && part.isActiveAndLoaded()) {
                     members.add(part);
                     membership = membership * 31 + part.stableKey();
+                    membership = membership * 31 + System.identityHashCode(hostGrid(part));
                 }
             }
             membership = membership * 31 + members.size();
@@ -350,44 +387,51 @@ public final class MeshRegistry {
             for (var part : entry.getValue()) {
                 part.setMeLinkState(part.attuned(TYPE_ME) ? ME_STATE_WAITING : ME_STATE_NONE);
             }
-            if (members.size() >= 2) {
-                members.sort(Comparator.comparingLong(MeshEndpointPart::stableKey));
+            members.sort(Comparator.comparingLong(MeshEndpointPart::stableKey));
+            var carriers = new java.util.LinkedHashMap<appeng.api.networking.IGrid, List<MeshEndpointPart>>();
+            for (var part : members) {
+                carriers.computeIfAbsent(hostGrid(part), g -> new ArrayList<>()).add(part);
+            }
+            for (var carrierMembers : carriers.values()) {
+                if (carrierMembers.size() < 2) {
+                    continue;
+                }
                 var groups = new java.util.LinkedHashMap<appeng.api.networking.IGrid, List<MeshEndpointPart>>();
-                for (var part : members) {
+                for (var part : carrierMembers) {
                     groups.computeIfAbsent(part.carriedNode().getGrid(), g -> new ArrayList<>()).add(part);
                 }
                 if (groups.size() == 1) {
                     // Cables already join every fed network; a lane would only add a
                     // redundant parallel path - the classic half-a-base-offline trap.
-                    for (var part : members) {
+                    for (var part : carrierMembers) {
                         part.setMeLinkState(ME_STATE_LOOP);
                     }
-                } else {
-                    var sides = new ArrayList<>(groups.values());
-                    var load = new HashMap<MeshEndpointPart, Integer>();
-                    for (int i = 0; i < sides.size(); i++) {
-                        for (int j = i + 1; j < sides.size(); j++) {
-                            int lanes = Math.min(sides.get(i).size(), sides.get(j).size());
-                            for (int lane = 0; lane < lanes; lane++) {
-                                var a = leastLoaded(sides.get(i), load);
-                                var b = leastLoaded(sides.get(j), load);
-                                try {
-                                    links.add(appeng.api.networking.GridHelper
-                                            .createConnection(a.carriedNode(), b.carriedNode()));
-                                    load.merge(a, 1, Integer::sum);
-                                    load.merge(b, 1, Integer::sum);
-                                    a.setMeLinkState(ME_STATE_LINKED);
-                                    b.setMeLinkState(ME_STATE_LINKED);
-                                } catch (IllegalStateException ignored) {
-                                    // the pair is already directly connected
-                                }
+                    continue;
+                }
+                var sides = new ArrayList<>(groups.values());
+                var load = new HashMap<MeshEndpointPart, Integer>();
+                for (int i = 0; i < sides.size(); i++) {
+                    for (int j = i + 1; j < sides.size(); j++) {
+                        int lanes = Math.min(sides.get(i).size(), sides.get(j).size());
+                        for (int lane = 0; lane < lanes; lane++) {
+                            var a = leastLoaded(sides.get(i), load);
+                            var b = leastLoaded(sides.get(j), load);
+                            try {
+                                links.add(appeng.api.networking.GridHelper
+                                        .createConnection(a.carriedNode(), b.carriedNode()));
+                                load.merge(a, 1, Integer::sum);
+                                load.merge(b, 1, Integer::sum);
+                                a.setMeLinkState(ME_STATE_LINKED);
+                                b.setMeLinkState(ME_STATE_LINKED);
+                            } catch (IllegalStateException ignored) {
+                                // the pair is already directly connected
                             }
                         }
                     }
-                    for (var part : members) {
-                        if (part.meLinkState() == ME_STATE_WAITING) {
-                            part.setMeLinkState(ME_STATE_STANDBY);
-                        }
+                }
+                for (var part : carrierMembers) {
+                    if (part.meLinkState() == ME_STATE_WAITING) {
+                        part.setMeLinkState(ME_STATE_STANDBY);
                     }
                 }
             }
@@ -419,36 +463,45 @@ public final class MeshRegistry {
         manageMeLinks();
 
         for (var entry : BY_FREQUENCY.entrySet()) {
-            int redstone = 0;
-            Map<ResourceLocation, Long> signals = null;
-
+            // Frequencies never cross networks: every transport runs per host grid.
+            var carriers = new java.util.LinkedHashMap<Object, List<MeshEndpointPart>>();
             for (var part : entry.getValue()) {
-                if (part.isSource(TYPE_REDSTONE)) {
-                    redstone = Math.max(redstone, part.readFaceRedstone());
-                }
-                if (part.isSource(TYPE_SIGNAL)) {
-                    var service = part.signalService();
-                    if (service != null) {
-                        if (signals == null) {
-                            signals = new HashMap<>();
-                        }
-                        // localCommitted excludes external contributions, so a mesh can
-                        // never re-publish what another mesh injected (no feedback).
-                        for (var channel : service.localCommitted().entrySet()) {
-                            signals.merge(channel.getKey(), channel.getValue(), SignalMath::add);
+                var grid = hostGrid(part);
+                carriers.computeIfAbsent(grid == null ? part : grid, g -> new ArrayList<>()).add(part);
+            }
+
+            for (var carrierMembers : carriers.values()) {
+                int redstone = 0;
+                Map<ResourceLocation, Long> signals = null;
+
+                for (var part : carrierMembers) {
+                    if (part.isSource(TYPE_REDSTONE)) {
+                        redstone = Math.max(redstone, part.readFaceRedstone());
+                    }
+                    if (part.isSource(TYPE_SIGNAL)) {
+                        var service = part.signalService();
+                        if (service != null) {
+                            if (signals == null) {
+                                signals = new HashMap<>();
+                            }
+                            // localCommitted excludes external contributions, so a mesh
+                            // can never re-publish what another mesh injected.
+                            for (var channel : service.localCommitted().entrySet()) {
+                                signals.merge(channel.getKey(), channel.getValue(), SignalMath::add);
+                            }
                         }
                     }
                 }
-            }
 
-            for (var part : entry.getValue()) {
-                if (part.attuned(TYPE_REDSTONE)) {
-                    part.setMeshRedstone(part.isValidTarget(TYPE_REDSTONE) ? redstone : 0);
-                }
-                if (part.isValidTarget(TYPE_SIGNAL)) {
-                    part.publishSignals(signals == null ? Map.of() : signals);
-                } else if (part.attuned(TYPE_SIGNAL)) {
-                    part.withdrawSignals();
+                for (var part : carrierMembers) {
+                    if (part.attuned(TYPE_REDSTONE)) {
+                        part.setMeshRedstone(part.isValidTarget(TYPE_REDSTONE) ? redstone : 0);
+                    }
+                    if (part.isValidTarget(TYPE_SIGNAL)) {
+                        part.publishSignals(signals == null ? Map.of() : signals);
+                    } else if (part.attuned(TYPE_SIGNAL)) {
+                        part.withdrawSignals();
+                    }
                 }
             }
         }

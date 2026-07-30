@@ -347,7 +347,8 @@ public class MeshPolishGameTests {
                 MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
 
         helper.runAfterDelay(10, () -> {
-            MeshRegistry.renameFrequency("ren-a", "ren-b");
+            MeshRegistry.renameFrequency("ren-a", "ren-b",
+                    first.getMainNode().getNode().getGrid());
             helper.assertTrue(first.frequency().equals("ren-b") && second.frequency().equals("ren-b"),
                     "both endpoints must carry the new frequency");
             helper.assertTrue(MeshRegistry.endpoints("ren-a").isEmpty(),

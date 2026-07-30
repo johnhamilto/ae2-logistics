@@ -106,35 +106,27 @@ public class P2PFrequencyTerminalMenu extends AbstractContainerMenu {
         collected.sort(Comparator.comparingInt((Row row) -> row.frequency() & 0xFFFF)
                 .thenComparing(Row::output));
 
-        // Every frequency with at least one endpoint on this grid, listed with all of its
-        // endpoints server-wide - the far side of a bridge is what you are debugging.
+        // Frequencies are network-scoped, so list exactly this network's mesh
+        // endpoints - the same set AE2's own P2P rows would show.
         var mesh = new ArrayList<MeshRow>();
         var grid = node.getGrid();
         for (var entry : io.github.johnhamilto.ae2logistics.mesh.MeshRegistry.allFrequencies().entrySet()) {
             var endpoints = new ArrayList<>(entry.getValue());
             endpoints.sort(Comparator.comparingLong(
                     io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart::stableKey));
-            boolean touches = false;
             for (var endpoint : endpoints) {
                 var endpointNode = endpoint.getMainNode().getNode();
-                if (endpointNode != null && endpointNode.getGrid() == grid) {
-                    touches = true;
-                    break;
+                if (endpointNode == null || endpointNode.getGrid() != grid) {
+                    continue;
                 }
-            }
-            if (!touches) {
-                continue;
-            }
-            for (var endpoint : endpoints) {
                 var host = endpoint.getHost().getBlockEntity();
-                var endpointNode = endpoint.getMainNode().getNode();
                 var endpointSide = endpoint.getSide();
                 mesh.add(new MeshRow(
                         entry.getKey(),
                         (byte) (endpointSide == null ? 6 : endpointSide.ordinal()),
                         endpoint.role(),
                         endpoint.capabilityMask(),
-                        endpointNode != null && endpointNode.getGrid() == grid,
+                        true,
                         io.github.johnhamilto.ae2logistics.mesh.MeshRegistry.statusOf(endpoint),
                         host.getBlockPos(),
                         host.getLevel() != null ? host.getLevel().dimension().location().toString() : "?"));

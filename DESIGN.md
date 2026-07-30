@@ -39,7 +39,8 @@ upgrade cards, terminals, keys in storage — rather than by bolting on a foreig
 > processing patterns (fuzzy, damage bands, tags, any-of, catalyst) + Pattern
 > Workbench (smithing/stonecutting variants cut by decision); **F11.1** P2P Frequency
 > Terminal with tunnel-resident frequency names; **F11.2/3/4** as one Universal Mesh
-> Endpoint part (five transports, named frequencies, nine-slot whitelists, true
+> Endpoint part (five transports, named network-scoped frequencies - the host grid
+> is the carrier, like AE2's own P2P - nine-slot whitelists, true
 > provider-P2P with per-machine blocking at range, mesh-ME as TRUE ME P2P (the
 > network fed into an endpoint's face is carried over paired quantum-bridge lanes,
 > 32 channels each, bundling across pairs; hosts never fuse), and status diagnostics
