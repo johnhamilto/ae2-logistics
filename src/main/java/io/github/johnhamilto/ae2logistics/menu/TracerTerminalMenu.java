@@ -12,15 +12,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
+
+import appeng.menu.AEBaseMenu;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.TracerTerminalPart;
 import io.github.johnhamilto.ae2logistics.signal.SignalService;
 
-public class TracerTerminalMenu extends AbstractContainerMenu {
+public class TracerTerminalMenu extends AEBaseMenu {
 
     @Nullable
     private final TracerTerminalPart part;
@@ -44,7 +45,7 @@ public class TracerTerminalMenu extends AbstractContainerMenu {
     public long[] samples = new long[0];
 
     public TracerTerminalMenu(int containerId, Inventory inventory, TracerTerminalPart part) {
-        super(AE2Logistics.TRACER_TERMINAL_MENU.get(), containerId);
+        super(AE2Logistics.TRACER_TERMINAL_MENU.get(), containerId, inventory, part);
         this.part = part;
         this.serverPlayer = inventory.player instanceof ServerPlayer sp ? sp : null;
         var host = part.getHost().getBlockEntity();
@@ -53,7 +54,7 @@ public class TracerTerminalMenu extends AbstractContainerMenu {
     }
 
     public TracerTerminalMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.TRACER_TERMINAL_MENU.get(), containerId);
+        super(AE2Logistics.TRACER_TERMINAL_MENU.get(), containerId, inventory, null);
         this.part = null;
         this.serverPlayer = null;
         this.pos = buffer.readBlockPos();
@@ -90,14 +91,4 @@ public class TracerTerminalMenu extends AbstractContainerMenu {
                 new TracerDataPayload(containerId, entries, selected, samples));
     }
 
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
-    }
 }

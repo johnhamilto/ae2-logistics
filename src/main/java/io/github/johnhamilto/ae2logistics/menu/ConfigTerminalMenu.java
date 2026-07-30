@@ -12,15 +12,16 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
+
+import appeng.menu.AEBaseMenu;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex;
 import io.github.johnhamilto.ae2logistics.parts.ConfigTerminalPart;
 
-public class ConfigTerminalMenu extends AbstractContainerMenu {
+public class ConfigTerminalMenu extends AEBaseMenu {
 
     public static final int MAX_ROWS = 256;
 
@@ -59,7 +60,7 @@ public class ConfigTerminalMenu extends AbstractContainerMenu {
     public String clientNotice = "";
 
     public ConfigTerminalMenu(int containerId, Inventory inventory, ConfigTerminalPart part) {
-        super(AE2Logistics.CONFIG_TERMINAL_MENU.get(), containerId);
+        super(AE2Logistics.CONFIG_TERMINAL_MENU.get(), containerId, inventory, part);
         this.part = part;
         this.serverPlayer = inventory.player instanceof ServerPlayer sp ? sp : null;
         var host = part.getHost().getBlockEntity();
@@ -68,7 +69,7 @@ public class ConfigTerminalMenu extends AbstractContainerMenu {
     }
 
     public ConfigTerminalMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.CONFIG_TERMINAL_MENU.get(), containerId);
+        super(AE2Logistics.CONFIG_TERMINAL_MENU.get(), containerId, inventory, null);
         this.part = null;
         this.serverPlayer = null;
         this.pos = buffer.readBlockPos();
@@ -241,14 +242,4 @@ public class ConfigTerminalMenu extends AbstractContainerMenu {
         notice = "";
     }
 
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
-    }
 }

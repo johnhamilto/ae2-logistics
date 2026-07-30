@@ -4,21 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AE2Button;
+import appeng.client.gui.widgets.AETextField;
+
 import io.github.johnhamilto.ae2logistics.menu.QueryEditPayload;
 import io.github.johnhamilto.ae2logistics.menu.QueryTerminalMenu;
 
-public class QueryTerminalScreen extends AbstractContainerScreen<QueryTerminalMenu> {
+public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
 
-    private static final ResourceLocation BACKGROUND = AE2Logistics.id("textures/gui/tracer_panel.png");
+    private static final int LABEL = 0x404040;
+    private static final int HINT = 0x7b7b7b;
+    private static final int ROW = 0x505A62;
+    private static final int SELECTED = 0x2E6E9E;
+    private static final int OK = 0x2E8B57;
+    private static final int ALERT = 0xB33A36;
 
     private static final int LIST_X = 10;
     private static final int LIST_Y = 62;
@@ -27,13 +32,14 @@ public class QueryTerminalScreen extends AbstractContainerScreen<QueryTerminalMe
     private static final int VISIBLE_ROWS = 9;
     private static final int RESULTS_X = 114;
 
-    private EditBox expressionBox;
-    private EditBox nameBox;
+    private AETextField expressionBox;
+    private AETextField nameBox;
     private String lastRequested = "";
     private int scroll;
 
-    public QueryTerminalScreen(QueryTerminalMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+    public QueryTerminalScreen(QueryTerminalMenu menu, Inventory inventory, Component title,
+            ScreenStyle style) {
+        super(menu, inventory, title, style);
         this.imageWidth = 236;
         this.imageHeight = 190;
     }
@@ -41,18 +47,18 @@ public class QueryTerminalScreen extends AbstractContainerScreen<QueryTerminalMe
     @Override
     protected void init() {
         super.init();
-        expressionBox = new EditBox(font, leftPos + 10, topPos + 18, 216, 16, Component.empty());
+        expressionBox = new AETextField(style, font, leftPos + 10, topPos + 18, 216, 16);
         expressionBox.setMaxLength(256);
         addRenderableWidget(expressionBox);
 
-        nameBox = new EditBox(font, leftPos + 10, topPos + 40, 108, 14, Component.empty());
+        nameBox = new AETextField(style, font, leftPos + 10, topPos + 40, 108, 14);
         nameBox.setMaxLength(32);
         addRenderableWidget(nameBox);
 
-        addRenderableWidget(Button.builder(Component.literal("Save"), b -> save())
-                .bounds(leftPos + 124, topPos + 38, 48, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("Delete"), b -> delete())
-                .bounds(leftPos + 178, topPos + 38, 48, 18).build());
+        addRenderableWidget(new AE2Button(leftPos + 124, topPos + 38, 48, 18,
+                Component.literal("Save"), b -> save()));
+        addRenderableWidget(new AE2Button(leftPos + 178, topPos + 38, 48, 18,
+                Component.literal("Delete"), b -> delete()));
     }
 
     private void save() {
@@ -70,8 +76,8 @@ public class QueryTerminalScreen extends AbstractContainerScreen<QueryTerminalMe
     }
 
     @Override
-    protected void containerTick() {
-        super.containerTick();
+    protected void updateBeforeRender() {
+        super.updateBeforeRender();
         var current = expressionBox.getValue();
         if (!current.equals(lastRequested)) {
             lastRequested = current;
@@ -85,15 +91,14 @@ public class QueryTerminalScreen extends AbstractContainerScreen<QueryTerminalMe
     }
 
     @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, title, 10, 6, 0xE0E6EB, false);
-        guiGraphics.drawString(font, "Saved", LIST_X, LIST_Y - 10, 0x9BB2C4, false);
+    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.drawString(font, "Saved", LIST_X, LIST_Y - 10, LABEL, false);
 
         var names = savedNames();
         int max = Math.max(0, names.size() - VISIBLE_ROWS);
         scroll = Math.min(scroll, max);
         if (names.isEmpty()) {
-            guiGraphics.drawString(font, "none yet", LIST_X, LIST_Y + 2, 0x5A6B7C, false);
+            guiGraphics.drawString(font, "none yet", LIST_X, LIST_Y + 2, HINT, false);
         }
         for (int i = 0; i < VISIBLE_ROWS && scroll + i < names.size(); i++) {
             var name = names.get(scroll + i);
@@ -103,7 +108,7 @@ public class QueryTerminalScreen extends AbstractContainerScreen<QueryTerminalMe
             }
             boolean selected = name.equals(nameBox.getValue());
             guiGraphics.drawString(font, label, LIST_X, LIST_Y + i * ROW_HEIGHT,
-                    selected ? 0x5CE2FF : 0xC7D3DE, false);
+                    selected ? SELECTED : ROW, false);
         }
 
         if (!menu.previewError.isEmpty()) {
@@ -111,27 +116,22 @@ public class QueryTerminalScreen extends AbstractContainerScreen<QueryTerminalMe
             if (error.length() > 36) {
                 error = error.substring(0, 35) + "..";
             }
-            guiGraphics.drawString(font, error, 10, imageHeight - 14, 0xE0524E, false);
+            guiGraphics.drawString(font, error, 10, imageHeight - 14, ALERT, false);
         } else if (!lastRequested.isBlank()) {
             guiGraphics.drawString(font,
                     menu.previewMatches + " kinds, " + menu.previewTotal + " total",
-                    RESULTS_X, LIST_Y - 10, 0x6FDB6F, false);
+                    RESULTS_X, LIST_Y - 10, OK, false);
         }
-    }
 
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
         for (int i = 0; i < menu.previewStacks.size(); i++) {
             var stack = menu.previewStacks.get(i);
-            int y = topPos + LIST_Y + i * 18;
+            int y = LIST_Y + i * 18;
             if (!stack.isEmpty()) {
-                guiGraphics.renderItem(stack, leftPos + RESULTS_X, y);
+                guiGraphics.renderItem(stack, RESULTS_X, y);
             }
             guiGraphics.drawString(font, "x" + menu.previewAmounts.get(i),
-                    leftPos + RESULTS_X + 20, y + 5, 0xC7D3DE, false);
+                    RESULTS_X + 20, y + 5, ROW, false);
         }
-        renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
     @Override
@@ -157,10 +157,5 @@ public class QueryTerminalScreen extends AbstractContainerScreen<QueryTerminalMe
         int max = Math.max(0, savedNames().size() - VISIBLE_ROWS);
         scroll = (int) Math.max(0, Math.min(max, scroll - scrollY));
         return true;
-    }
-
-    @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
     }
 }

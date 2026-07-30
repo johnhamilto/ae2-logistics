@@ -6,24 +6,32 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AE2Button;
+import appeng.client.gui.widgets.AETextField;
+
 import io.github.johnhamilto.ae2logistics.menu.P2PActionPayload;
 import io.github.johnhamilto.ae2logistics.menu.P2PFrequencyTerminalMenu;
 import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 
-public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequencyTerminalMenu> {
+public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTerminalMenu> {
 
-    private static final ResourceLocation BACKGROUND = AE2Logistics.id("textures/gui/tracer_panel.png");
+    private static final int HINT = 0x7b7b7b;
+    private static final int ROW = 0x505A62;
+    private static final int SELECTED = 0x2E6E9E;
+    private static final int OK = 0x2E8B57;
+    private static final int WARN = 0xA8760B;
+    private static final int ALERT = 0xB33A36;
+    private static final int OUT_COLOR = 0xA85E1F;
+    private static final int REMOTE = 0x7C4FB3;
 
     private static final int LIST_X = 10;
     private static final int LIST_Y = 18;
@@ -47,10 +55,11 @@ public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequ
     private boolean hasTarget;
     @Nullable
     private Line selected;
-    private EditBox nameBox;
+    private AETextField nameBox;
 
-    public P2PFrequencyTerminalScreen(P2PFrequencyTerminalMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+    public P2PFrequencyTerminalScreen(P2PFrequencyTerminalMenu menu, Inventory inventory,
+            Component title, ScreenStyle style) {
+        super(menu, inventory, title, style);
         this.imageWidth = 236;
         this.imageHeight = 190;
     }
@@ -58,15 +67,15 @@ public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequ
     @Override
     protected void init() {
         super.init();
-        nameBox = new EditBox(font, leftPos + 10, topPos + imageHeight - 46, 130, 14, Component.empty());
+        nameBox = new AETextField(style, font, leftPos + 10, topPos + imageHeight - 46, 130, 14);
         nameBox.setMaxLength(32);
         addRenderableWidget(nameBox);
-        addRenderableWidget(Button.builder(Component.literal("Rename"), b -> rename())
-                .bounds(leftPos + 146, topPos + imageHeight - 48, 80, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("Mark target"), b -> markTarget())
-                .bounds(leftPos + 10, topPos + imageHeight - 26, 108, 18).build());
-        addRenderableWidget(Button.builder(Component.literal("Retune to target"), b -> retuneSelected())
-                .bounds(leftPos + 126, topPos + imageHeight - 26, 100, 18).build());
+        addRenderableWidget(new AE2Button(leftPos + 146, topPos + imageHeight - 48, 80, 18,
+                Component.literal("Rename"), b -> rename()));
+        addRenderableWidget(new AE2Button(leftPos + 10, topPos + imageHeight - 26, 108, 18,
+                Component.literal("Mark target"), b -> markTarget()));
+        addRenderableWidget(new AE2Button(leftPos + 126, topPos + imageHeight - 26, 100, 18,
+                Component.literal("Retune to target"), b -> retuneSelected()));
     }
 
     private List<Line> buildLines() {
@@ -141,24 +150,22 @@ public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequ
 
     private static int statusColor(byte status) {
         return switch (status) {
-            case MeshRegistry.STATUS_OFFLINE -> 0x5A6B7C;
-            case MeshRegistry.STATUS_ME_WAITING -> 0xF5C542;
-            case MeshRegistry.STATUS_CABLED_LOOP -> 0xE0524E;
-            default -> 0x6FDB6F;
+            case MeshRegistry.STATUS_OFFLINE -> HINT;
+            case MeshRegistry.STATUS_ME_WAITING -> WARN;
+            case MeshRegistry.STATUS_CABLED_LOOP -> ALERT;
+            default -> OK;
         };
     }
 
     @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, title, 10, 6, 0xE0E6EB, false);
-
+    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         var lines = buildLines();
         int max = Math.max(0, lines.size() - VISIBLE_ROWS);
         scroll = Math.min(scroll, max);
 
         if (lines.isEmpty()) {
             guiGraphics.drawString(font, "No P2P tunnels or mesh endpoints", LIST_X, LIST_Y + 4,
-                    0x5A6B7C, false);
+                    HINT, false);
         }
 
         for (int i = 0; i < VISIBLE_ROWS && scroll + i < lines.size(); i++) {
@@ -166,20 +173,20 @@ public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequ
             int y = LIST_Y + i * ROW_HEIGHT;
             boolean isSelected = line.equals(selected);
             if (isSelected) {
-                guiGraphics.fill(LIST_X - 2, y - 1, LIST_X + 218, y + ROW_HEIGHT - 2, 0x3325C0E0);
+                guiGraphics.fill(LIST_X - 2, y - 1, LIST_X + 218, y + ROW_HEIGHT - 2, 0x332E6E9E);
             }
 
             if (line instanceof MeshHeaderLine header) {
-                guiGraphics.drawString(font, "MESH", LIST_X, y, 0x5CE2FF, false);
+                guiGraphics.drawString(font, "MESH", LIST_X, y, SELECTED, false);
                 var label = header.frequency();
                 if (label.length() > 18) {
                     label = label.substring(0, 17) + "..";
                 }
                 guiGraphics.drawString(font, label, LIST_X + 32, y,
-                        isSelected ? 0x5CE2FF : 0xC7D3DE, false);
-                guiGraphics.drawString(font, "x" + header.count(), LIST_X + 162, y, 0x9BB2C4, false);
+                        isSelected ? SELECTED : ROW, false);
+                guiGraphics.drawString(font, "x" + header.count(), LIST_X + 162, y, HINT, false);
                 if (header.flagged()) {
-                    guiGraphics.drawString(font, "!", LIST_X + 186, y, 0xF5C542, false);
+                    guiGraphics.drawString(font, "!", LIST_X + 186, y, WARN, false);
                 }
             } else if (line instanceof MeshEndpointLine endpointLine) {
                 var row = endpointLine.row();
@@ -189,18 +196,18 @@ public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequ
                     default -> "IN";
                 };
                 var roleColor = switch (row.role()) {
-                    case MeshEndpointPart.ROLE_OUT -> 0xE08A4E;
-                    case MeshEndpointPart.ROLE_BOTH -> 0x5CE2FF;
-                    default -> 0x6FDB6F;
+                    case MeshEndpointPart.ROLE_OUT -> OUT_COLOR;
+                    case MeshEndpointPart.ROLE_BOTH -> SELECTED;
+                    default -> OK;
                 };
                 guiGraphics.drawString(font, roleText, LIST_X + 8, y, roleColor, false);
                 var caps = capsLabel(row.capabilities());
                 if (caps.length() > 12) {
                     caps = caps.substring(0, 11) + "..";
                 }
-                guiGraphics.drawString(font, caps, LIST_X + 40, y, 0x9BB2C4, false);
+                guiGraphics.drawString(font, caps, LIST_X + 40, y, HINT, false);
                 guiGraphics.drawString(font, row.sameGrid() ? "here" : "remote", LIST_X + 122, y,
-                        row.sameGrid() ? 0x8A9AA8 : 0xB08AE0, false);
+                        row.sameGrid() ? HINT : REMOTE, false);
                 guiGraphics.drawString(font, statusLabel(row.status()), LIST_X + 168, y,
                         statusColor(row.status()), false);
             } else if (line instanceof P2PLine p2pLine) {
@@ -211,19 +218,19 @@ public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequ
                     label = label.substring(0, 15) + "..";
                 }
                 guiGraphics.drawString(font, label, LIST_X, y,
-                        isTarget ? 0xF5C542 : isSelected ? 0x5CE2FF : 0xC7D3DE, false);
+                        isTarget ? WARN : isSelected ? SELECTED : ROW, false);
 
                 var item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(row.itemId()));
                 var typeName = item.getDescription().getString().replace(" P2P Tunnel", "");
                 if (typeName.length() > 8) {
                     typeName = typeName.substring(0, 8);
                 }
-                guiGraphics.drawString(font, typeName, LIST_X + 92, y, 0x9BB2C4, false);
+                guiGraphics.drawString(font, typeName, LIST_X + 92, y, HINT, false);
                 guiGraphics.drawString(font, row.output() ? "OUT" : "IN", LIST_X + 142, y,
-                        row.output() ? 0xE08A4E : 0x6FDB6F, false);
+                        row.output() ? OUT_COLOR : OK, false);
                 guiGraphics.drawString(font,
                         row.pos().getX() + "," + row.pos().getY() + "," + row.pos().getZ(),
-                        LIST_X + 166, y, 0x8A9AA8, false);
+                        LIST_X + 166, y, HINT, false);
             }
         }
 
@@ -232,10 +239,10 @@ public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequ
             guiGraphics.drawString(font,
                     "at " + row.pos().getX() + "," + row.pos().getY() + "," + row.pos().getZ()
                             + " (" + shortDimension(row.dimension()) + ")",
-                    10, imageHeight - 58, 0x8A9AA8, false);
+                    10, imageHeight - 58, HINT, false);
         } else if (hasTarget) {
             guiGraphics.drawString(font, "Target: " + String.format("%04X", targetFrequency & 0xFFFF),
-                    10, imageHeight - 58, 0xF5C542, false);
+                    10, imageHeight - 58, WARN, false);
         }
     }
 
@@ -273,16 +280,5 @@ public class P2PFrequencyTerminalScreen extends AbstractContainerScreen<P2PFrequ
         int max = Math.max(0, buildLines().size() - VISIBLE_ROWS);
         scroll = (int) Math.max(0, Math.min(max, scroll - scrollY));
         return true;
-    }
-
-    @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
-    }
-
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderTooltip(guiGraphics, mouseX, mouseY);
     }
 }

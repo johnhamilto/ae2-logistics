@@ -1,0 +1,18 @@
+{
+  "includes": ["common/common.json"],
+  "background": {
+    "texture": "guis/ae2logistics/terminal_236x190.png",
+    "srcRect": [0, 0, 236, 190]
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "item.ae2logistics.p2p_frequency_terminal"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

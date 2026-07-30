@@ -12,16 +12,17 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.parts.p2p.P2PTunnelPart;
 
+import appeng.menu.AEBaseMenu;
+
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.P2PFrequencyTerminalPart;
 
-public class P2PFrequencyTerminalMenu extends AbstractContainerMenu {
+public class P2PFrequencyTerminalMenu extends AEBaseMenu {
 
     @Nullable
     private final P2PFrequencyTerminalPart part;
@@ -47,7 +48,7 @@ public class P2PFrequencyTerminalMenu extends AbstractContainerMenu {
     public List<MeshRow> meshRows = new ArrayList<>();
 
     public P2PFrequencyTerminalMenu(int containerId, Inventory inventory, P2PFrequencyTerminalPart part) {
-        super(AE2Logistics.P2P_TERMINAL_MENU.get(), containerId);
+        super(AE2Logistics.P2P_TERMINAL_MENU.get(), containerId, inventory, part);
         this.part = part;
         this.serverPlayer = inventory.player instanceof ServerPlayer sp ? sp : null;
         var host = part.getHost().getBlockEntity();
@@ -56,7 +57,7 @@ public class P2PFrequencyTerminalMenu extends AbstractContainerMenu {
     }
 
     public P2PFrequencyTerminalMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.P2P_TERMINAL_MENU.get(), containerId);
+        super(AE2Logistics.P2P_TERMINAL_MENU.get(), containerId, inventory, null);
         this.part = null;
         this.serverPlayer = null;
         this.pos = buffer.readBlockPos();
@@ -135,14 +136,4 @@ public class P2PFrequencyTerminalMenu extends AbstractContainerMenu {
         PacketDistributor.sendToPlayer(serverPlayer, new P2PDataPayload(containerId, collected, mesh));
     }
 
-    @Override
-    public ItemStack quickMoveStack(Player player, int index) {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public boolean stillValid(Player player) {
-        return player.level().isClientSide
-                || player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
-    }
 }

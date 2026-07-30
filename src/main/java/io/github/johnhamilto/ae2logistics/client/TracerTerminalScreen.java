@@ -1,19 +1,22 @@
 package io.github.johnhamilto.ae2logistics.client;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.style.ScreenStyle;
+
 import io.github.johnhamilto.ae2logistics.menu.SelectTracerChannelPayload;
 import io.github.johnhamilto.ae2logistics.menu.TracerTerminalMenu;
 
-public class TracerTerminalScreen extends AbstractContainerScreen<TracerTerminalMenu> {
+public class TracerTerminalScreen extends AEBaseScreen<TracerTerminalMenu> {
 
-    private static final ResourceLocation BACKGROUND = AE2Logistics.id("textures/gui/tracer_panel.png");
+    private static final int LABEL = 0x404040;
+    private static final int HINT = 0x7b7b7b;
+    private static final int ROW = 0x505A62;
+    private static final int SELECTED = 0x2E6E9E;
 
     private static final int LIST_X = 10;
     private static final int LIST_Y = 18;
@@ -26,8 +29,9 @@ public class TracerTerminalScreen extends AbstractContainerScreen<TracerTerminal
 
     private int scroll;
 
-    public TracerTerminalScreen(TracerTerminalMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+    public TracerTerminalScreen(TracerTerminalMenu menu, Inventory inventory, Component title,
+            ScreenStyle style) {
+        super(menu, inventory, title, style);
         this.imageWidth = 236;
         this.imageHeight = 190;
     }
@@ -46,20 +50,13 @@ public class TracerTerminalScreen extends AbstractContainerScreen<TracerTerminal
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
-    }
-
-    @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, title, 10, 6, 0xE0E6EB, false);
-
+    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         var entries = menu.entries;
         int max = Math.max(0, entries.size() - VISIBLE_ROWS);
         scroll = Math.min(scroll, max);
 
         if (entries.isEmpty()) {
-            guiGraphics.drawString(font, "No signals on this network", LIST_X, LIST_Y + 4, 0x5A6B7C, false);
+            guiGraphics.drawString(font, "No signals on this network", LIST_X, LIST_Y + 4, HINT, false);
         }
 
         for (int i = 0; i < VISIBLE_ROWS && scroll + i < entries.size(); i++) {
@@ -67,21 +64,21 @@ public class TracerTerminalScreen extends AbstractContainerScreen<TracerTerminal
             int y = LIST_Y + i * ROW_HEIGHT;
             boolean selected = entry.channel().equals(menu.clientSelected);
             if (selected) {
-                guiGraphics.fill(LIST_X - 2, y - 1, LIST_X + 218, y + ROW_HEIGHT - 2, 0x3325C0E0);
+                guiGraphics.fill(LIST_X - 2, y - 1, LIST_X + 218, y + ROW_HEIGHT - 2, 0x332E6E9E);
             }
             var name = entry.channel().toString();
             if (name.length() > 26) {
                 name = "..." + name.substring(name.length() - 23);
             }
-            guiGraphics.drawString(font, name, LIST_X, y, selected ? 0x5CE2FF : 0xC7D3DE, false);
+            guiGraphics.drawString(font, name, LIST_X, y, selected ? SELECTED : ROW, false);
             var value = fmt(entry.value());
-            guiGraphics.drawString(font, value, LIST_X + 216 - font.width(value), y, 0xE0E6EB, false);
+            guiGraphics.drawString(font, value, LIST_X + 216 - font.width(value), y, LABEL, false);
         }
 
         if (entries.size() > VISIBLE_ROWS) {
             guiGraphics.drawString(font,
                     (scroll + 1) + "-" + Math.min(entries.size(), scroll + VISIBLE_ROWS) + "/" + entries.size(),
-                    LIST_X + 180, 6, 0x5A6B7C, false);
+                    LIST_X + 180, 6, HINT, false);
         }
 
         renderChart(guiGraphics);
@@ -90,13 +87,13 @@ public class TracerTerminalScreen extends AbstractContainerScreen<TracerTerminal
     private void renderChart(GuiGraphics guiGraphics) {
         if (menu.clientSelected == null) {
             guiGraphics.drawString(font, "Select a channel for history", CHART_X, CHART_Y + CHART_H / 2,
-                    0x5A6B7C, false);
+                    HINT, false);
             return;
         }
         var samples = menu.samples;
-        guiGraphics.drawString(font, menu.clientSelected.toString(), CHART_X, CHART_Y - 10, 0x5CE2FF, false);
+        guiGraphics.drawString(font, menu.clientSelected.toString(), CHART_X, CHART_Y - 10, SELECTED, false);
         if (samples.length < 2) {
-            guiGraphics.drawString(font, "Collecting samples...", CHART_X, CHART_Y + CHART_H / 2, 0x5A6B7C, false);
+            guiGraphics.drawString(font, "Collecting samples...", CHART_X, CHART_Y + CHART_H / 2, HINT, false);
             return;
         }
 
@@ -108,6 +105,7 @@ public class TracerTerminalScreen extends AbstractContainerScreen<TracerTerminal
         }
         long range = Math.max(1, max - min);
 
+        // The plot stays a dark panel by design; the bright sparkline reads like a screen.
         guiGraphics.fill(CHART_X, CHART_Y, CHART_X + CHART_W, CHART_Y + CHART_H, 0xFF1A1F27);
         int prevY = -1;
         for (int x = 0; x < CHART_W; x++) {
@@ -125,7 +123,7 @@ public class TracerTerminalScreen extends AbstractContainerScreen<TracerTerminal
         guiGraphics.drawString(font, fmt(min), CHART_X + CHART_W - font.width(fmt(min)) - 2,
                 CHART_Y + CHART_H - 10, 0x9BB2C4, false);
         var latest = "now: " + fmt(samples[samples.length - 1]);
-        guiGraphics.drawString(font, latest, CHART_X + 2, CHART_Y + CHART_H + 4, 0xC7D3DE, false);
+        guiGraphics.drawString(font, latest, CHART_X + 2, CHART_Y + CHART_H + 4, ROW, false);
     }
 
     @Override
@@ -150,11 +148,5 @@ public class TracerTerminalScreen extends AbstractContainerScreen<TracerTerminal
         int max = Math.max(0, menu.entries.size() - VISIBLE_ROWS);
         scroll = (int) Math.max(0, Math.min(max, scroll - scrollY));
         return true;
-    }
-
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        renderTooltip(guiGraphics, mouseX, mouseY);
     }
 }

@@ -132,6 +132,9 @@ def main() -> None:
     stamp_slots(out, slot, player_inventory(252))
     emit("core_panel", out)
 
+    # The four slotless terminals (Tracer, Query, Config, P2P Frequency) share this.
+    emit("terminal_236x190", dialog(source, 236, 190))
+
 
 if __name__ == "__main__":
     main()

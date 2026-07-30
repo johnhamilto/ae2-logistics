@@ -26,8 +26,14 @@ public final class AE2LogisticsClient {
                     AE2Logistics.PATTERN_WORKBENCH_MENU.get(),
                     PatternWorkbenchScreen::new,
                     "/screens/ae2logistics_pattern_workbench.json");
-            event.register(AE2Logistics.TRACER_TERMINAL_MENU.get(), TracerTerminalScreen::new);
-            event.register(AE2Logistics.P2P_TERMINAL_MENU.get(), P2PFrequencyTerminalScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.TRACER_TERMINAL_MENU.get(),
+                    TracerTerminalScreen::new,
+                    "/screens/ae2logistics_tracer_terminal.json");
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.P2P_TERMINAL_MENU.get(),
+                    P2PFrequencyTerminalScreen::new,
+                    "/screens/ae2logistics_p2p_terminal.json");
             appeng.init.client.InitScreens.register(event,
                     AE2Logistics.MESH_ENDPOINT_MENU.get(),
                     MeshEndpointScreen::new,
@@ -40,7 +46,10 @@ public final class AE2LogisticsClient {
                     AE2Logistics.GUARDED_PROVIDER_MENU.get(),
                     GuardedProviderScreen::new,
                     "/screens/ae2logistics_guarded_provider.json");
-            event.register(AE2Logistics.QUERY_TERMINAL_MENU.get(), QueryTerminalScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.QUERY_TERMINAL_MENU.get(),
+                    QueryTerminalScreen::new,
+                    "/screens/ae2logistics_query_terminal.json");
             appeng.init.client.InitScreens.register(event,
                     AE2Logistics.QUERY_SENSOR_MENU.get(),
                     QuerySensorScreen::new,
@@ -49,7 +58,10 @@ public final class AE2LogisticsClient {
                     AE2Logistics.QUERY_EXPORT_BUS_MENU.get(),
                     QueryExportBusScreen::new,
                     "/screens/ae2logistics_query_export_bus.json");
-            event.register(AE2Logistics.CONFIG_TERMINAL_MENU.get(), ConfigTerminalScreen::new);
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.CONFIG_TERMINAL_MENU.get(),
+                    ConfigTerminalScreen::new,
+                    "/screens/ae2logistics_config_terminal.json");
             appeng.init.client.InitScreens.register(event,
                     AE2Logistics.JOB_SCHEDULER_MENU.get(),
                     JobSchedulerScreen::new,
