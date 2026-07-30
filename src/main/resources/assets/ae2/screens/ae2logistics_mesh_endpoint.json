@@ -10,13 +10,13 @@
       0,
       0,
       200,
-      231
+      251
     ]
   },
   "slots": {
     "CONFIG": {
       "left": 19,
-      "top": 117,
+      "top": 137,
       "grid": "HORIZONTAL"
     }
   },

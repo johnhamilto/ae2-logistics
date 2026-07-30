@@ -25,8 +25,9 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
     private static final String[] ROLES = {"Role: Input", "Role: Output", "Role: Both"};
     private static final int[] TYPES = {MeshRegistry.TYPE_REDSTONE, MeshRegistry.TYPE_ITEM,
             MeshRegistry.TYPE_FLUID, MeshRegistry.TYPE_ENERGY, MeshRegistry.TYPE_SIGNAL,
-            MeshRegistry.TYPE_ME};
-    private static final String[] TYPE_NAMES = {"Redstone", "Items", "Fluids", "Energy", "Signals", "ME Link"};
+            MeshRegistry.TYPE_ME, MeshRegistry.TYPE_PROVIDER};
+    private static final String[] TYPE_NAMES = {"Redstone", "Items", "Fluids", "Energy", "Signals",
+            "ME Link", "Provider"};
 
     private AETextField frequencyBox;
     private AETextField priorityBox;
@@ -37,7 +38,7 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
             ScreenStyle style) {
         super(menu, inventory, title, style);
         this.imageWidth = 200;
-        this.imageHeight = 231;
+        this.imageHeight = 251;
     }
 
     @Override
@@ -164,7 +165,7 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
             guiGraphics.drawString(font, "Fixed for this endpoint; craft the universal one to mix",
                     10, 88, HINT, false);
         }
-        guiGraphics.drawString(font, "Filter - empty allows all; click with item or bucket", 10, 108,
+        guiGraphics.drawString(font, "Filter - empty allows all; click with item or bucket", 10, 128,
                 HINT, false);
     }
 }

@@ -262,13 +262,13 @@ public class MeshPolishGameTests {
         placeCable(helper, new BlockPos(2, 2, 3));
 
         var input = placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.SOUTH, "batch-filter",
-                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_ITEM);
+                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_PROVIDER);
         var planksOnly = placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.WEST, "batch-filter",
-                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
-        planksOnly.applyMeshConfig("batch-filter", MeshEndpointPart.ROLE_OUT, 10, MeshRegistry.TYPE_ITEM);
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_PROVIDER);
+        planksOnly.applyMeshConfig("batch-filter", MeshEndpointPart.ROLE_OUT, 10, MeshRegistry.TYPE_PROVIDER);
         planksOnly.setFilterSlot(0, new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 1));
         placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.EAST, "batch-filter",
-                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_PROVIDER);
         helper.setBlock(new BlockPos(1, 1, 2), Blocks.CHEST);
         helper.setBlock(new BlockPos(3, 1, 2), Blocks.CHEST);
 

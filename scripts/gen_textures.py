@@ -544,11 +544,39 @@ MESH_TYPE_COLORS = {
     "energy": ((255, 226, 74, 255), (150, 126, 24, 255)),
     "signal": ((238, 116, 255, 255), (134, 44, 158, 255)),
     "me": ((193, 126, 255, 255), (104, 58, 160, 255)),
+    "provider": ((232, 232, 244, 255), (120, 122, 140, 255)),
 }
 for mesh_type, (bright, dim) in MESH_TYPE_COLORS.items():
     typed = dict(PART)
     typed.update({"C": bright, "c": dim})
     write_png(OUT / "part" / f"mesh_endpoint_{mesh_type}.png", PART_MESH_ENDPOINT, typed)
+
+# Provider P2P tunnel face: a pattern-provider slot grid around a violet core.
+PART_PROVIDER_P2P_TUNNEL = """
+################
+#DDDDDDDDDDDDDD#
+#D............D#
+#D.PP..PP..PP.D#
+#D.PP..PP..PP.D#
+#D............D#
+#D.PP..vv..PP.D#
+#D.PP..vv..PP.D#
+#D............D#
+#D.PP..PP..PP.D#
+#D.PP..PP..PP.D#
+#D............D#
+#D....cccc....D#
+#D............D#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+PROVIDER_TUNNEL = dict(PART)
+PROVIDER_TUNNEL.update({
+    "P": (226, 228, 236, 255),  # pattern slot white
+    "v": (168, 110, 255, 255),  # provider violet core
+})
+write_png(OUT / "part" / "provider_p2p_tunnel.png", PART_PROVIDER_P2P_TUNNEL, PROVIDER_TUNNEL)
 
 # Subnet link: a split face - main network left, subnet right, bridged in the middle.
 PART_SUBNET_LINK = """

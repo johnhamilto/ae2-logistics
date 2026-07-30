@@ -58,6 +58,8 @@ public class MeshEndpointPart extends AEBasePart {
     public static final IPartModel MODEL_SIGNAL = new PartModel(AE2Logistics.id("part/mesh_endpoint_signal"));
     @PartModels
     public static final IPartModel MODEL_ME = new PartModel(AE2Logistics.id("part/mesh_endpoint_me"));
+    @PartModels
+    public static final IPartModel MODEL_PROVIDER = new PartModel(AE2Logistics.id("part/mesh_endpoint_provider"));
 
     private record TypedVariant(int mask, IPartModel model) {
     }
@@ -69,7 +71,8 @@ public class MeshEndpointPart extends AEBasePart {
             AE2Logistics.id("mesh_endpoint_fluid"), new TypedVariant(MeshRegistry.TYPE_FLUID, MODEL_FLUID),
             AE2Logistics.id("mesh_endpoint_energy"), new TypedVariant(MeshRegistry.TYPE_ENERGY, MODEL_ENERGY),
             AE2Logistics.id("mesh_endpoint_signal"), new TypedVariant(MeshRegistry.TYPE_SIGNAL, MODEL_SIGNAL),
-            AE2Logistics.id("mesh_endpoint_me"), new TypedVariant(MeshRegistry.TYPE_ME, MODEL_ME));
+            AE2Logistics.id("mesh_endpoint_me"), new TypedVariant(MeshRegistry.TYPE_ME, MODEL_ME),
+            AE2Logistics.id("mesh_endpoint_provider"), new TypedVariant(MeshRegistry.TYPE_PROVIDER, MODEL_PROVIDER));
 
     public static final byte ROLE_IN = 0;
     public static final byte ROLE_OUT = 1;
@@ -103,8 +106,8 @@ public class MeshEndpointPart extends AEBasePart {
     private final IItemHandler itemHandler = new MeshItemHandler();
     private final IFluidHandler fluidHandler = new MeshFluidHandler();
     private final IEnergyStorage energyHandler = new MeshEnergyHandler();
-    private final io.github.johnhamilto.ae2logistics.mesh.MeshProviderStorage providerStorage =
-            new io.github.johnhamilto.ae2logistics.mesh.MeshProviderStorage(this);
+    private final io.github.johnhamilto.ae2logistics.provider.ProviderBatchRouter<MeshEndpointPart> providerStorage =
+            new io.github.johnhamilto.ae2logistics.provider.ProviderBatchRouter<>(new MeshProviderTargets());
     private final java.util.Set<appeng.api.stacks.AEKey> lastBatch = new java.util.HashSet<>();
 
     public MeshEndpointPart(IPartItem<?> partItem) {
@@ -306,7 +309,7 @@ public class MeshEndpointPart extends AEBasePart {
         var tag = input.get(AE2Logistics.EXPORTED_MESH_SETTINGS.get());
         if (tag != null) {
             applyMeshConfig(tag.getString("freq"), (byte) Math.floorMod(tag.getByte("role"), 3),
-                    tag.getInt("priority"), tag.getInt("capabilities") & 63);
+                    tag.getInt("priority"), tag.getInt("capabilities") & MeshRegistry.TYPE_ALL);
             var stacks = input.get(AE2Logistics.EXPORTED_MESH_FILTER.get());
             for (int i = 0; i < FILTER_SLOTS; i++) {
                 setFilterSlot(i, stacks != null && i < stacks.size() ? stacks.get(i) : null);
@@ -425,7 +428,7 @@ public class MeshEndpointPart extends AEBasePart {
         }
     }
 
-    // --- provider-P2P support ---
+    // --- provider-P2P support (the provider transport; key-type agnostic) ---
 
     /** Remembers the last batch delivered here; the machine counts as busy until it drains. */
     public void noteDelivered(java.util.Set<appeng.api.stacks.AEKey> keys) {
@@ -433,27 +436,25 @@ public class MeshEndpointPart extends AEBasePart {
         lastBatch.addAll(keys);
     }
 
+    /** The push target behind this endpoint's face, resolved like a pattern provider's. */
+    @Nullable
+    public appeng.api.storage.MEStorage adjacentProviderTarget() {
+        var host = getHost().getBlockEntity();
+        if (!(host.getLevel() instanceof net.minecraft.server.level.ServerLevel level)) {
+            return null;
+        }
+        return io.github.johnhamilto.ae2logistics.provider.ProviderTargets.resolve(level,
+                host.getBlockPos().relative(getSide()), getSide().getOpposite());
+    }
+
     public boolean isBusy() {
         if (lastBatch.isEmpty()) {
             return false;
         }
-        var items = adjacentItemHandler();
-        var fluids = adjacentFluidHandler();
-        for (var key : lastBatch) {
-            if (key instanceof appeng.api.stacks.AEItemKey itemKey && items != null) {
-                for (int i = 0; i < items.getSlots(); i++) {
-                    if (itemKey.matches(items.getStackInSlot(i))) {
-                        return true;
-                    }
-                }
-            } else if (key instanceof appeng.api.stacks.AEFluidKey fluidKey && fluids != null) {
-                for (int i = 0; i < fluids.getTanks(); i++) {
-                    var tank = fluids.getFluidInTank(i);
-                    if (!tank.isEmpty() && FluidStack.isSameFluidSameComponents(fluidKey.toStack(1), tank)) {
-                        return true;
-                    }
-                }
-            }
+        var target = adjacentProviderTarget();
+        if (target != null
+                && io.github.johnhamilto.ae2logistics.provider.ProviderTargets.containsAny(target, lastBatch)) {
+            return true;
         }
         lastBatch.clear();
         return false;
@@ -461,9 +462,41 @@ public class MeshEndpointPart extends AEBasePart {
 
     @Nullable
     public appeng.api.storage.MEStorage exposedMeStorage() {
-        return attuned(MeshRegistry.TYPE_ITEM | MeshRegistry.TYPE_FLUID) && role != ROLE_OUT
-                ? providerStorage
-                : null;
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role != ROLE_OUT ? providerStorage : null;
+    }
+
+    private class MeshProviderTargets
+            implements io.github.johnhamilto.ae2logistics.provider.ProviderBatchRouter.Targets<MeshEndpointPart> {
+        @Override
+        public Iterable<MeshEndpointPart> candidates() {
+            return MeshRegistry.outputs(frequency, MeshRegistry.TYPE_PROVIDER, MeshEndpointPart.this);
+        }
+
+        @Override
+        public boolean accepts(MeshEndpointPart target, appeng.api.stacks.AEKey what) {
+            return target.isValidTarget(MeshRegistry.TYPE_PROVIDER) && target.filterAccepts(what);
+        }
+
+        @Override
+        @Nullable
+        public appeng.api.storage.MEStorage storageOf(MeshEndpointPart target) {
+            return target.adjacentProviderTarget();
+        }
+
+        @Override
+        public boolean isBusy(MeshEndpointPart target) {
+            return target.isBusy();
+        }
+
+        @Override
+        public void noteDelivered(MeshEndpointPart target, java.util.Set<appeng.api.stacks.AEKey> keys) {
+            target.noteDelivered(keys);
+        }
+
+        @Override
+        public Component description() {
+            return Component.literal("Mesh Frequency " + frequency);
+        }
     }
 
     // --- exposed capabilities (insert-only; mirror the next target for blocking mode) ---

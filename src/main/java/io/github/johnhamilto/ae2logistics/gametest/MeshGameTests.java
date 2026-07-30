@@ -150,11 +150,11 @@ public class MeshGameTests {
         placeCable(helper, new BlockPos(2, 2, 3));
 
         var input = placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.SOUTH, "prov-mesh",
-                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_ITEM);
+                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_PROVIDER);
         placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.WEST, "prov-mesh",
-                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_PROVIDER);
         placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.EAST, "prov-mesh",
-                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_PROVIDER);
         helper.setBlock(new BlockPos(1, 1, 2), Blocks.CHEST);
         helper.setBlock(new BlockPos(3, 1, 2), Blocks.CHEST);
 
@@ -278,9 +278,9 @@ public class MeshGameTests {
         placeCable(helper, new BlockPos(2, 2, 3));
 
         var input = placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.SOUTH, "busy-mesh",
-                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_ITEM);
+                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_PROVIDER);
         placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.EAST, "busy-mesh",
-                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_PROVIDER);
         helper.setBlock(new BlockPos(3, 1, 2), Blocks.CHEST);
 
         var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());

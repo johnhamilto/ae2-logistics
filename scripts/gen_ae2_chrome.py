@@ -108,10 +108,10 @@ def main() -> None:
     stamp_slots(out, slot, player_inventory(222))
     emit("logic_sensor", out)
 
-    # Mesh Endpoint: control stack, 9 filter ghosts, player inventory.
-    out = dialog(source, 200, 231)
-    stamp_slots(out, slot, grid(18, 116, 9, 1))
-    stamp_slots(out, slot, player_inventory(231))
+    # Mesh Endpoint: control stack (three toggle rows), 9 filter ghosts, player inventory.
+    out = dialog(source, 200, 251)
+    stamp_slots(out, slot, grid(18, 136, 9, 1))
+    stamp_slots(out, slot, player_inventory(251))
     emit("mesh_endpoint", out)
 
     # Guarded Pattern Provider: 9 pattern slots up top, guard strip, player inventory.

@@ -36,6 +36,8 @@ public final class MeshRegistry {
     public static final int TYPE_ENERGY = 8;
     public static final int TYPE_SIGNAL = 16;
     public static final int TYPE_ME = 32;
+    public static final int TYPE_PROVIDER = 64;
+    public static final int TYPE_ALL = 127;
 
     // ME link state per endpoint, evaluated whenever the frequency's lanes (re)build.
     public static final byte ME_STATE_NONE = 0;
@@ -166,6 +168,9 @@ public final class MeshRegistry {
         }
         if ((mask & TYPE_ME) != 0) {
             parts.add("ME");
+        }
+        if ((mask & TYPE_PROVIDER) != 0) {
+            parts.add("P");
         }
         return String.join(",", parts);
     }

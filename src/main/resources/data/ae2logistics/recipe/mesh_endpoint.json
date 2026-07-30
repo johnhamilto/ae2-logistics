@@ -2,12 +2,30 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2logistics:mesh_endpoint_redstone"},
-    {"item": "ae2logistics:mesh_endpoint_item"},
-    {"item": "ae2logistics:mesh_endpoint_fluid"},
-    {"item": "ae2logistics:mesh_endpoint_energy"},
-    {"item": "ae2logistics:mesh_endpoint_signal"},
-    {"item": "ae2logistics:mesh_endpoint_me"}
+    {
+      "item": "ae2logistics:mesh_endpoint_redstone"
+    },
+    {
+      "item": "ae2logistics:mesh_endpoint_item"
+    },
+    {
+      "item": "ae2logistics:mesh_endpoint_fluid"
+    },
+    {
+      "item": "ae2logistics:mesh_endpoint_energy"
+    },
+    {
+      "item": "ae2logistics:mesh_endpoint_signal"
+    },
+    {
+      "item": "ae2logistics:mesh_endpoint_me"
+    },
+    {
+      "item": "ae2logistics:mesh_endpoint_provider"
+    }
   ],
-  "result": {"count": 1, "id": "ae2logistics:mesh_endpoint"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:mesh_endpoint"
+  }
 }

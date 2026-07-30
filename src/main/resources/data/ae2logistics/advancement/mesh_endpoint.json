@@ -12,7 +12,9 @@
               "ae2logistics:mesh_endpoint_fluid",
               "ae2logistics:mesh_endpoint_energy",
               "ae2logistics:mesh_endpoint_signal",
-              "ae2logistics:mesh_endpoint_me"
+              "ae2logistics:mesh_endpoint_me",
+              "ae2logistics:mesh_endpoint_provider",
+              "ae2logistics:provider_p2p_tunnel"
             ]
           }
         ]
@@ -27,7 +29,7 @@
       "text": "Everything Everywhere"
     },
     "description": {
-      "text": "Mesh endpoints move six transports over named frequencies; the universal one moves them all"
+      "text": "Mesh endpoints move seven transports over named frequencies; the universal one moves them all"
     },
     "frame": "task"
   },

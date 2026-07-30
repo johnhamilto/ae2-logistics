@@ -11,8 +11,8 @@ navigation:
 AE2's P2P tunnels are one-input, many-output, one transport type each. The Universal
 Mesh Endpoint generalizes all three limits: any number of endpoints **on one network**
 share a **named frequency**, each with a role (input, output, or both), a priority, and
-any subset of transport capabilities - redstone, items, fluids, energy, and signals -
-on one part, for one channel.
+any subset of transport capabilities - redstone, items, fluids, energy, signals, ME,
+and provider pushes - on one part, for one channel.
 
 **Two endpoints on a frequency are a universal point-to-point tunnel. More are a mesh.**
 
@@ -21,10 +21,10 @@ on is the carrier, and the same frequency name on another network is a different
 unrelated frequency. To span distance, extend the carrier network (cables, quantum
 bridges, the ME Wireless Bridge) - not the frequency.
 
-Endpoints come in six single-transport flavors - the
+Endpoints come in seven single-transport flavors - the
 [Typed Mesh Endpoints](typed-mesh-endpoints.md) - and the universal part that
 carries any mix. Craft a typed endpoint from an ME P2P Tunnel, a logic processor,
-and an item matching the transport; fuse all six into the universal:
+and an item matching the transport; fuse all seven into the universal:
 
 <RecipeFor id="mesh_endpoint" />
 
@@ -38,11 +38,17 @@ mix freely on a frequency.
 - **Items and fluids** - anything pushed into an input endpoint is delivered into the
   inventory an output endpoint faces, by priority then round-robin, with batches kept
   whole on one destination.
-- **Provider P2P** - point a pattern provider at an input endpoint and it behaves as if
-  it were adjacent to every machine on the frequency: each batch goes complete to the
-  first machine that has finished its previous batch, and when all machines are still
-  working, nothing is pushed until one frees up - true per-machine blocking, at range,
-  over one face.
+- **Provider** - its own transport: point a pattern provider at a provider-attuned
+  input endpoint and it behaves as if it were adjacent to every machine behind the
+  frequency's provider outputs: each batch goes complete to the first machine that has
+  finished its previous batch, and when all machines are still working, nothing is
+  pushed until one frees up - true per-machine blocking, at range, over one face. Like
+  a provider itself it is **key-type agnostic**: items, fluids, and any companion-mod
+  key type (Mekanism chemicals, flux) push through. A provider facing an item-only
+  input endpoint still pushes, but as a plain pipe - batches split and blocking loses
+  meaning; use the provider transport for provider semantics. The P2P-frequency
+  version of the same behavior is the
+  [Provider P2P Tunnel](provider-p2p-tunnel.md).
 - **Energy** - FE pushed into an input spreads across all outputs by priority.
 - **Signals** - bridge subnets THROUGH the mesh: an input endpoint reads the signal
   channels of the network **touching its face**, and an output endpoint injects them
@@ -79,7 +85,8 @@ allows everything. An **input** endpoint refuses non-matching insertions outrigh
 frequency can sort, with each machine declaring what it takes. Provider batches respect
 filters as a whole: a batch only lands on a machine whose filter accepts **every**
 ingredient in it, and moves complete to another machine otherwise. Matching is exact
-(components included); filters do not apply to redstone, energy, signals, or ME.
+(components included); filters apply to items, fluids, and the provider transport, not
+to redstone, energy, signals, or ME.
 
 # Diagnostics
 
@@ -103,5 +110,7 @@ Each endpoint costs one channel and idles at one AE per tick.
 
 ## Devices
 
-<ItemLink id="mesh_endpoint" />, the six [Typed Mesh Endpoints](typed-mesh-endpoints.md),
-and the <ItemLink id="p2p_frequency_terminal" /> that lists and renames frequencies.
+<ItemLink id="mesh_endpoint" />, the seven [Typed Mesh Endpoints](typed-mesh-endpoints.md),
+the <ItemLink id="provider_p2p_tunnel" /> (provider semantics on a classic P2P
+frequency), and the <ItemLink id="p2p_frequency_terminal" /> that lists and renames
+frequencies.

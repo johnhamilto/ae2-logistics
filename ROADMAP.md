@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.22.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (93 tests, run
+Status as of v0.23.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (96 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -39,6 +39,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | QoL | Guide knowledgebase (page per device + AE2 help button), right-click reverse on cycle buttons, JEI ghost drag onto filter/ghost slots | 0.18.0-0.18.1 |
 | Infra | Entire GUI layer on AE2's own framework: all 14 screens are AEBaseMenu/AEBaseScreen with style docs, chrome composed from AE2's me_chest dialog (scripts/gen_ae2_chrome.py), and AE2Button/AETextField widgets; mesh endpoint placement wireframe matches the P2P chassis | 0.17.0 |
 | F11 | Typed Mesh Endpoints: six single-transport part items sharing the endpoint class (mask locked by item id, pre-attuned on placement, per-type recolored chassis); fuse all six to craft the universal; provider P2P remains built into item/fluid inputs | 0.22.0 |
+| F11.6 | Provider is its own transport, key-type agnostic (provider target resolution = ME_STORAGE cap else external storage strategies - companion-mod chemicals/flux ride through): Provider P2P Tunnel on AE2's own P2P system (attunes with a pattern provider, memory-card linking, terminal rows) + Provider Mesh Endpoint as the seventh typed part; shared batch router with per-machine blocking and a one-hop guard | 0.23.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -58,9 +59,9 @@ representation).
 - **F10 bundles** (DESIGN.md 4.3): the last unbuilt design-doc feature. Preconditions
   met; waits on the ecosystem-novelty check (DESIGN 7.3, folded into the publishing
   pass) and a deliberate go/no-go on the atomic-delivery pitch.
-- **F11.6 extra tunnel types**: experience is straightforward; signal is now mostly
-  superseded by the mesh; entity/player/chunk-load are balance decisions first;
-  tick manipulation is a hard no.
+- **F11.6 extra tunnel types**: provider shipped in 0.23.0 (tunnel + mesh transport);
+  experience is straightforward; signal is now mostly superseded by the mesh;
+  entity/player/chunk-load are balance decisions first; tick manipulation is a hard no.
 - **Foreign-job steering**: everything scheduler-side shipped in 0.15.0; steering
   jobs we did not originate needs an upstream CPU-selection hook (fourth PR
   candidate below).

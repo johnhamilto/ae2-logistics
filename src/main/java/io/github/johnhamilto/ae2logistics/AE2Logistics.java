@@ -358,8 +358,13 @@ public class AE2Logistics {
             "mesh_endpoint_signal", MeshEndpointPart.class, MeshEndpointPart::new);
     public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_ME_PART = part(
             "mesh_endpoint_me", MeshEndpointPart.class, MeshEndpointPart::new);
+    public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_PROVIDER_PART = part(
+            "mesh_endpoint_provider", MeshEndpointPart.class, MeshEndpointPart::new);
     public static final Supplier<MenuType<MeshEndpointMenu>> MESH_ENDPOINT_MENU = MENUS.register(
             "mesh_endpoint", () -> IMenuTypeExtension.create(MeshEndpointMenu::new));
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart>> PROVIDER_P2P_TUNNEL_PART = part(
+            "provider_p2p_tunnel", io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class,
+            io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart::new);
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart>> SUBNET_LINK_PART = part(
             "subnet_link", io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart.class,
             io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart::new);
@@ -400,12 +405,14 @@ public class AE2Logistics {
                         output.accept(CONFIG_TERMINAL_PART.get());
                         output.accept(CONFIG_BLUEPRINT.get());
                         output.accept(P2P_TERMINAL_PART.get());
+                        output.accept(PROVIDER_P2P_TUNNEL_PART.get());
                         output.accept(MESH_ENDPOINT_REDSTONE_PART.get());
                         output.accept(MESH_ENDPOINT_ITEM_PART.get());
                         output.accept(MESH_ENDPOINT_FLUID_PART.get());
                         output.accept(MESH_ENDPOINT_ENERGY_PART.get());
                         output.accept(MESH_ENDPOINT_SIGNAL_PART.get());
                         output.accept(MESH_ENDPOINT_ME_PART.get());
+                        output.accept(MESH_ENDPOINT_PROVIDER_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(SUBNET_LINK_PART.get());
                         output.accept(REGULUS_CRYSTAL.get());
@@ -505,7 +512,15 @@ public class AE2Logistics {
                     io.github.johnhamilto.ae2logistics.menu.ConfigureCoreEntryPayload::handle);
         });
 
+        modBus.addListener((net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent event) -> {
+            event.enqueueWork(() -> appeng.api.features.P2PTunnelAttunement
+                    .registerAttunementTag(PROVIDER_P2P_TUNNEL_PART.get()));
+        });
+
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {
+            event.register(AECapabilities.ME_STORAGE,
+                    (part, context) -> part.exposedStorage(),
+                    io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
             event.register(AECapabilities.ME_STORAGE,
                     (part, context) -> part.exposedMeStorage(), MeshEndpointPart.class);
             event.register(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
