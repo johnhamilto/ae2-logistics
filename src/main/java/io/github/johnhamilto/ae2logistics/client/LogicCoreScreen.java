@@ -76,8 +76,8 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
         opValue = menu.ops[selected];
         flagValue = menu.flags[selected];
 
-        addDetail(new AE2Button(leftPos + 8, topPos + 123, 46, 14,
-                Component.literal(typeName(type)), b -> cycleType()));
+        addDetail(new CycleButton(leftPos + 8, topPos + 123, 46, 14,
+                Component.literal(typeName(type)), (b, dir) -> cycleType(dir)));
 
         outBox = new AETextField(style, font, leftPos + 60, topPos + 124, 62, 12);
         outBox.setBordered(false);
@@ -103,8 +103,8 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
             inBBox.setValue(menu.inBs[selected]);
             addDetail(inBBox);
 
-            addDetail(new AE2Button(leftPos + 104, topPos + 139, 26, 14,
-                    Component.literal(opName(type, opValue)), b -> cycleOp((Button) b)));
+            addDetail(new CycleButton(leftPos + 104, topPos + 139, 26, 14,
+                    Component.literal(opName(type, opValue)), this::cycleOp));
 
             valueABox = new AETextField(style, font, leftPos + 134, topPos + 140, 28, 12);
             valueABox.setBordered(false);
@@ -133,25 +133,26 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
         addRenderableWidget(widget);
     }
 
-    private void cycleType() {
+    private void cycleType(int dir) {
         int selected = menu.selected();
         int current = menu.types[selected];
-        int index = -1;
-        for (int i = 0; i < TYPE_CYCLE.length; i++) {
+        // Domain is empty plus TYPE_CYCLE, cycled in either direction (empty at len).
+        int len = TYPE_CYCLE.length;
+        int pos = len;
+        for (int i = 0; i < len; i++) {
             if (TYPE_CYCLE[i].ordinal() == current) {
-                index = i;
+                pos = i;
                 break;
             }
         }
-        int next = index + 1 >= TYPE_CYCLE.length ? -1
-                : index < 0 ? TYPE_CYCLE[0].ordinal() : TYPE_CYCLE[index + 1].ordinal();
-        menu.types[selected] = (byte) next;
+        int next = Math.floorMod(pos + dir, len + 1);
+        menu.types[selected] = (byte) (next == len ? -1 : TYPE_CYCLE[next].ordinal());
         rebuildDetail();
     }
 
-    private void cycleOp(Button button) {
+    private void cycleOp(CycleButton button, int dir) {
         int type = selectedType();
-        opValue = (opValue + 1) % opCount(type);
+        opValue = Math.floorMod(opValue + dir, opCount(type));
         button.setMessage(Component.literal(opName(type, opValue)));
     }
 

@@ -122,9 +122,9 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
         for (int i = 0; i < menu.detailSettings.size() && i < 4; i++) {
             var line = menu.detailSettings.get(i);
             int y = topPos + DETAIL_Y + i * 10;
-            var button = new AE2Button(leftPos + 212, y, 14, 9,
-                    Component.literal(">"), b -> send(
-                            ConfigTerminalActionPayload.ACTION_CYCLE, menu.selectedIndex, line.name(), 0));
+            var button = new CycleButton(leftPos + 212, y, 14, 9,
+                    Component.literal(">"), (b, dir) -> send(
+                            ConfigTerminalActionPayload.ACTION_CYCLE, menu.selectedIndex, line.name(), dir));
             settingButtons.add(button);
             addRenderableWidget(button);
         }

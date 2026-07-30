@@ -27,7 +27,7 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
  * output values and the active mask stream through data slots; the single ghost slot is
  * bound server-side to the selected entry.
  */
-public class LogicCoreMenu extends AEBaseMenu {
+public class LogicCoreMenu extends AEBaseMenu implements GhostSlotPayload.GhostSlotTarget {
 
     public static final int ROWS = LogicCoreBlockEntity.ENTRIES;
 
@@ -234,6 +234,21 @@ public class LogicCoreMenu extends AEBaseMenu {
     public void broadcastChanges() {
         refreshGhost();
         super.broadcastChanges();
+    }
+
+    @Override
+    public boolean acceptsGhost(int slotIndex) {
+        return slotIndex == ghostSlotIndex
+                && types[selected] == LogicPartType.STOCK_SENSOR.ordinal();
+    }
+
+    @Override
+    public void setGhost(int slotIndex, ItemStack stack) {
+        var key = keyFromCarried(stack);
+        if (core != null) {
+            core.setEntryWatched(selected, key);
+        }
+        ghost.setItem(0, displayStack(key));
     }
 
     @Override

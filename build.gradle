@@ -35,6 +35,8 @@ dependencies {
 
     // Dev-environment QoL only; not shipped dependencies.
     runtimeOnly "maven.modrinth:jade:${project.jade_version}"
+    compileOnly "mezz.jei:jei-1.21.1-common-api:${project.jei_version}"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${project.jei_version}"
     runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${project.jei_version}"
 }
 

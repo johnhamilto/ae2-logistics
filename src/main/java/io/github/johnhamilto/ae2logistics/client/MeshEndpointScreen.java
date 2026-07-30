@@ -58,9 +58,9 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         priorityBox.setValue(Integer.toString(menu.priority));
         addRenderableWidget(priorityBox);
 
-        addRenderableWidget(new AE2Button(leftPos + 10, topPos + 46, 88, 18,
-                Component.literal(ROLES[roleValue]), b -> {
-                    roleValue = (byte) ((roleValue + 1) % 3);
+        addRenderableWidget(new CycleButton(leftPos + 10, topPos + 46, 88, 18,
+                Component.literal(ROLES[roleValue]), (b, dir) -> {
+                    roleValue = (byte) Math.floorMod(roleValue + dir, 3);
                     b.setMessage(Component.literal(ROLES[roleValue]));
                 }));
 

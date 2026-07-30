@@ -244,7 +244,7 @@ public class SchedulerPolicyGameTests {
             }
             helper.assertTrue(exportBus != null && storageBus != null, "devices missing");
             var settingName = exportBus.configManager().getSettings().iterator().next().getName();
-            ConfigDeviceIndex.cycleSetting(exportBus, settingName);
+            ConfigDeviceIndex.cycleSetting(exportBus, settingName, 1);
 
             var diff = ConfigDeviceIndex.computeDiff(terminal.snapshot(), devices);
             helper.assertTrue(diff.get(ConfigDeviceIndex.snapshotKey(exportBus))

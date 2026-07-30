@@ -28,7 +28,7 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
  * buffer; edits return via {@link ConfigurePartPayload}; the live output value streams
  * through two int data slots.
  */
-public class LogicPartMenu extends AEBaseMenu {
+public class LogicPartMenu extends AEBaseMenu implements GhostSlotPayload.GhostSlotTarget {
 
     @Nullable
     private final LogicPart part;
@@ -152,6 +152,20 @@ public class LogicPartMenu extends AEBaseMenu {
                 return false;
             }
         }, SlotSemantics.CONFIG);
+    }
+
+    @Override
+    public boolean acceptsGhost(int slotIndex) {
+        return ghostSlotIndex >= 0 && slotIndex == ghostSlotIndex;
+    }
+
+    @Override
+    public void setGhost(int slotIndex, ItemStack stack) {
+        var key = keyFromCarried(stack);
+        if (part != null) {
+            part.setWatchedKey(key);
+        }
+        ghostContainer.setItem(0, displayStack(key));
     }
 
     @Override

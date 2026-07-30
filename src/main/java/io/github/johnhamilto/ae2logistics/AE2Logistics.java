@@ -51,6 +51,7 @@ import io.github.johnhamilto.ae2logistics.crafting.EncodedAdaptivePattern;
 import io.github.johnhamilto.ae2logistics.item.SignalCardItem;
 import io.github.johnhamilto.ae2logistics.menu.ConfigureMeshPayload;
 import io.github.johnhamilto.ae2logistics.menu.ConfigurePartPayload;
+import io.github.johnhamilto.ae2logistics.menu.GhostSlotPayload;
 import io.github.johnhamilto.ae2logistics.menu.MeshEndpointMenu;
 import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.menu.CyclePatternSpecPayload;
@@ -453,6 +454,8 @@ public class AE2Logistics {
             var registrar = event.registrar("1");
             registrar.playToServer(ConfigurePartPayload.TYPE, ConfigurePartPayload.STREAM_CODEC,
                     ConfigurePartPayload::handle);
+            registrar.playToServer(GhostSlotPayload.TYPE, GhostSlotPayload.STREAM_CODEC,
+                    GhostSlotPayload::handle);
             registrar.playToServer(CyclePatternSpecPayload.TYPE, CyclePatternSpecPayload.STREAM_CODEC,
                     CyclePatternSpecPayload::handle);
             registrar.playToServer(SelectTracerChannelPayload.TYPE, SelectTracerChannelPayload.STREAM_CODEC,

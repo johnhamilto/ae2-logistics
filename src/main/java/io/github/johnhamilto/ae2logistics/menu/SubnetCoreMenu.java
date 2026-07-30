@@ -28,7 +28,7 @@ import io.github.johnhamilto.ae2logistics.block.SubnetCoreBlockEntity;
  * menu: snapshot in the open buffer, edits via {@link ConfigureSubnetEntryPayload},
  * one ghost filter slot bound server-side to the selection.
  */
-public class SubnetCoreMenu extends AEBaseMenu {
+public class SubnetCoreMenu extends AEBaseMenu implements GhostSlotPayload.GhostSlotTarget {
 
     public static final int ROWS = SubnetCoreBlockEntity.ENTRIES;
 
@@ -174,6 +174,20 @@ public class SubnetCoreMenu extends AEBaseMenu {
     public void broadcastChanges() {
         refreshGhost();
         super.broadcastChanges();
+    }
+
+    @Override
+    public boolean acceptsGhost(int slotIndex) {
+        return slotIndex == ghostSlotIndex && types[selected] >= 0;
+    }
+
+    @Override
+    public void setGhost(int slotIndex, ItemStack stack) {
+        var filter = fromCarried(stack);
+        if (core != null) {
+            core.setEntryFilter(selected, filter);
+        }
+        ghost.setItem(0, displayStack(filter));
     }
 
     @Override

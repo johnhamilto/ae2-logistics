@@ -28,6 +28,11 @@ system; where it disagrees with this doc, that's a doc bug — note it.
   Job Scheduler, Guarded Provider, Logic Core, Subnet Core, Dense WAP, Wireless
   Bridge) — check them in-world and as items in hand/inventory. All part models,
   16x16 art, GUI panels.
+- **Cycle buttons reverse on right-click** (role, entry type, face, operator,
+  config-terminal `>` cycles) — left forward, right back. **[HUMAN]**
+- **JEI ghost drag**: drag an item (or fluid) from JEI onto any filter/ghost slot
+  (mesh filters, stock sensor watch, core entry filters/watch, scheduler targets);
+  fluids land as their bucket and convert like a bucket click. **[HUMAN]**
 - **Feel**: advancement toasts, recipe availability in the crafting book, tooltips,
   guide rendering, chat/action-bar messages, screen resize behavior (known: resizing
   a screen resets unsaved edit-box text — vanilla plumbing, low priority).

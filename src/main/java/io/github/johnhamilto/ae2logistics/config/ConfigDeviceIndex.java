@@ -195,7 +195,7 @@ public final class ConfigDeviceIndex {
     }
 
     /** Advances the named setting to its next value; returns false when not applicable. */
-    public static boolean cycleSetting(Device device, String settingName) {
+    public static boolean cycleSetting(Device device, String settingName, int direction) {
         var manager = device.configManager();
         if (manager == null) {
             return false;
@@ -216,7 +216,7 @@ public final class ConfigDeviceIndex {
                     break;
                 }
             }
-            var next = values.get((index + 1) % values.size());
+            var next = values.get(Math.floorMod(index + direction, values.size()));
             setting.setFromString(manager, next.name());
             return true;
         }

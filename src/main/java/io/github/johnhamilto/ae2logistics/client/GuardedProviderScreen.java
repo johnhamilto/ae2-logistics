@@ -47,9 +47,9 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
         guardChannelBox.setValue(menu.guardChannel);
         addRenderableWidget(guardChannelBox);
 
-        addRenderableWidget(new AE2Button(leftPos + 78, topPos + 66, 28, 16,
-                Component.literal(GuardedPattern.OPS[guardOp]), b -> {
-                    guardOp = (guardOp + 1) % GuardedPattern.OPS.length;
+        addRenderableWidget(new CycleButton(leftPos + 78, topPos + 66, 28, 16,
+                Component.literal(GuardedPattern.OPS[guardOp]), (b, dir) -> {
+                    guardOp = Math.floorMod(guardOp + dir, GuardedPattern.OPS.length);
                     b.setMessage(Component.literal(GuardedPattern.OPS[guardOp]));
                 }));
 

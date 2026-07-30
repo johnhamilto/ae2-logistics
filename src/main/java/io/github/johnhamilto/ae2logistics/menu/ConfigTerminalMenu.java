@@ -105,7 +105,8 @@ public class ConfigTerminalMenu extends AEBaseMenu {
                 var device = device(index);
                 if (!mayEdit) {
                     notice = "no permission";
-                } else if (device != null && ConfigDeviceIndex.cycleSetting(device, text)) {
+                } else if (device != null
+                        && ConfigDeviceIndex.cycleSetting(device, text, value < 0 ? -1 : 1)) {
                     notice = "";
                 }
             }

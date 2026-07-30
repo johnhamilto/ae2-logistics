@@ -136,10 +136,10 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
         }
 
         if (opsFor(menu.type) != null) {
-            addRenderableWidget(new AE2Button(leftPos + 10, y, 60, 18,
+            addRenderableWidget(new CycleButton(leftPos + 10, y, 60, 18,
                     Component.literal(opLabel()),
-                    b -> {
-                        opValue = (opValue + 1) % opsFor(menu.type).length;
+                    (b, dir) -> {
+                        opValue = Math.floorMod(opValue + dir, opsFor(menu.type).length);
                         b.setMessage(Component.literal(opLabel()));
                     }));
         }

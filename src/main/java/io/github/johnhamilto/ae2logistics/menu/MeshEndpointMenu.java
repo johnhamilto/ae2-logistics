@@ -25,7 +25,7 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 
-public class MeshEndpointMenu extends AEBaseMenu {
+public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.GhostSlotTarget {
 
     @Nullable
     private final MeshEndpointPart part;
@@ -182,6 +182,22 @@ public class MeshEndpointMenu extends AEBaseMenu {
 
     public byte meState() {
         return (byte) meStateValue;
+    }
+
+    @Override
+    public boolean acceptsGhost(int slotIndex) {
+        return filterSlotStart >= 0 && slotIndex >= filterSlotStart
+                && slotIndex < filterSlotStart + MeshEndpointPart.FILTER_SLOTS;
+    }
+
+    @Override
+    public void setGhost(int slotIndex, ItemStack stack) {
+        int index = slotIndex - filterSlotStart;
+        var filter = filterFromCarried(stack);
+        if (part != null) {
+            part.setFilterSlot(index, filter);
+        }
+        filterContainer.setItem(index, displayStack(filter));
     }
 
     @Override

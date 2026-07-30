@@ -75,7 +75,7 @@ public class ConfigTerminalGameTests {
                     "export bus must expose generic settings");
             var settingName = manager.getSettings().iterator().next().getName();
             var before = manager.exportSettings().get(settingName);
-            helper.assertTrue(ConfigDeviceIndex.cycleSetting(exportBus, settingName),
+            helper.assertTrue(ConfigDeviceIndex.cycleSetting(exportBus, settingName, 1),
                     "cycling must apply");
             var after = manager.exportSettings().get(settingName);
             helper.assertTrue(!Objects.equals(before, after),
@@ -110,7 +110,7 @@ public class ConfigTerminalGameTests {
             // Make the source differ from defaults on every cycleable setting.
             var manager = source.configManager();
             for (var setting : manager.getSettings()) {
-                ConfigDeviceIndex.cycleSetting(source, setting.getName());
+                ConfigDeviceIndex.cycleSetting(source, setting.getName(), 1);
             }
             var expected = manager.exportSettings();
             helper.assertTrue(!expected.equals(target.configManager().exportSettings()),

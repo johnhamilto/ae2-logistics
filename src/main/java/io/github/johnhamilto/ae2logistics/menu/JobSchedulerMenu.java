@@ -22,7 +22,7 @@ import appeng.menu.AEBaseMenu;
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity;
 
-public class JobSchedulerMenu extends AEBaseMenu {
+public class JobSchedulerMenu extends AEBaseMenu implements GhostSlotPayload.GhostSlotTarget {
 
     public static final int GHOST_X = 10;
     public static final int GHOST_Y = 20;
@@ -133,6 +133,20 @@ public class JobSchedulerMenu extends AEBaseMenu {
 
     public int ruleStateValue(int index) {
         return stateValues[index];
+    }
+
+    @Override
+    public boolean acceptsGhost(int slotIndex) {
+        return slotIndex >= 0 && slotIndex < JobSchedulerBlockEntity.RULES;
+    }
+
+    @Override
+    public void setGhost(int slotIndex, ItemStack stack) {
+        var target = fromCarried(stack);
+        if (scheduler != null) {
+            scheduler.setRuleTarget(slotIndex, target);
+        }
+        ghosts.setItem(slotIndex, displayStack(target));
     }
 
     @Override

@@ -62,9 +62,9 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
         guardChannelBox.setMaxLength(80);
         addRenderableWidget(guardChannelBox);
 
-        guardOpButton = new AE2Button(leftPos + 132, topPos + 72, 24, 16,
-                Component.literal(GuardedPattern.OPS[guardOp]), b -> {
-                    guardOp = (guardOp + 1) % GuardedPattern.OPS.length;
+        guardOpButton = new CycleButton(leftPos + 132, topPos + 72, 24, 16,
+                Component.literal(GuardedPattern.OPS[guardOp]), (b, dir) -> {
+                    guardOp = Math.floorMod(guardOp + dir, GuardedPattern.OPS.length);
                     b.setMessage(Component.literal(GuardedPattern.OPS[guardOp]));
                 });
         addRenderableWidget(guardOpButton);

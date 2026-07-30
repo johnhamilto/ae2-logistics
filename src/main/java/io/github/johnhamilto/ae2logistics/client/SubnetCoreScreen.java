@@ -55,15 +55,15 @@ public class SubnetCoreScreen extends AEBaseScreen<SubnetCoreMenu> {
         int type = menu.types[selected];
         faceValue = menu.faces[selected];
 
-        addDetail(new AE2Button(leftPos + 8, topPos + 123, 52, 14,
-                Component.literal(typeName(type)), b -> cycleType()));
+        addDetail(new CycleButton(leftPos + 8, topPos + 123, 52, 14,
+                Component.literal(typeName(type)), (b, dir) -> cycleType(dir)));
 
         if (type >= 0) {
             var entryType = SubnetCoreEntry.Type.byOrdinal(type);
             if (entryType.faceBound()) {
-                addDetail(new AE2Button(leftPos + 64, topPos + 123, 30, 14,
-                        Component.literal(faceName(faceValue)), b -> {
-                            faceValue = (faceValue + 1) % Direction.values().length;
+                addDetail(new CycleButton(leftPos + 64, topPos + 123, 30, 14,
+                        Component.literal(faceName(faceValue)), (b, dir) -> {
+                            faceValue = Math.floorMod(faceValue + dir, Direction.values().length);
                             b.setMessage(Component.literal(faceName(faceValue)));
                         }));
             }
@@ -86,12 +86,14 @@ public class SubnetCoreScreen extends AEBaseScreen<SubnetCoreMenu> {
         addRenderableWidget(widget);
     }
 
-    private void cycleType() {
+    private void cycleType(int dir) {
         int selected = menu.selected();
         int current = menu.types[selected];
-        int next = current + 1 >= SubnetCoreEntry.Type.values().length ? -1
-                : current < 0 ? 0 : current + 1;
-        menu.types[selected] = (byte) next;
+        // Domain is empty (-1) plus every entry type, cycled in either direction.
+        int len = SubnetCoreEntry.Type.values().length;
+        int pos = current < 0 ? 0 : current + 1;
+        int next = Math.floorMod(pos + dir, len + 1);
+        menu.types[selected] = (byte) (next - 1);
         rebuildDetail();
     }
 
