@@ -47,11 +47,13 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         maskValue = menu.capabilities;
 
         frequencyBox = new AETextField(style, font, leftPos + 10, topPos + 26, 104, 16);
+        frequencyBox.setBordered(false);
         frequencyBox.setMaxLength(32);
         frequencyBox.setValue(menu.frequency);
         addRenderableWidget(frequencyBox);
 
         priorityBox = new AETextField(style, font, leftPos + 124, topPos + 26, 66, 16);
+        priorityBox.setBordered(false);
         priorityBox.setMaxLength(11);
         priorityBox.setValue(Integer.toString(menu.priority));
         addRenderableWidget(priorityBox);

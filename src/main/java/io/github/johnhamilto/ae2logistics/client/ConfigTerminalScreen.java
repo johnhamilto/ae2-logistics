@@ -54,6 +54,7 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
     protected void init() {
         super.init();
         searchBox = new AETextField(style, font, leftPos + 10, topPos + 16, 118, 14);
+        searchBox.setBordered(false);
         searchBox.setMaxLength(64);
         addRenderableWidget(searchBox);
 
@@ -70,6 +71,7 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
                 }));
 
         priorityBox = new AETextField(style, font, leftPos + 34, topPos + DETAIL_Y + 44, 42, 12);
+        priorityBox.setBordered(false);
         priorityBox.setMaxLength(9);
         addRenderableWidget(priorityBox);
         addRenderableWidget(new AE2Button(leftPos + 80, topPos + DETAIL_Y + 42, 26, 14,

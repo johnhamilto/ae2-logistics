@@ -47,11 +47,13 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
             classValues[i] = menu.classes[i];
 
             floorBoxes[i] = new AETextField(style, font, leftPos + 32, y + 2, 40, 13);
+            floorBoxes[i].setBordered(false);
             floorBoxes[i].setMaxLength(12);
             floorBoxes[i].setValue(Long.toString(menu.floors[i]));
             addRenderableWidget(floorBoxes[i]);
 
             batchBoxes[i] = new AETextField(style, font, leftPos + 76, y + 2, 34, 13);
+            batchBoxes[i].setBordered(false);
             batchBoxes[i].setMaxLength(9);
             batchBoxes[i].setValue(Long.toString(menu.batches[i]));
             addRenderableWidget(batchBoxes[i]);
@@ -63,11 +65,13 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
                     }));
 
             guardBoxes[i] = new AETextField(style, font, leftPos + 154, y + 2, 36, 13);
+            guardBoxes[i].setBordered(false);
             guardBoxes[i].setMaxLength(80);
             guardBoxes[i].setValue(menu.guards[i]);
             addRenderableWidget(guardBoxes[i]);
 
             deadlineBoxes[i] = new AETextField(style, font, leftPos + 76, y + 16, 34, 10);
+            deadlineBoxes[i].setBordered(false);
             deadlineBoxes[i].setMaxLength(6);
             deadlineBoxes[i].setValue(Long.toString(menu.deadlines[i]));
             addRenderableWidget(deadlineBoxes[i]);

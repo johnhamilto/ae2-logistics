@@ -67,7 +67,8 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
     @Override
     protected void init() {
         super.init();
-        nameBox = new AETextField(style, font, leftPos + 10, topPos + imageHeight - 46, 130, 14);
+        nameBox = new WideTextField(style, font, leftPos + 10, topPos + imageHeight - 46, 130, 14);
+        nameBox.setBordered(false);
         nameBox.setMaxLength(32);
         addRenderableWidget(nameBox);
         addRenderableWidget(new AE2Button(leftPos + 146, topPos + imageHeight - 48, 80, 18,

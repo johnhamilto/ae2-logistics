@@ -47,11 +47,13 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
     @Override
     protected void init() {
         super.init();
-        expressionBox = new AETextField(style, font, leftPos + 10, topPos + 18, 216, 16);
+        expressionBox = new WideTextField(style, font, leftPos + 10, topPos + 18, 216, 16);
+        expressionBox.setBordered(false);
         expressionBox.setMaxLength(256);
         addRenderableWidget(expressionBox);
 
         nameBox = new AETextField(style, font, leftPos + 10, topPos + 40, 108, 14);
+        nameBox.setBordered(false);
         nameBox.setMaxLength(32);
         addRenderableWidget(nameBox);
 

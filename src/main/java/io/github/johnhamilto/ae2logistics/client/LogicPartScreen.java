@@ -128,6 +128,7 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
         int y = topPos + 18;
         for (var row : rows) {
             var box = new AETextField(style, font, x, y, 112, 16);
+            box.setBordered(false);
             box.setMaxLength(80);
             box.setValue(initialValue(row.field));
             rowBoxes.add(addRenderableWidget(box));

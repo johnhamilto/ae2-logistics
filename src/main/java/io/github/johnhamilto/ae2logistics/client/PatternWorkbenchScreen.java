@@ -58,6 +58,7 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     protected void init() {
         super.init();
         guardChannelBox = new AETextField(style, font, leftPos + 40, topPos + 74, 88, 14);
+        guardChannelBox.setBordered(false);
         guardChannelBox.setMaxLength(80);
         addRenderableWidget(guardChannelBox);
 
@@ -69,6 +70,7 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
         addRenderableWidget(guardOpButton);
 
         guardValueBox = new AETextField(style, font, leftPos + 40, topPos + 90, 60, 14);
+        guardValueBox.setBordered(false);
         guardValueBox.setMaxLength(19);
         guardValueBox.setValue("0");
         addRenderableWidget(guardValueBox);

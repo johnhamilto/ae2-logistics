@@ -34,11 +34,13 @@ public class QuerySensorScreen extends AEBaseScreen<QuerySensorMenu> {
     protected void init() {
         super.init();
         channelBox = new AETextField(style, font, leftPos + 78, topPos + 18, 112, 16);
+        channelBox.setBordered(false);
         channelBox.setMaxLength(80);
         channelBox.setValue(menu.outChannel);
         addRenderableWidget(channelBox);
 
-        expressionBox = new AETextField(style, font, leftPos + 10, topPos + 52, 180, 16);
+        expressionBox = new WideTextField(style, font, leftPos + 10, topPos + 52, 180, 16);
+        expressionBox.setBordered(false);
         expressionBox.setMaxLength(256);
         expressionBox.setValue(menu.source);
         addRenderableWidget(expressionBox);

@@ -80,6 +80,7 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
                 Component.literal(typeName(type)), b -> cycleType()));
 
         outBox = new AETextField(style, font, leftPos + 60, topPos + 124, 62, 12);
+        outBox.setBordered(false);
         outBox.setMaxLength(80);
         outBox.setValue(menu.outs[selected]);
         addDetail(outBox);
@@ -91,11 +92,13 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
             inABox = inBBox = valueABox = valueBBox = null;
         } else if (type >= 0) {
             inABox = new AETextField(style, font, leftPos + 8, topPos + 140, 44, 12);
+            inABox.setBordered(false);
             inABox.setMaxLength(80);
             inABox.setValue(menu.inAs[selected]);
             addDetail(inABox);
 
             inBBox = new AETextField(style, font, leftPos + 56, topPos + 140, 44, 12);
+            inBBox.setBordered(false);
             inBBox.setMaxLength(80);
             inBBox.setValue(menu.inBs[selected]);
             addDetail(inBBox);
@@ -104,11 +107,13 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
                     Component.literal(opName(type, opValue)), b -> cycleOp((Button) b)));
 
             valueABox = new AETextField(style, font, leftPos + 134, topPos + 140, 28, 12);
+            valueABox.setBordered(false);
             valueABox.setMaxLength(12);
             valueABox.setValue(Long.toString(menu.valueAs[selected]));
             addDetail(valueABox);
 
             valueBBox = new AETextField(style, font, leftPos + 166, topPos + 140, 28, 12);
+            valueBBox.setBordered(false);
             valueBBox.setMaxLength(12);
             valueBBox.setValue(Long.toString(menu.valueBs[selected]));
             addDetail(valueBBox);

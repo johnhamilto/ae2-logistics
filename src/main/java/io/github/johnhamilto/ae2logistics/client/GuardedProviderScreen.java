@@ -42,6 +42,7 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
         gateExecution = menu.gateExecution;
 
         guardChannelBox = new AETextField(style, font, leftPos + 78, topPos + 44, 112, 16);
+        guardChannelBox.setBordered(false);
         guardChannelBox.setMaxLength(80);
         guardChannelBox.setValue(menu.guardChannel);
         addRenderableWidget(guardChannelBox);
@@ -53,6 +54,7 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
                 }));
 
         guardValueBox = new AETextField(style, font, leftPos + 112, topPos + 66, 78, 16);
+        guardValueBox.setBordered(false);
         guardValueBox.setMaxLength(19);
         guardValueBox.setValue(Long.toString(menu.guardValue));
         addRenderableWidget(guardValueBox);
@@ -67,11 +69,13 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
                 Component.literal("Apply"), b -> apply()));
 
         priorityChannelBox = new AETextField(style, font, leftPos + 78, topPos + 112, 74, 16);
+        priorityChannelBox.setBordered(false);
         priorityChannelBox.setMaxLength(80);
         priorityChannelBox.setValue(menu.priorityChannel);
         addRenderableWidget(priorityChannelBox);
 
         basePriorityBox = new AETextField(style, font, leftPos + 158, topPos + 112, 32, 16);
+        basePriorityBox.setBordered(false);
         basePriorityBox.setMaxLength(9);
         basePriorityBox.setValue(Integer.toString(menu.basePriority));
         addRenderableWidget(basePriorityBox);

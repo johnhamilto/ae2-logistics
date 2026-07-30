@@ -34,11 +34,13 @@ public class JobMonitorScreen extends AEBaseScreen<JobMonitorMenu> {
     protected void init() {
         super.init();
         prefixBox = new AETextField(style, font, leftPos + 78, topPos + 18, 112, 16);
+        prefixBox.setBordered(false);
         prefixBox.setMaxLength(24);
         prefixBox.setValue(menu.prefix);
         addRenderableWidget(prefixBox);
 
         stallBox = new AETextField(style, font, leftPos + 78, topPos + 40, 112, 16);
+        stallBox.setBordered(false);
         stallBox.setMaxLength(3);
         stallBox.setValue(Integer.toString(menu.stallSeconds));
         addRenderableWidget(stallBox);

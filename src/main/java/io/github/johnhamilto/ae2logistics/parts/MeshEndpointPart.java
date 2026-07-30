@@ -583,7 +583,14 @@ public class MeshEndpointPart extends AEBasePart {
 
     @Override
     public float getCableConnectionLength(AECableType cable) {
-        return 16;
+        // AE2's P2P tunnel chassis values: short host-side arm, dense-smart face
+        // connection so fed cables visually connect to the tunnel plate.
+        return 1;
+    }
+
+    @Override
+    public AECableType getExternalCableConnectionType() {
+        return AECableType.DENSE_SMART;
     }
 
     @Override

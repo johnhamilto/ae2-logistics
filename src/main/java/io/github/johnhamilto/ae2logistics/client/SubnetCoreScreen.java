@@ -69,6 +69,7 @@ public class SubnetCoreScreen extends AEBaseScreen<SubnetCoreMenu> {
             }
 
             priorityBox = new AETextField(style, font, leftPos + 98, topPos + 124, 40, 12);
+            priorityBox.setBordered(false);
             priorityBox.setMaxLength(9);
             priorityBox.setValue(Integer.toString(menu.priorities[selected]));
             addDetail(priorityBox);

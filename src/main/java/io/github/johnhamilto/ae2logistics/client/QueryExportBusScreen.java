@@ -32,7 +32,8 @@ public class QueryExportBusScreen extends AEBaseScreen<QueryExportBusMenu> {
     @Override
     protected void init() {
         super.init();
-        expressionBox = new AETextField(style, font, leftPos + 10, topPos + 28, 180, 16);
+        expressionBox = new WideTextField(style, font, leftPos + 10, topPos + 28, 180, 16);
+        expressionBox.setBordered(false);
         expressionBox.setMaxLength(256);
         expressionBox.setValue(menu.source);
         addRenderableWidget(expressionBox);
