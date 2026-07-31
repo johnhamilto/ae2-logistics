@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.25.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (109 tests, run
+Status as of v0.25.1 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (111 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -47,6 +47,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Infra | Interactive test plots (@TestPlotClass scan + /ae2logistics testworld builds our row), 8-mod compat suite as runtime-only deps on NeoForge 21.1.247 (CompatGameTests skip when absent), make test crash guard, TestPlotGameTests guards the plot scan + template loading | 0.24.0 |
 | Infra | Mesh endpoint polish closed out (art deferred): roster gametests (carrier scoping, self row, typed rows, live config), open-default + tag-recipe-resolution tests, guide pages match the cog sub-screen / roster / tag recipes / retired fuse recipe | 0.24.1 |
 | F11.6 | Mesh provider return path, parity with the tunnel's: strict-Output provider endpoints expose the return surfaces (generic internal inv for any key type, plain item/fluid caps, ME storage) forwarding to the frequency's input faces highest-priority-first with spill; input faces expose the push router only (never the generic inv - a provider standing there must not chain into returns); shared ReturnAdapters behind tunnel + mesh | 0.25.0 |
+| F11.6 | Assembler crossing VERIFIED end to end (was claimed, untested): a real vanilla crafting pattern reaches a molecular assembler only through the tunnel and the result returns to networked storage, plus a two-step chain (logs -> planks -> sticks) whose intermediate re-enters through the same tunnel. The MAE2-trick TODO closes via the replica route - no input-face ICraftingMachine needed, replicas push into crafting machines via the public ICraftingMachine.of | 0.25.1 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer

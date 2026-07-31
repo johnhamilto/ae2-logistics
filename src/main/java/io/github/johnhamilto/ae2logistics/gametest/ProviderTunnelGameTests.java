@@ -133,6 +133,11 @@ public class ProviderTunnelGameTests {
 
     private static void submitJob(GameTestHelper helper, ProviderP2PTunnelPart input,
             Runnable thenCheck) {
+        submitJob(helper, input, AEItemKey.of(Items.CRAFTING_TABLE), 2, 80, thenCheck);
+    }
+
+    private static void submitJob(GameTestHelper helper, ProviderP2PTunnelPart input,
+            AEItemKey what, int amount, int settleTicks, Runnable thenCheck) {
         var level = helper.getLevel();
         var job = new Object() {
             java.util.concurrent.Future<appeng.api.networking.crafting.ICraftingPlan> future;
@@ -143,7 +148,7 @@ public class ProviderTunnelGameTests {
                     var grid = input.getMainNode().getGrid();
                     var source = new appeng.me.helpers.MachineSource(input);
                     job.future = grid.getCraftingService().beginCraftingCalculation(level,
-                            () -> source, AEItemKey.of(Items.CRAFTING_TABLE), 2,
+                            () -> source, what, amount,
                             appeng.api.networking.crafting.CalculationStrategy.REPORT_MISSING_ITEMS);
                 })
                 .thenWaitUntil(() -> {
@@ -168,7 +173,7 @@ public class ProviderTunnelGameTests {
                         throw new RuntimeException(e);
                     }
                 })
-                .thenExecuteAfter(80, thenCheck)
+                .thenExecuteAfter(settleTicks, thenCheck)
                 .thenSucceed();
     }
 
@@ -492,6 +497,117 @@ public class ProviderTunnelGameTests {
             helper.assertTrue(high == 5 && low == 0,
                     "returns must fill the priority-5 input first, high " + high + " low " + low);
             helper.succeed();
+        });
+    }
+
+    /** Encodes a REAL vanilla crafting recipe as an AE2 crafting pattern (assembler kind). */
+    @SuppressWarnings("unchecked")
+    private static ItemStack craftingPattern(GameTestHelper helper, String recipeId,
+            ItemStack[] grid, ItemStack out) {
+        var holder = helper.getLevel().getRecipeManager()
+                .byKey(ResourceLocation.parse(recipeId)).orElseThrow();
+        return appeng.api.crafting.PatternDetailsHelper.encodeCraftingPattern(
+                (net.minecraft.world.item.crafting.RecipeHolder<net.minecraft.world.item.crafting.CraftingRecipe>) holder,
+                grid, out, false, false);
+    }
+
+    private static ItemStack[] craftingGrid(java.util.Map<Integer, ItemStack> slots) {
+        var grid = new ItemStack[9];
+        java.util.Arrays.fill(grid, ItemStack.EMPTY);
+        slots.forEach((slot, stack) -> grid[slot] = stack);
+        return grid;
+    }
+
+    /**
+     * The assembler scene: oak logs in networked storage (chest + storage bus), a
+     * crafting CPU, an on-grid pattern provider whose only push face is the input
+     * tunnel, and a molecular assembler that touches the grid only for POWER (cable on
+     * top) - the sole pattern path to it is the output tunnel on its west face.
+     */
+    private static ProviderP2PTunnelPart[] buildAssemblerScene(GameTestHelper helper,
+            ItemStack... patterns) {
+        helper.setBlock(new BlockPos(2, 1, 0),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(2, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 2));
+        helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity source) {
+            source.setItem(0, new ItemStack(Items.OAK_LOG, 8));
+        }
+        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
+                Direction.WEST, null, (IPartItem<?>) storageBus);
+        helper.setBlock(new BlockPos(2, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+        helper.setBlock(new BlockPos(2, 1, 3),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+        placeCable(helper, new BlockPos(2, 2, 2));
+        placeCable(helper, new BlockPos(2, 2, 3));
+
+        var input = placeTunnel(helper, new BlockPos(2, 1, 2), Direction.SOUTH);
+        var output = placeTunnel(helper, new BlockPos(2, 1, 2), Direction.EAST);
+        helper.setBlock(new BlockPos(3, 1, 2),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:molecular_assembler")));
+        placeCable(helper, new BlockPos(3, 2, 2));
+
+        if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+            for (int i = 0; i < patterns.length; i++) {
+                providerBe.getLogic().getPatternInv().setItemDirect(i, patterns[i]);
+            }
+        } else {
+            helper.fail("no pattern provider");
+        }
+        return new ProviderP2PTunnelPart[] {input, output};
+    }
+
+    /**
+     * The load-bearing claim of the replica architecture, verified end to end: a
+     * CRAFTING pattern (the molecular-assembler kind, which can never push into plain
+     * inventories) reaches an assembler only through the tunnel, the assembler crafts,
+     * and the result lands back in networked storage via the return path.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 400)
+    public void assemblerPatternsCrossTheTunnel(GameTestHelper helper) {
+        var planks = craftingPattern(helper, "minecraft:oak_planks",
+                craftingGrid(java.util.Map.of(0, new ItemStack(Items.OAK_LOG))),
+                new ItemStack(Items.OAK_PLANKS, 4));
+        var tunnels = buildAssemblerScene(helper, planks);
+        helper.runAfterDelay(30, () -> linkTunnels(helper, tunnels[0], tunnels[1]));
+
+        submitJob(helper, tunnels[0], AEItemKey.of(Items.OAK_PLANKS), 4, 120, () -> {
+            int crafted = 0;
+            if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+                crafted = count(chest, Items.OAK_PLANKS);
+            }
+            helper.assertTrue(crafted >= 4,
+                    "4 crafted planks must return to networked storage, got " + crafted);
+        });
+    }
+
+    /**
+     * Machines chain: a two-step craft (logs -> planks -> sticks) where the
+     * intermediate result must return through the tunnel, re-enter storage, and be
+     * pushed BACK through the same tunnel for the second assembler step.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 600)
+    public void assemblerCraftsChainThroughTheTunnel(GameTestHelper helper) {
+        var planks = craftingPattern(helper, "minecraft:oak_planks",
+                craftingGrid(java.util.Map.of(0, new ItemStack(Items.OAK_LOG))),
+                new ItemStack(Items.OAK_PLANKS, 4));
+        var sticks = craftingPattern(helper, "minecraft:stick",
+                craftingGrid(java.util.Map.of(0, new ItemStack(Items.OAK_PLANKS),
+                        3, new ItemStack(Items.OAK_PLANKS))),
+                new ItemStack(Items.STICK, 4));
+        var tunnels = buildAssemblerScene(helper, planks, sticks);
+        helper.runAfterDelay(30, () -> linkTunnels(helper, tunnels[0], tunnels[1]));
+
+        submitJob(helper, tunnels[0], AEItemKey.of(Items.STICK), 4, 240, () -> {
+            int crafted = 0;
+            if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+                crafted = count(chest, Items.STICK);
+            }
+            helper.assertTrue(crafted >= 4,
+                    "4 chained sticks must return to networked storage, got " + crafted);
         });
     }
 }

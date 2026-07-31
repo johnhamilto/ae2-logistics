@@ -56,8 +56,6 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 - Generated backgrounds everywhere: adopt `generatedBackground` for the remaining
   screens as each is touched; verify slot-grid screens (Stock Sensor, Pattern
   Workbench) draw slot insets correctly without a baked texture.
-- Provider P2P Tunnel: expose `ICraftingMachine` on the input face so assembler
-  patterns cross and machines chain (public-API version of MAE2's trick).
 - Roster follow-ups: click a row to highlight the endpoint in world; stream status
   changes live (today only config edits refresh); self-row emphasis if the color
   distinction stays too subtle.
