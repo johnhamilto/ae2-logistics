@@ -33,6 +33,7 @@ import appeng.parts.p2p.P2PTunnelPart;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.provider.ProviderTargets;
+import io.github.johnhamilto.ae2logistics.provider.ReturnAdapters;
 
 /**
  * A P2P tunnel that REPLICATES the pattern provider on its input face onto every output
@@ -59,7 +60,11 @@ public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
 
     private final VirtualProvider virtualProvider = new VirtualProvider();
     private final MEStorage returnPath = new ReturnPath();
-    private final GenericInternalInventory returnGenericInv = new ReturnGenericInv();
+    private final GenericInternalInventory returnGenericInv = ReturnAdapters.genericInv(returnPath);
+    private final net.neoforged.neoforge.items.IItemHandler returnItemHandler =
+            ReturnAdapters.itemHandler(returnPath);
+    private final net.neoforged.neoforge.fluids.capability.IFluidHandler returnFluidHandler =
+            ReturnAdapters.fluidHandler(returnPath);
 
     public ProviderP2PTunnelPart(IPartItem<?> partItem) {
         super(partItem);
@@ -332,179 +337,6 @@ public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
             return Component.literal("Provider P2P Return " + getFrequency());
         }
     }
-
-    /** Insert-only pass-through; slot indices are meaningless for a forwarding view. */
-    private class ReturnGenericInv implements GenericInternalInventory {
-        @Override
-        public int size() {
-            return 1;
-        }
-
-        @Override
-        @Nullable
-        public GenericStack getStack(int slot) {
-            return null;
-        }
-
-        @Override
-        @Nullable
-        public AEKey getKey(int slot) {
-            return null;
-        }
-
-        @Override
-        public long getAmount(int slot) {
-            return 0;
-        }
-
-        @Override
-        public long getMaxAmount(AEKey key) {
-            return 1_000_000_000L;
-        }
-
-        @Override
-        public long getCapacity(AEKeyType type) {
-            return 1_000_000_000L;
-        }
-
-        @Override
-        public boolean canInsert() {
-            return true;
-        }
-
-        @Override
-        public boolean canExtract() {
-            return false;
-        }
-
-        @Override
-        public void setStack(int slot, GenericStack stack) {
-        }
-
-        @Override
-        public boolean isSupportedType(AEKeyType type) {
-            return true;
-        }
-
-        @Override
-        public boolean isAllowedIn(int slot, AEKey key) {
-            return true;
-        }
-
-        @Override
-        public long insert(int slot, AEKey what, long amount, Actionable mode) {
-            return returnPath.insert(what, amount, mode, IActionSource.empty());
-        }
-
-        @Override
-        public long extract(int slot, AEKey what, long amount, Actionable mode) {
-            return 0;
-        }
-
-        @Override
-        public void beginBatch() {
-        }
-
-        @Override
-        public void endBatch() {
-        }
-
-        @Override
-        public void endBatchSuppressed() {
-        }
-
-        @Override
-        public void onChange() {
-        }
-    }
-
-    private final net.neoforged.neoforge.items.IItemHandler returnItemHandler =
-            new net.neoforged.neoforge.items.IItemHandler() {
-                @Override
-                public int getSlots() {
-                    return 1;
-                }
-
-                @Override
-                public net.minecraft.world.item.ItemStack getStackInSlot(int slot) {
-                    return net.minecraft.world.item.ItemStack.EMPTY;
-                }
-
-                @Override
-                public net.minecraft.world.item.ItemStack insertItem(int slot,
-                        net.minecraft.world.item.ItemStack stack, boolean simulate) {
-                    var key = appeng.api.stacks.AEItemKey.of(stack);
-                    if (key == null) {
-                        return stack;
-                    }
-                    long inserted = returnPath.insert(key, stack.getCount(),
-                            simulate ? Actionable.SIMULATE : Actionable.MODULATE,
-                            IActionSource.empty());
-                    return inserted >= stack.getCount() ? net.minecraft.world.item.ItemStack.EMPTY
-                            : stack.copyWithCount(stack.getCount() - (int) inserted);
-                }
-
-                @Override
-                public net.minecraft.world.item.ItemStack extractItem(int slot, int amount,
-                        boolean simulate) {
-                    return net.minecraft.world.item.ItemStack.EMPTY;
-                }
-
-                @Override
-                public int getSlotLimit(int slot) {
-                    return 64;
-                }
-
-                @Override
-                public boolean isItemValid(int slot, net.minecraft.world.item.ItemStack stack) {
-                    return true;
-                }
-            };
-
-    private final net.neoforged.neoforge.fluids.capability.IFluidHandler returnFluidHandler =
-            new net.neoforged.neoforge.fluids.capability.IFluidHandler() {
-                @Override
-                public int getTanks() {
-                    return 1;
-                }
-
-                @Override
-                public net.neoforged.neoforge.fluids.FluidStack getFluidInTank(int tank) {
-                    return net.neoforged.neoforge.fluids.FluidStack.EMPTY;
-                }
-
-                @Override
-                public int getTankCapacity(int tank) {
-                    return 16000;
-                }
-
-                @Override
-                public boolean isFluidValid(int tank, net.neoforged.neoforge.fluids.FluidStack stack) {
-                    return true;
-                }
-
-                @Override
-                public int fill(net.neoforged.neoforge.fluids.FluidStack resource, FluidAction action) {
-                    var key = appeng.api.stacks.AEFluidKey.of(resource);
-                    if (key == null) {
-                        return 0;
-                    }
-                    return (int) returnPath.insert(key, resource.getAmount(),
-                            action.simulate() ? Actionable.SIMULATE : Actionable.MODULATE,
-                            IActionSource.empty());
-                }
-
-                @Override
-                public net.neoforged.neoforge.fluids.FluidStack drain(
-                        net.neoforged.neoforge.fluids.FluidStack resource, FluidAction action) {
-                    return net.neoforged.neoforge.fluids.FluidStack.EMPTY;
-                }
-
-                @Override
-                public net.neoforged.neoforge.fluids.FluidStack drain(int maxDrain, FluidAction action) {
-                    return net.neoforged.neoforge.fluids.FluidStack.EMPTY;
-                }
-            };
 
     @Override
     public IPartModel getStaticModels() {

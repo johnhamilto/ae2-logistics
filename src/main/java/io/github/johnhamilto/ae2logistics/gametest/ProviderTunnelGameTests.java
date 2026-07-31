@@ -377,4 +377,121 @@ public class ProviderTunnelGameTests {
             helper.succeed();
         });
     }
+
+    /** Builds one provider mesh pair: input faces a chest at (1,1,0), output face on top of (2,1,1). */
+    private static io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart[] meshReturnScene(
+            GameTestHelper helper, String frequency) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 1));
+
+        var input = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
+                Direction.NORTH, null, AE2Logistics.MESH_ENDPOINT_PROVIDER_PART.get());
+        var output = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
+                Direction.UP, null, AE2Logistics.MESH_ENDPOINT_PROVIDER_PART.get());
+        helper.assertTrue(input != null && output != null, "provider endpoint placement failed");
+        input.applyMeshConfig(frequency, io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart.ROLE_IN, 0, 0);
+        output.applyMeshConfig(frequency, io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart.ROLE_OUT, 0, 0);
+        helper.setBlock(new BlockPos(1, 1, 0), Blocks.CHEST);
+        return new io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart[] {input, output};
+    }
+
+    /**
+     * Mesh parity with the tunnel's returns: an insert into an OUTPUT provider
+     * endpoint's item capability must land in whatever the input endpoint faces, and
+     * input faces must never expose the generic inventory (a provider standing there
+     * would chain into the return path instead of the push router).
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void meshProviderReturnsResultsThroughOutputFace(GameTestHelper helper) {
+        meshReturnScene(helper, "mesh-ret");
+
+        helper.runAfterDelay(30, () -> {
+            var inputGeneric = helper.getLevel().getCapability(
+                    appeng.api.AECapabilities.GENERIC_INTERNAL_INV,
+                    helper.absolutePos(new BlockPos(1, 1, 1)), Direction.NORTH);
+            helper.assertTrue(inputGeneric == null,
+                    "input endpoint faces must not expose the generic return inventory");
+            var handler = helper.getLevel().getCapability(
+                    net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
+            helper.assertTrue(handler != null, "output endpoint must expose a return item handler");
+            var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
+            helper.assertTrue(rest.isEmpty(), "return insert must be accepted, rest " + rest);
+        });
+
+        helper.runAfterDelay(50, () -> {
+            int returned = 0;
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+                returned = count(chest, Items.CRAFTING_TABLE);
+            }
+            helper.assertTrue(returned == 5,
+                    "all 5 returned items must reach the input-side inventory, got " + returned);
+            helper.succeed();
+        });
+    }
+
+    /** The mesh return's generic-inventory surface accepts any AE key type, like the tunnel's. */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void meshProviderGenericReturnSurface(GameTestHelper helper) {
+        meshReturnScene(helper, "mesh-ret-gen");
+
+        helper.runAfterDelay(30, () -> {
+            var inv = helper.getLevel().getCapability(appeng.api.AECapabilities.GENERIC_INTERNAL_INV,
+                    helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
+            helper.assertTrue(inv != null, "output endpoint must expose the generic inventory");
+            long inserted = inv.insert(0, AEItemKey.of(Items.CRAFTING_TABLE), 5, Actionable.MODULATE);
+            helper.assertTrue(inserted == 5, "generic return must accept the stack, took " + inserted);
+        });
+
+        helper.runAfterDelay(50, () -> {
+            int returned = 0;
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+                returned = count(chest, Items.CRAFTING_TABLE);
+            }
+            helper.assertTrue(returned == 5,
+                    "generic return must reach the input-side inventory, got " + returned);
+            helper.succeed();
+        });
+    }
+
+    /** With several inputs on the frequency, returns land at the highest-priority input first. */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void meshProviderReturnsFollowInputPriority(GameTestHelper helper) {
+        var parts = meshReturnScene(helper, "mesh-ret-prio");
+        parts[0].applyMeshConfig("mesh-ret-prio",
+                io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart.ROLE_IN, 5, 0);
+        // A second, lower-priority input facing its own chest.
+        placeCable(helper, new BlockPos(3, 1, 1));
+        var second = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(3, 1, 1)),
+                Direction.NORTH, null, AE2Logistics.MESH_ENDPOINT_PROVIDER_PART.get());
+        helper.assertTrue(second != null, "second input placement failed");
+        second.applyMeshConfig("mesh-ret-prio",
+                io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart.ROLE_IN, 0, 0);
+        helper.setBlock(new BlockPos(3, 1, 0), Blocks.CHEST);
+
+        helper.runAfterDelay(30, () -> {
+            var handler = helper.getLevel().getCapability(
+                    net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
+            helper.assertTrue(handler != null, "output endpoint must expose a return item handler");
+            var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
+            helper.assertTrue(rest.isEmpty(), "return insert must be accepted, rest " + rest);
+        });
+
+        helper.runAfterDelay(50, () -> {
+            int high = 0;
+            int low = 0;
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+                high = count(chest, Items.CRAFTING_TABLE);
+            }
+            if (helper.getBlockEntity(new BlockPos(3, 1, 0)) instanceof ChestBlockEntity chest) {
+                low = count(chest, Items.CRAFTING_TABLE);
+            }
+            helper.assertTrue(high == 5 && low == 0,
+                    "returns must fill the priority-5 input first, high " + high + " low " + low);
+            helper.succeed();
+        });
+    }
 }

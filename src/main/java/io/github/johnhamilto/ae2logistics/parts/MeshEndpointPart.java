@@ -106,6 +106,13 @@ public class MeshEndpointPart extends AEBasePart {
     private final io.github.johnhamilto.ae2logistics.provider.ProviderBatchRouter<MeshEndpointPart> providerStorage =
             new io.github.johnhamilto.ae2logistics.provider.ProviderBatchRouter<>(new MeshProviderTargets());
     private final java.util.Set<appeng.api.stacks.AEKey> lastBatch = new java.util.HashSet<>();
+    private final appeng.api.storage.MEStorage providerReturnPath = new ProviderReturnPath();
+    private final appeng.api.behaviors.GenericInternalInventory returnGenericInv =
+            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.genericInv(providerReturnPath);
+    private final IItemHandler returnItemHandler =
+            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.itemHandler(providerReturnPath);
+    private final IFluidHandler returnFluidHandler =
+            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.fluidHandler(providerReturnPath);
 
     public MeshEndpointPart(IPartItem<?> partItem) {
         super(partItem);
@@ -420,9 +427,65 @@ public class MeshEndpointPart extends AEBasePart {
         return false;
     }
 
+    /**
+     * Inputs face the real provider and expose the push router; strict Outputs face
+     * machines and expose the return path (parity with the Provider P2P Tunnel).
+     * Both-role endpoints keep the router: a face cannot serve both directions.
+     */
     @Nullable
     public appeng.api.storage.MEStorage exposedMeStorage() {
-        return attuned(MeshRegistry.TYPE_PROVIDER) && role != ROLE_OUT ? providerStorage : null;
+        if (!attuned(MeshRegistry.TYPE_PROVIDER)) {
+            return null;
+        }
+        return role != ROLE_OUT ? providerStorage : providerReturnPath;
+    }
+
+    /** Machines return any registered key type through the generic view (chemicals, flux, ...). */
+    @Nullable
+    public appeng.api.behaviors.GenericInternalInventory exposedReturnGenericInv() {
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnGenericInv : null;
+    }
+
+    /** Insert-only view forwarding output-face returns to the frequency's input faces. */
+    private class ProviderReturnPath implements appeng.api.storage.MEStorage {
+
+        /** One hop per transfer: a return can never re-enter another endpoint's return. */
+        private static final ThreadLocal<Boolean> RETURNING = ThreadLocal.withInitial(() -> false);
+
+        @Override
+        public long insert(appeng.api.stacks.AEKey what, long amount,
+                appeng.api.config.Actionable mode,
+                appeng.api.networking.security.IActionSource source) {
+            if (RETURNING.get()) {
+                return 0;
+            }
+            RETURNING.set(true);
+            try {
+                if (!isActiveAndLoaded()) {
+                    return 0;
+                }
+                long total = 0;
+                for (var input : MeshRegistry.inputs(frequency, MeshRegistry.TYPE_PROVIDER,
+                        MeshEndpointPart.this)) {
+                    var target = input.adjacentProviderTarget();
+                    if (target == null) {
+                        continue;
+                    }
+                    total += target.insert(what, amount - total, mode, source);
+                    if (total >= amount) {
+                        break;
+                    }
+                }
+                return total;
+            } finally {
+                RETURNING.set(false);
+            }
+        }
+
+        @Override
+        public Component getDescription() {
+            return Component.literal("Mesh Provider Return " + frequency);
+        }
     }
 
     private class MeshProviderTargets
@@ -471,12 +534,18 @@ public class MeshEndpointPart extends AEBasePart {
 
     @Nullable
     public IItemHandler exposedItemHandler() {
-        return attuned(MeshRegistry.TYPE_ITEM) && role != ROLE_OUT ? itemHandler : null;
+        if (attuned(MeshRegistry.TYPE_ITEM) && role != ROLE_OUT) {
+            return itemHandler;
+        }
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnItemHandler : null;
     }
 
     @Nullable
     public IFluidHandler exposedFluidHandler() {
-        return attuned(MeshRegistry.TYPE_FLUID) && role != ROLE_OUT ? fluidHandler : null;
+        if (attuned(MeshRegistry.TYPE_FLUID) && role != ROLE_OUT) {
+            return fluidHandler;
+        }
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnFluidHandler : null;
     }
 
     @Nullable

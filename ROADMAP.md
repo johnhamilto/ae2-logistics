@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.24.1 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (106 tests, run
+Status as of v0.25.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (109 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -46,6 +46,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | QoL | Part items render on AE2's 3D part/tunnel model bases (was flat sprites); typed-endpoint recipes take any P2P tunnel via the ae2logistics:p2p_tunnels tag, universal endpoint = tunnel + regulus + engineering processor (fuse-all-seven retired), provider tunnel crafted only by attunement; Redstone Port strong/weak emission option (repropagates on flip); Subnet Link window titles as itself; guide tablet item retired (screen help buttons + hold-G reach every page) | 0.24.0 |
 | Infra | Interactive test plots (@TestPlotClass scan + /ae2logistics testworld builds our row), 8-mod compat suite as runtime-only deps on NeoForge 21.1.247 (CompatGameTests skip when absent), make test crash guard, TestPlotGameTests guards the plot scan + template loading | 0.24.0 |
 | Infra | Mesh endpoint polish closed out (art deferred): roster gametests (carrier scoping, self row, typed rows, live config), open-default + tag-recipe-resolution tests, guide pages match the cog sub-screen / roster / tag recipes / retired fuse recipe | 0.24.1 |
+| F11.6 | Mesh provider return path, parity with the tunnel's: strict-Output provider endpoints expose the return surfaces (generic internal inv for any key type, plain item/fluid caps, ME storage) forwarding to the frequency's input faces highest-priority-first with spill; input faces expose the push router only (never the generic inv - a provider standing there must not chain into returns); shared ReturnAdapters behind tunnel + mesh | 0.25.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -53,11 +54,9 @@ representation).
 
 ## Next session
 
-1. Mesh provider transport return path (parity with the tunnel's returns), as its own
-   minor version.
-2. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
+1. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
    then Modrinth + CurseForge uploads.
-3. Later: F10 bundles go/no-go, upstream PR implementations.
+2. Later: F10 bundles go/no-go, upstream PR implementations.
 
 ## Longer term
 - **F10 bundles** (DESIGN.md 4.3): the last unbuilt design-doc feature. Preconditions

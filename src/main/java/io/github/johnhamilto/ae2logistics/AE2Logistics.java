@@ -532,6 +532,8 @@ public class AE2Logistics {
                     io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
             event.register(AECapabilities.ME_STORAGE,
                     (part, context) -> part.exposedMeStorage(), MeshEndpointPart.class);
+            event.register(AECapabilities.GENERIC_INTERNAL_INV,
+                    (part, context) -> part.exposedReturnGenericInv(), MeshEndpointPart.class);
             event.register(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
                     (part, context) -> part.exposedItemHandler(), MeshEndpointPart.class);
             event.register(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,

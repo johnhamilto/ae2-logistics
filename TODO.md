@@ -56,8 +56,6 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 - Generated backgrounds everywhere: adopt `generatedBackground` for the remaining
   screens as each is touched; verify slot-grid screens (Stock Sensor, Pattern
   Workbench) draw slot insets correctly without a baked texture.
-- Mesh provider transport: return path through output endpoint faces (parity with the
-  Provider P2P Tunnel's returns).
 - Provider P2P Tunnel: expose `ICraftingMachine` on the input face so assembler
   patterns cross and machines chain (public-API version of MAE2's trick).
 - Roster follow-ups: click a row to highlight the endpoint in world; stream status

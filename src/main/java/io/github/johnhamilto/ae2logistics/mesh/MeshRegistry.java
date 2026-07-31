@@ -208,6 +208,23 @@ public final class MeshRegistry {
         return list;
     }
 
+    /** Source endpoints of the frequency on {@code from}'s network, priority-ordered; where returns land. */
+    public static List<MeshEndpointPart> inputs(String frequency, int type, MeshEndpointPart from) {
+        var set = BY_FREQUENCY.get(frequency);
+        if (set == null) {
+            return List.of();
+        }
+        var list = new ArrayList<MeshEndpointPart>();
+        for (var part : set) {
+            if (part != from && part.isSource(type) && sameCarrier(from, part)) {
+                list.add(part);
+            }
+        }
+        list.sort(Comparator.comparingInt(MeshEndpointPart::priority).reversed()
+                .thenComparingLong(MeshEndpointPart::stableKey));
+        return list;
+    }
+
     /** The endpoint the next item/fluid transfer would go to; used for blocking-mode mirroring. */
     @Nullable
     public static MeshEndpointPart peekTarget(String frequency, int type, MeshEndpointPart from) {

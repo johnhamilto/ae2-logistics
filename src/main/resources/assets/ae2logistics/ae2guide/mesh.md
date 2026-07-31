@@ -44,7 +44,10 @@ mix freely on a frequency.
   frequency's provider outputs: each batch goes complete to one machine, rotating
   round-robin, and the provider's own blocking mode maps through - with it on, busy
   machines are skipped and pushes wait until one frees up; with it off, the rotation
-  never waits. Like
+  never waits. Machines return results through their own face: pushing into an
+  Output endpoint delivers to what the frequency's input endpoints face, highest
+  priority first, as if the machine pushed into the provider directly (Output role
+  only - a Both endpoint's face keeps the push direction). Like
   a provider itself it is **key-type agnostic**: items, fluids, and any companion-mod
   key type (Mekanism chemicals, flux) push through. A provider facing an item-only
   input endpoint still pushes, but as a plain pipe - batches split and blocking loses

@@ -36,7 +36,8 @@ Typed endpoints mix freely with universal ones on a frequency; the frequency doe
 not care which part item joined it. The **Provider Mesh Endpoint** carries
 pattern-provider pushes with per-machine batches, honoring the provider's own
 blocking mode - and, like a provider,
-it is key-type agnostic (companion-mod chemicals and the like ride through). The
+it is key-type agnostic (companion-mod chemicals and the like ride through), and
+machines on Output faces return results back through the mesh to the provider. The
 frequency-scoped cousin of the [Provider P2P Tunnel](provider-p2p-tunnel.md); details
 in [the Mesh](mesh.md).
 
