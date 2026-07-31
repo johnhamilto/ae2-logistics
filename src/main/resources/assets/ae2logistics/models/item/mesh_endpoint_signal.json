@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "ae2:item/p2p_tunnel_base",
   "textures": {
-    "layer0": "ae2logistics:part/mesh_endpoint_signal"
+    "type": "ae2logistics:part/mesh_endpoint_signal"
   }
 }

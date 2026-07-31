@@ -46,6 +46,32 @@ public final class ProviderTargets {
         return externalStorages.isEmpty() ? null : new CompositeStorage(externalStorages);
     }
 
+    /** The pattern provider (block or part form) sitting on the given face of {@code hostPos}. */
+    @Nullable
+    public static appeng.helpers.patternprovider.PatternProviderLogicHost providerHostAt(
+            ServerLevel level, BlockPos hostPos, Direction side) {
+        var be = level.getBlockEntity(hostPos.relative(side));
+        if (be instanceof appeng.helpers.patternprovider.PatternProviderLogicHost host) {
+            return host;
+        }
+        if (be instanceof appeng.api.parts.IPartHost partHost
+                && partHost.getPart(side.getOpposite())
+                        instanceof appeng.helpers.patternprovider.PatternProviderLogicHost host) {
+            return host;
+        }
+        return null;
+    }
+
+    /**
+     * Reads the blocking-mode setting of the pattern provider sitting on the given face
+     * of {@code hostPos}. No provider there means no blocking.
+     */
+    public static boolean blockingModeAt(ServerLevel level, BlockPos hostPos, Direction side) {
+        var provider = providerHostAt(level, hostPos, side);
+        return provider != null && provider.getLogic().getConfigManager()
+                .getSetting(appeng.api.config.Settings.BLOCKING_MODE) == appeng.api.config.YesNo.YES;
+    }
+
     /** Blocking-mode check: does the target still hold any of the batch's keys? */
     public static boolean containsAny(MEStorage storage, Set<AEKey> keys) {
         for (var stack : storage.getAvailableStacks()) {

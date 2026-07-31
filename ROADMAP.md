@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.23.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (96 tests, run
+Status as of v0.24.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (102 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -40,6 +40,11 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Infra | Entire GUI layer on AE2's own framework: all 14 screens are AEBaseMenu/AEBaseScreen with style docs, chrome composed from AE2's me_chest dialog (scripts/gen_ae2_chrome.py), and AE2Button/AETextField widgets; mesh endpoint placement wireframe matches the P2P chassis | 0.17.0 |
 | F11 | Typed Mesh Endpoints: six single-transport part items sharing the endpoint class (mask locked by item id, pre-attuned on placement, per-type recolored chassis); fuse all six to craft the universal; provider P2P remains built into item/fluid inputs | 0.22.0 |
 | F11.6 | Provider is its own transport, key-type agnostic (provider target resolution = ME_STORAGE cap else external storage strategies - companion-mod chemicals/flux ride through): Provider P2P Tunnel on AE2's own P2P system (attunes with a pattern provider, memory-card linking, terminal rows) + Provider Mesh Endpoint as the seventh typed part; shared batch router with per-machine blocking and a one-hop guard | 0.23.0 |
+| F11.6 | Provider P2P Tunnel re-architected as invisible replica providers: each output face registers a stateless ICraftingProvider mirroring the input face's real provider (patterns/priority/blocking read through live), AE2's crafting service schedules across replicas as if the provider sat beside every machine; pushes prefer crafting machines (assembler patterns cross); output faces expose the RETURN path (generic internal inv keeps returns key-type agnostic, plus plain item/fluid caps) so machines return results through the tunnel | 0.24.0 |
+| F11 polish | Universal endpoint GUI: transport toggles on an AESubScreen behind the sidebar cog, live endpoint roster streamed into the open menu (MeshRosterPayload); Palette + ScrollingRowList extracted as shared client widgets | 0.24.0 |
+| Design | Mesh endpoint 9-slot filters REMOVED (routing is frequency + transport mask only); cabled-loop demoted from alert status to silent skip - an already-cabled frequency doing the right thing is not a diagnosis | 0.24.0 |
+| QoL | Part items render on AE2's 3D part/tunnel model bases (was flat sprites); typed-endpoint recipes take any P2P tunnel via the ae2logistics:p2p_tunnels tag, universal endpoint = tunnel + regulus + engineering processor (fuse-all-seven retired), provider tunnel crafted only by attunement; Redstone Port strong/weak emission option (repropagates on flip); Subnet Link window titles as itself; guide tablet item retired (screen help buttons + hold-G reach every page) | 0.24.0 |
+| Infra | Interactive test plots (@TestPlotClass scan + /ae2logistics testworld builds our row), 8-mod compat suite as runtime-only deps on NeoForge 21.1.247 (CompatGameTests skip when absent), make test crash guard, TestPlotGameTests guards the plot scan + template loading | 0.24.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -47,13 +52,14 @@ representation).
 
 ## Next session
 
-1. **PLAYTEST.** Jack is testing when home. Fifteen GUI surfaces, two use-item flows
-   (blueprint corners, memory cards), and the bridge anchor click-flow are
-   machine-verified and human-untouched; the session should start from his notes and
-   fix friction before anything new. Everything programmatic is gametested.
-2. Publishing pass if the playtest holds: gallery screenshots (shot list in
-   docs/publishing/modrinth.md), then Modrinth + CurseForge uploads.
-3. Later: F11.6 tunnel types, F10 bundles go/no-go, upstream PR implementations.
+1. Close out the mesh endpoint polish line: gametests for the 0.24.0 roster/transport
+   rework (functionality human-verified in-game), guide + recipe + tooltip accuracy.
+   Better endpoint textures stay deferred on TODO.md.
+2. Mesh provider transport return path (parity with the tunnel's returns), as its own
+   minor version.
+3. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
+   then Modrinth + CurseForge uploads.
+4. Later: F10 bundles go/no-go, upstream PR implementations.
 
 ## Longer term
 - **F10 bundles** (DESIGN.md 4.3): the last unbuilt design-doc feature. Preconditions
@@ -91,7 +97,8 @@ representation).
   computed when a frequency's membership changes, not when fed-network CABLING
   changes - `/ae2logistics mesh relink` forces a re-check after recabling. One lane
   ceils at AE2's 32-channel dense node cap; capacity scales by adding endpoint pairs.
-- Endpoint filters match exactly (components included); no fuzzy/tag cards yet.
+- Mesh endpoint routing is frequency + transport mask only; the 0.6.0 9-slot per-key
+  filters were removed in 0.24.0.
 - Mesh registry is server-global internally but every operation partitions by live
   host grid (frequencies never cross networks); nothing persists beyond part NBT
   (P2P names persist as data attachments on the tunnels' cable-bus block entities).

@@ -14,7 +14,10 @@ item_ids:
 
 The bridge between signals and redstone, in both directions.
 
-- **Output mode**: emits the channel's value as redstone 0-15 on its face.
+- **Output mode**: emits the channel's value as redstone 0-15 on its face. The
+  Strong/Weak toggle picks the emission style: **Strong** (default) also powers the
+  block on its face like a lever would, **Weak** only feeds directly adjacent
+  receivers and never conducts through blocks.
 - **Input mode**: writes the neighbor's redstone level into the channel.
 - The only logic part whose job cannot move into an [ME Logic Core](logic-core.md) - it needs a physical face.
 

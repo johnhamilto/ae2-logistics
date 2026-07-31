@@ -1,5 +1,6 @@
 package io.github.johnhamilto.ae2logistics.provider;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -17,12 +18,13 @@ import appeng.api.storage.MEStorage;
  * The provider-facing half of a provider tunnel or provider mesh endpoint. Pattern
  * providers resolve ME_STORAGE targets and push whole batches through one adapter as a
  * sequence of SIMULATE inserts followed by MODULATE inserts. This storage detects batch
- * boundaries (a simulate after a modulate starts a new batch), routes each batch to the
- * first non-busy output machine that can hold ALL of it, and leaves "busy" per machine
- * as "the previous batch's keys are still in its inventory" - which makes one provider
- * behave as if it were adjacent to every machine behind the outputs, each with true
- * blocking-mode semantics. Key-type agnostic: whatever the output-side adapter accepts
- * (items, fluids, companion-mod chemicals) rides through.
+ * boundaries (a simulate after a modulate starts a new batch) and routes each batch to
+ * the next machine in ROUND-ROBIN order that can hold ALL of it - the same rotation a
+ * pattern provider applies to its own push sides. Busy machines ("the previous
+ * batch's keys are still in its inventory") are skipped only while the pushing
+ * provider itself runs blocking mode - the tunnel maps the real provider's semantics
+ * over the link instead of recreating its own. Key-type agnostic: whatever the
+ * output-side adapter accepts (items, fluids, companion-mod chemicals) rides through.
  */
 public final class ProviderBatchRouter<T> implements MEStorage {
 
@@ -35,6 +37,9 @@ public final class ProviderBatchRouter<T> implements MEStorage {
         MEStorage storageOf(T target);
 
         boolean isBusy(T target);
+
+        /** Skip busy machines? Mapped live from the pushing provider's own blocking-mode setting. */
+        boolean blockingMode();
 
         void noteDelivered(T target, Set<AEKey> batchKeys);
 
@@ -52,6 +57,7 @@ public final class ProviderBatchRouter<T> implements MEStorage {
 
     @Nullable
     private T batchTarget;
+    private int roundRobin;
     private boolean lastWasModulate;
     private final Set<AEKey> batchKeys = new HashSet<>();
     private final LinkedHashMap<AEKey, Long> batchSim = new LinkedHashMap<>();
@@ -84,11 +90,24 @@ public final class ProviderBatchRouter<T> implements MEStorage {
         if (batchTarget == null || !targets.accepts(batchTarget, what)) {
             batchTarget = selectTarget(what, amount, source);
             if (batchTarget == null) {
+                finishBatch();
                 return 0;
             }
         }
 
         long inserted = insertInto(batchTarget, what, amount, mode, source);
+        if (mode == Actionable.SIMULATE && inserted < amount) {
+            // The pinned machine cannot hold this ingredient: move the WHOLE batch to
+            // one that fits everything seen so far, or abandon the attempt cleanly so
+            // the provider's next push starts a fresh batch.
+            var replacement = selectTarget(what, amount, source);
+            if (replacement == null) {
+                finishBatch();
+                return inserted;
+            }
+            batchTarget = replacement;
+            inserted = insertInto(batchTarget, what, amount, mode, source);
+        }
         if (inserted > 0) {
             if (simulate) {
                 batchSim.merge(what, inserted, Long::sum);
@@ -109,15 +128,27 @@ public final class ProviderBatchRouter<T> implements MEStorage {
     }
 
     /**
-     * Picks the first non-busy machine that can take the whole batch seen so far: the
-     * provider pushes every key of a pattern to whichever target we settle on, so a
-     * mid-batch switch (say the first target rejects a later ingredient) must re-verify
-     * acceptance and capacity for everything already simulated this batch.
+     * Picks the next machine in round-robin order that can take the whole batch seen so
+     * far: the provider pushes every key of a pattern to whichever target we settle on,
+     * so a mid-batch switch (say the first target rejects a later ingredient) must
+     * re-verify acceptance and capacity for everything already simulated this batch.
      */
     @Nullable
     private T selectTarget(AEKey what, long amount, IActionSource source) {
+        var candidates = new ArrayList<T>();
         for (var candidate : targets.candidates()) {
-            if (targets.isBusy(candidate) || !targets.accepts(candidate, what)) {
+            candidates.add(candidate);
+        }
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        boolean blocking = targets.blockingMode();
+        int size = candidates.size();
+        int start = Math.floorMod(roundRobin, size);
+        for (int offset = 0; offset < size; offset++) {
+            int index = (start + offset) % size;
+            var candidate = candidates.get(index);
+            if ((blocking && targets.isBusy(candidate)) || !targets.accepts(candidate, what)) {
                 continue;
             }
             boolean fits = insertInto(candidate, what, amount, Actionable.SIMULATE, source) >= amount;
@@ -130,6 +161,7 @@ public final class ProviderBatchRouter<T> implements MEStorage {
                                 Actionable.SIMULATE, source) >= entry.getValue();
             }
             if (fits) {
+                roundRobin = index + 1;
                 return candidate;
             }
         }

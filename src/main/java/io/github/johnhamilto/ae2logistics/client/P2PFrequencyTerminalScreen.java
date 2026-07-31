@@ -144,7 +144,6 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
         return switch (status) {
             case MeshRegistry.STATUS_OFFLINE -> "off";
             case MeshRegistry.STATUS_ME_WAITING -> "wait";
-            case MeshRegistry.STATUS_CABLED_LOOP -> "LOOP";
             default -> "OK";
         };
     }
@@ -153,7 +152,6 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
         return switch (status) {
             case MeshRegistry.STATUS_OFFLINE -> HINT;
             case MeshRegistry.STATUS_ME_WAITING -> WARN;
-            case MeshRegistry.STATUS_CABLED_LOOP -> ALERT;
             default -> OK;
         };
     }

@@ -7,6 +7,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
@@ -15,18 +16,20 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.IActionSource;
+import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.GenericStack;
+import appeng.api.stacks.KeyCounter;
 import appeng.api.ids.AEComponents;
 import appeng.me.service.P2PService;
 import appeng.util.SettingsFrom;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
-import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
-import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
+import io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec;
+import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 import io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart;
 
 @GameTestHolder(AE2Logistics.MOD_ID)
@@ -59,98 +62,197 @@ public class ProviderTunnelGameTests {
         }
     }
 
-    /** Simulate-then-modulate, the way a pattern provider pushes one batch entry. */
-    private static long push(ProviderP2PTunnelPart input, appeng.api.stacks.AEKey what, long amount) {
-        var storage = input.exposedStorage();
-        if (storage == null) {
-            return 0;
-        }
-        long simulated = storage.insert(what, amount, Actionable.SIMULATE, IActionSource.empty());
-        if (simulated < amount) {
-            return 0;
-        }
-        return storage.insert(what, amount, Actionable.MODULATE, IActionSource.empty());
-    }
-
-    /**
-     * Two batches through one input tunnel must land whole on DIFFERENT machines: the
-     * first machine still holds its batch, so it reports busy like a blocking provider.
-     */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void providerTunnelDistributesBatchesAcrossMachines(GameTestHelper helper) {
-        helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
-        placeCable(helper, new BlockPos(1, 1, 1));
-        placeCable(helper, new BlockPos(2, 1, 1));
-        placeCable(helper, new BlockPos(3, 1, 1));
-
-        var input = placeTunnel(helper, new BlockPos(1, 1, 1), Direction.NORTH);
-        var outputA = placeTunnel(helper, new BlockPos(2, 1, 1), Direction.UP);
-        var outputB = placeTunnel(helper, new BlockPos(3, 1, 1), Direction.UP);
-        helper.setBlock(new BlockPos(2, 2, 1), Blocks.CHEST);
-        helper.setBlock(new BlockPos(3, 2, 1), Blocks.CHEST);
-
-        helper.runAfterDelay(30, () -> {
-            linkTunnels(helper, input, outputA, outputB);
-        });
-
-        helper.runAfterDelay(40, () -> {
-            long iron = push(input, AEItemKey.of(Items.IRON_INGOT), 8);
-            helper.assertTrue(iron == 8, "first batch must be accepted whole, got " + iron);
-            long gold = push(input, AEItemKey.of(Items.GOLD_INGOT), 4);
-            helper.assertTrue(gold == 4, "second batch must be accepted whole, got " + gold);
-        });
-
-        helper.runAfterDelay(50, () -> {
-            int chestsWithOneKind = 0;
-            int total = 0;
-            for (var chestPos : new BlockPos[] {new BlockPos(2, 2, 1), new BlockPos(3, 2, 1)}) {
-                if (helper.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
-                    var kinds = new java.util.HashSet<net.minecraft.world.item.Item>();
-                    for (int i = 0; i < chest.getContainerSize(); i++) {
-                        var stack = chest.getItem(i);
-                        if (!stack.isEmpty()) {
-                            kinds.add(stack.getItem());
-                            total += stack.getCount();
-                        }
-                    }
-                    if (kinds.size() == 1) {
-                        chestsWithOneKind++;
-                    }
-                }
+    private static int count(ChestBlockEntity chest, net.minecraft.world.item.Item item) {
+        int total = 0;
+        for (int i = 0; i < chest.getContainerSize(); i++) {
+            if (chest.getItem(i).is(item)) {
+                total += chest.getItem(i).getCount();
             }
-            helper.assertTrue(total == 12, "all 12 items must arrive, got " + total);
-            helper.assertTrue(chestsWithOneKind == 2,
-                    "each machine must hold exactly one complete batch, got " + chestsWithOneKind);
-            helper.succeed();
+        }
+        return total;
+    }
+
+    private static int chestTotal(GameTestHelper helper, BlockPos pos) {
+        int total = 0;
+        if (helper.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
+            for (int i = 0; i < chest.getContainerSize(); i++) {
+                total += chest.getItem(i).getCount();
+            }
+        }
+        return total;
+    }
+
+    /**
+     * The hall scene: a grid with planks in a chest (storage bus), a crafting CPU, and
+     * an on-grid pattern provider whose only push face is the input tunnel. Two output
+     * tunnels face machine chests. Returns the input tunnel; outputs are WEST and EAST
+     * of the mesh cable, chests at (1,1,2) and (3,1,2).
+     */
+    private static ProviderP2PTunnelPart[] buildJobScene(GameTestHelper helper,
+            appeng.api.config.YesNo blockingMode) {
+        helper.setBlock(new BlockPos(2, 1, 0),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(2, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 2));
+        helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity source) {
+            source.setItem(0, new ItemStack(Items.BIRCH_PLANKS, 8));
+        }
+        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
+                Direction.WEST, null, (IPartItem<?>) storageBus);
+        helper.setBlock(new BlockPos(2, 2, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+        helper.setBlock(new BlockPos(2, 1, 3),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+        // The provider's push face points at the input tunnel; its grid connection
+        // comes from the cable path above - same grid, as the replicas require.
+        placeCable(helper, new BlockPos(2, 2, 2));
+        placeCable(helper, new BlockPos(2, 2, 3));
+
+        var input = placeTunnel(helper, new BlockPos(2, 1, 2), Direction.SOUTH);
+        var outputA = placeTunnel(helper, new BlockPos(2, 1, 2), Direction.WEST);
+        var outputB = placeTunnel(helper, new BlockPos(2, 1, 2), Direction.EAST);
+        helper.setBlock(new BlockPos(1, 1, 2), Blocks.CHEST);
+        helper.setBlock(new BlockPos(3, 1, 2), Blocks.CHEST);
+
+        var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        AdaptivePattern.encode(pattern,
+                java.util.List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
+                java.util.List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
+                java.util.List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+            providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
+            providerBe.getLogic().getConfigManager().putSetting(
+                    appeng.api.config.Settings.BLOCKING_MODE, blockingMode);
+        } else {
+            helper.fail("no pattern provider");
+        }
+        return new ProviderP2PTunnelPart[] {input, outputA, outputB};
+    }
+
+    private static void submitJob(GameTestHelper helper, ProviderP2PTunnelPart input,
+            Runnable thenCheck) {
+        var level = helper.getLevel();
+        var job = new Object() {
+            java.util.concurrent.Future<appeng.api.networking.crafting.ICraftingPlan> future;
+            boolean submitted;
+        };
+        helper.startSequence()
+                .thenExecuteAfter(100, () -> {
+                    var grid = input.getMainNode().getGrid();
+                    var source = new appeng.me.helpers.MachineSource(input);
+                    job.future = grid.getCraftingService().beginCraftingCalculation(level,
+                            () -> source, AEItemKey.of(Items.CRAFTING_TABLE), 2,
+                            appeng.api.networking.crafting.CalculationStrategy.REPORT_MISSING_ITEMS);
+                })
+                .thenWaitUntil(() -> {
+                    try {
+                        var plan = job.future.get(0, java.util.concurrent.TimeUnit.MILLISECONDS);
+                        if (plan.simulation()) {
+                            helper.fail("plan incomplete");
+                        }
+                        if (!job.submitted) {
+                            var grid = input.getMainNode().getGrid();
+                            var result = grid.getCraftingService().submitJob(plan, null, null, true,
+                                    new appeng.me.helpers.MachineSource(input));
+                            if (!result.successful()) {
+                                throw new net.minecraft.gametest.framework.GameTestAssertException(
+                                        "submit failed: " + result.errorCode());
+                            }
+                            job.submitted = true;
+                        }
+                    } catch (java.util.concurrent.TimeoutException e) {
+                        throw new net.minecraft.gametest.framework.GameTestAssertException("planning");
+                    } catch (java.util.concurrent.ExecutionException | InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .thenExecuteAfter(80, thenCheck)
+                .thenSucceed();
+    }
+
+    /**
+     * A blocking-mode provider replicated onto two machine faces must land each
+     * complete batch on a DIFFERENT machine: the crafting service skips the busy
+     * replica whose machine still holds its batch.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 400)
+    public void providerTunnelDistributesBatchesAcrossMachines(GameTestHelper helper) {
+        var tunnels = buildJobScene(helper, appeng.api.config.YesNo.YES);
+        helper.runAfterDelay(30, () -> linkTunnels(helper, tunnels[0], tunnels[1], tunnels[2]));
+        submitJob(helper, tunnels[0], () -> {
+            int chestA = chestTotal(helper, new BlockPos(1, 1, 2));
+            int chestB = chestTotal(helper, new BlockPos(3, 1, 2));
+            helper.assertTrue(chestA + chestB == 8,
+                    "both batches must be pushed, got " + chestA + "+" + chestB);
+            helper.assertTrue(chestA == 4 && chestB == 4,
+                    "each machine must get one complete batch, got " + chestA + "/" + chestB);
+        });
+    }
+
+    /** Without blocking mode, all batches still deliver - distribution is unconstrained. */
+    @GameTest(template = "empty5", timeoutTicks = 400)
+    public void providerTunnelPushesWithoutBlocking(GameTestHelper helper) {
+        var tunnels = buildJobScene(helper, appeng.api.config.YesNo.NO);
+        helper.runAfterDelay(30, () -> linkTunnels(helper, tunnels[0], tunnels[1], tunnels[2]));
+        submitJob(helper, tunnels[0], () -> {
+            int chestA = chestTotal(helper, new BlockPos(1, 1, 2));
+            int chestB = chestTotal(helper, new BlockPos(3, 1, 2));
+            helper.assertTrue(chestA + chestB == 8,
+                    "all ingredients must be pushed without blocking, got " + chestA + "+" + chestB);
         });
     }
 
     /**
-     * The push path is key-type agnostic: a fluid rides the external-storage strategies
-     * into a cauldron, the same registry companion mods use for chemicals.
+     * The replicas mirror the real provider's patterns and push any key type: a fluid
+     * pattern rides the external-storage strategies into a cauldron, the same registry
+     * companion mods use for chemicals.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void providerTunnelPushesFluidsGenerically(GameTestHelper helper) {
+    @GameTest(template = "empty5", timeoutTicks = 300)
+    public void providerTunnelMirrorsPatternsAndPushesFluids(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
+        // The provider's grid connection loops through a cable next to the cell.
+        placeCable(helper, new BlockPos(0, 1, 0));
+        helper.setBlock(new BlockPos(1, 1, 0),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
 
         var input = placeTunnel(helper, new BlockPos(1, 1, 1), Direction.NORTH);
         var output = placeTunnel(helper, new BlockPos(2, 1, 1), Direction.UP);
         helper.setBlock(new BlockPos(2, 2, 1), Blocks.CAULDRON);
 
-        helper.runAfterDelay(30, () -> {
-            linkTunnels(helper, input, output);
+        var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
+        AdaptivePattern.encode(pattern,
+                java.util.List.of(new GenericStack(AEFluidKey.of(
+                        net.minecraft.world.level.material.Fluids.WATER), 1000)),
+                java.util.List.of(new GenericStack(AEItemKey.of(Items.OBSIDIAN), 1)),
+                java.util.List.of(AdaptiveInputSpec.EXACT));
+        if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+            providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
+        } else {
+            helper.fail("no pattern provider");
+        }
+
+        helper.runAfterDelay(30, () -> linkTunnels(helper, input, output));
+
+        helper.runAfterDelay(80, () -> {
+            var node = output.getMainNode().getNode();
+            helper.assertTrue(node != null, "output tunnel must have a grid node");
+            var virtual = node.getService(ICraftingProvider.class);
+            helper.assertTrue(virtual != null, "output tunnel must register a virtual provider");
+            var patterns = virtual.getAvailablePatterns();
+            helper.assertTrue(patterns.size() == 1,
+                    "replica must mirror the real provider's pattern, got " + patterns.size());
+            var inputs = new KeyCounter();
+            inputs.add(AEFluidKey.of(net.minecraft.world.level.material.Fluids.WATER), 1000);
+            boolean pushed = virtual.pushPattern(patterns.get(0), new KeyCounter[] {inputs});
+            helper.assertTrue(pushed, "replica must push the fluid batch");
         });
 
-        helper.runAfterDelay(40, () -> {
-            long filled = push(input, AEFluidKey.of(net.minecraft.world.level.material.Fluids.WATER), 1000);
-            helper.assertTrue(filled == 1000, "the tunnel must accept a full bucket, took " + filled);
-        });
-
-        helper.runAfterDelay(50, () -> {
+        helper.runAfterDelay(120, () -> {
             var state = helper.getBlockState(new BlockPos(2, 2, 1));
             helper.assertTrue(state.is(Blocks.WATER_CAULDRON)
                     && state.getValue(LayeredCauldronBlock.LEVEL) == 3,
@@ -172,9 +274,9 @@ public class ProviderTunnelGameTests {
         var output = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
                 Direction.UP, null, AE2Logistics.MESH_ENDPOINT_PROVIDER_PART.get());
         helper.assertTrue(input != null && output != null, "typed provider endpoint placement failed");
-        input.applyMeshConfig("prov-typed", MeshEndpointPart.ROLE_IN, 0, 0);
-        output.applyMeshConfig("prov-typed", MeshEndpointPart.ROLE_OUT, 0, 0);
-        helper.assertTrue(input.capabilityMask() == MeshRegistry.TYPE_PROVIDER,
+        input.applyMeshConfig("prov-typed", io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart.ROLE_IN, 0, 0);
+        output.applyMeshConfig("prov-typed", io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart.ROLE_OUT, 0, 0);
+        helper.assertTrue(input.capabilityMask() == io.github.johnhamilto.ae2logistics.mesh.MeshRegistry.TYPE_PROVIDER,
                 "typed provider endpoint must lock to the provider transport");
         helper.setBlock(new BlockPos(2, 2, 1), Blocks.CAULDRON);
 
@@ -182,10 +284,10 @@ public class ProviderTunnelGameTests {
             var storage = input.exposedMeStorage();
             helper.assertTrue(storage != null, "provider endpoint must expose ME storage");
             long simulated = storage.insert(AEFluidKey.of(net.minecraft.world.level.material.Fluids.WATER),
-                    1000, Actionable.SIMULATE, IActionSource.empty());
+                    1000, Actionable.SIMULATE, appeng.api.networking.security.IActionSource.empty());
             helper.assertTrue(simulated == 1000, "simulate must accept a bucket, took " + simulated);
             long filled = storage.insert(AEFluidKey.of(net.minecraft.world.level.material.Fluids.WATER),
-                    1000, Actionable.MODULATE, IActionSource.empty());
+                    1000, Actionable.MODULATE, appeng.api.networking.security.IActionSource.empty());
             helper.assertTrue(filled == 1000, "the mesh must accept a full bucket, took " + filled);
         });
 
@@ -194,6 +296,84 @@ public class ProviderTunnelGameTests {
             helper.assertTrue(state.is(Blocks.WATER_CAULDRON)
                     && state.getValue(LayeredCauldronBlock.LEVEL) == 3,
                     "cauldron must be full of water, state " + state);
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Machines return results through their own face: an insert into the output
+     * tunnel's item capability must land in whatever the input tunnel faces.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void providerTunnelReturnsResultsThroughOutputFace(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 1));
+
+        var input = placeTunnel(helper, new BlockPos(1, 1, 1), Direction.NORTH);
+        helper.setBlock(new BlockPos(1, 1, 0), Blocks.CHEST);
+        var output = placeTunnel(helper, new BlockPos(2, 1, 1), Direction.UP);
+
+        helper.runAfterDelay(30, () -> {
+            linkTunnels(helper, input, output);
+        });
+
+        helper.runAfterDelay(40, () -> {
+            var handler = helper.getLevel().getCapability(
+                    net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
+            helper.assertTrue(handler != null, "output tunnel must expose a return item handler");
+            var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
+            helper.assertTrue(rest.isEmpty(), "return insert must be accepted, rest " + rest);
+        });
+
+        helper.runAfterDelay(50, () -> {
+            int returned = 0;
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+                returned = count(chest, Items.CRAFTING_TABLE);
+            }
+            helper.assertTrue(returned == 5,
+                    "all 5 returned items must reach the input-side inventory, got " + returned);
+            helper.succeed();
+        });
+    }
+
+    /**
+     * The generic-inventory return surface accepts any AE key type - it is the same
+     * capability addons bridge chemicals and other custom keys through on AE2's own
+     * providers and interfaces.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void providerTunnelGenericReturnSurface(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 1));
+
+        var input = placeTunnel(helper, new BlockPos(1, 1, 1), Direction.NORTH);
+        helper.setBlock(new BlockPos(1, 1, 0), Blocks.CHEST);
+        var output = placeTunnel(helper, new BlockPos(2, 1, 1), Direction.UP);
+
+        helper.runAfterDelay(30, () -> {
+            linkTunnels(helper, input, output);
+        });
+
+        helper.runAfterDelay(40, () -> {
+            var inv = helper.getLevel().getCapability(appeng.api.AECapabilities.GENERIC_INTERNAL_INV,
+                    helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
+            helper.assertTrue(inv != null, "output tunnel must expose the generic inventory");
+            long inserted = inv.insert(0, AEItemKey.of(Items.CRAFTING_TABLE), 5, Actionable.MODULATE);
+            helper.assertTrue(inserted == 5, "generic return must accept the stack, took " + inserted);
+        });
+
+        helper.runAfterDelay(50, () -> {
+            int returned = 0;
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+                returned = count(chest, Items.CRAFTING_TABLE);
+            }
+            helper.assertTrue(returned == 5,
+                    "generic return must reach the input-side inventory, got " + returned);
             helper.succeed();
         });
     }

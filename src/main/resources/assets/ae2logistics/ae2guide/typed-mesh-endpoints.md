@@ -29,12 +29,13 @@ item_ids:
 Single-transport [mesh](mesh.md) endpoints: one each for redstone, items, fluids,
 energy, signals, ME, and provider pushes. Each behaves exactly like a
 [Universal Mesh Endpoint](mesh-endpoint.md) attuned to that one transport - same
-frequencies, roles, priorities, filters, and diagnostics - but the attunement is
+frequencies, roles, priorities, and diagnostics - but the attunement is
 **fixed**: the GUI shows what the part is instead of capability toggles.
 
 Typed endpoints mix freely with universal ones on a frequency; the frequency does
 not care which part item joined it. The **Provider Mesh Endpoint** carries
-pattern-provider pushes with per-machine batches and blocking - and, like a provider,
+pattern-provider pushes with per-machine batches, honoring the provider's own
+blocking mode - and, like a provider,
 it is key-type agnostic (companion-mod chemicals and the like ride through). The
 frequency-scoped cousin of the [Provider P2P Tunnel](provider-p2p-tunnel.md); details
 in [the Mesh](mesh.md).

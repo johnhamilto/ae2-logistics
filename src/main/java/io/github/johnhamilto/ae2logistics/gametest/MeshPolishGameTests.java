@@ -160,83 +160,9 @@ public class MeshPolishGameTests {
         });
     }
 
-    /** An IN endpoint's filter refuses non-matching inserts at the exposed handler. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void inFilterRefusesNonMatchingInserts(GameTestHelper helper) {
-        helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
-        placeCable(helper, new BlockPos(1, 1, 1));
-        placeCable(helper, new BlockPos(2, 1, 1));
-
-        var input = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.NORTH, "filter-in",
-                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_ITEM);
-        input.setFilterSlot(0, new GenericStack(AEItemKey.of(Items.IRON_INGOT), 1));
-        placeEndpoint(helper, new BlockPos(2, 1, 1), Direction.UP, "filter-in",
-                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
-        helper.setBlock(new BlockPos(2, 2, 1), Blocks.CHEST);
-
-        helper.runAfterDelay(30, () -> {
-            var handler = input.exposedItemHandler();
-            helper.assertTrue(handler != null, "input must expose a handler");
-            var restGold = handler.insertItem(0, new ItemStack(Items.GOLD_INGOT, 4), false);
-            helper.assertTrue(restGold.getCount() == 4,
-                    "gold must be refused by the iron filter, got back " + restGold.getCount());
-            var restIron = handler.insertItem(0, new ItemStack(Items.IRON_INGOT, 4), false);
-            helper.assertTrue(restIron.isEmpty(), "iron must pass the filter");
-        });
-        helper.runAfterDelay(40, () -> {
-            int chest = countItems(helper, new BlockPos(2, 2, 1));
-            helper.assertTrue(chest == 4, "only the iron may arrive, chest has " + chest);
-            helper.succeed();
-        });
-    }
-
-    /** OUT filters steer each stack to the machine whose whitelist matches it. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void outFiltersRouteByKey(GameTestHelper helper) {
-        helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
-        placeCable(helper, new BlockPos(1, 1, 1));
-        placeCable(helper, new BlockPos(2, 1, 1));
-        placeCable(helper, new BlockPos(3, 1, 1));
-
-        var input = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.NORTH, "filter-out",
-                MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_ITEM);
-        var ironTarget = placeEndpoint(helper, new BlockPos(2, 1, 1), Direction.UP, "filter-out",
-                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
-        ironTarget.setFilterSlot(0, new GenericStack(AEItemKey.of(Items.IRON_INGOT), 1));
-        var goldTarget = placeEndpoint(helper, new BlockPos(3, 1, 1), Direction.UP, "filter-out",
-                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ITEM);
-        goldTarget.setFilterSlot(0, new GenericStack(AEItemKey.of(Items.GOLD_INGOT), 1));
-        helper.setBlock(new BlockPos(2, 2, 1), Blocks.CHEST);
-        helper.setBlock(new BlockPos(3, 2, 1), Blocks.CHEST);
-
-        helper.runAfterDelay(30, () -> {
-            var handler = input.exposedItemHandler();
-            helper.assertTrue(handler != null, "input must expose a handler");
-            var restIron = handler.insertItem(0, new ItemStack(Items.IRON_INGOT, 4), false);
-            var restGold = handler.insertItem(0, new ItemStack(Items.GOLD_INGOT, 4), false);
-            helper.assertTrue(restIron.isEmpty() && restGold.isEmpty(),
-                    "both stacks must be accepted somewhere");
-        });
-        helper.runAfterDelay(40, () -> {
-            var ironChest = helper.getBlockEntity(new BlockPos(2, 2, 1));
-            var goldChest = helper.getBlockEntity(new BlockPos(3, 2, 1));
-            helper.assertTrue(ironChest instanceof ChestBlockEntity && goldChest instanceof ChestBlockEntity,
-                    "chests missing");
-            var iron = ((ChestBlockEntity) ironChest).getItem(0);
-            var gold = ((ChestBlockEntity) goldChest).getItem(0);
-            helper.assertTrue(iron.is(Items.IRON_INGOT) && iron.getCount() == 4,
-                    "iron chest must hold 4 iron, has " + iron);
-            helper.assertTrue(gold.is(Items.GOLD_INGOT) && gold.getCount() == 4,
-                    "gold chest must hold 4 gold, has " + gold);
-            helper.succeed();
-        });
-    }
-
     /**
-     * A provider batch whose later ingredient is rejected by the first machine's filter
-     * must move WHOLE to a machine that accepts everything - never split across machines.
+     * A provider batch whose later ingredient cannot fit in the first machine must move
+     * WHOLE to a machine that accepts everything - never split across machines.
      */
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void providerBatchMovesWholeToAcceptingMachine(GameTestHelper helper) {
@@ -263,14 +189,22 @@ public class MeshPolishGameTests {
 
         var input = placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.SOUTH, "batch-filter",
                 MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_PROVIDER);
-        var planksOnly = placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.WEST, "batch-filter",
+        var cramped = placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.WEST, "batch-filter",
                 MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_PROVIDER);
-        planksOnly.applyMeshConfig("batch-filter", MeshEndpointPart.ROLE_OUT, 10, MeshRegistry.TYPE_PROVIDER);
-        planksOnly.setFilterSlot(0, new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 1));
+        cramped.applyMeshConfig("batch-filter", MeshEndpointPart.ROLE_OUT, 10, MeshRegistry.TYPE_PROVIDER);
         placeEndpoint(helper, new BlockPos(2, 1, 2), Direction.EAST, "batch-filter",
                 MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_PROVIDER);
         helper.setBlock(new BlockPos(1, 1, 2), Blocks.CHEST);
         helper.setBlock(new BlockPos(3, 1, 2), Blocks.CHEST);
+        // The preferred (priority 10) machine has room for the planks but no slot for
+        // the iron, so the whole batch must move on rather than split.
+        if (helper.getBlockEntity(new BlockPos(1, 1, 2)) instanceof ChestBlockEntity crampedChest) {
+            for (int i = 0; i < crampedChest.getContainerSize() - 1; i++) {
+                crampedChest.setItem(i, new ItemStack(Items.COBBLESTONE, 64));
+            }
+            crampedChest.setItem(crampedChest.getContainerSize() - 1,
+                    new ItemStack(Items.OAK_PLANKS, 60));
+        }
 
         var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
         io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern.encode(pattern,
@@ -322,11 +256,22 @@ public class MeshPolishGameTests {
                     }
                 })
                 .thenExecuteAfter(80, () -> {
-                    int filteredChest = countItems(helper, new BlockPos(1, 1, 2));
                     int openChest = countItems(helper, new BlockPos(3, 1, 2));
-                    helper.assertTrue(filteredChest == 0,
-                            "the planks-only machine must not receive a batch containing iron, has "
-                                    + filteredChest);
+                    int crampedPlanks = 0;
+                    int crampedIron = 0;
+                    if (helper.getBlockEntity(new BlockPos(1, 1, 2)) instanceof ChestBlockEntity chest) {
+                        for (int i = 0; i < chest.getContainerSize(); i++) {
+                            var stack = chest.getItem(i);
+                            if (stack.is(Items.OAK_PLANKS)) {
+                                crampedPlanks += stack.getCount();
+                            } else if (stack.is(Items.IRON_INGOT)) {
+                                crampedIron += stack.getCount();
+                            }
+                        }
+                    }
+                    helper.assertTrue(crampedPlanks == 60 && crampedIron == 0,
+                            "the cramped machine must receive nothing from a batch it cannot hold whole, has "
+                                    + crampedPlanks + " planks / " + crampedIron + " iron");
                     helper.assertTrue(openChest == 6,
                             "the whole 6-item batch must land on the accepting machine, has " + openChest);
                     helper.succeed();
@@ -387,7 +332,7 @@ public class MeshPolishGameTests {
             // to bridge: every endpoint is flagged, and no lanes exist.
             int loops = 0;
             for (var endpoint : new MeshEndpointPart[] {first, second}) {
-                if (MeshRegistry.statusOf(endpoint) == MeshRegistry.STATUS_CABLED_LOOP) {
+                if (endpoint.meLinkState() == MeshRegistry.ME_STATE_LOOP) {
                     loops++;
                 }
             }

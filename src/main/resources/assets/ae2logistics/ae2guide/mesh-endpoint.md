@@ -18,15 +18,14 @@ form a universal point-to-point tunnel - or, with more of them, a
 
 - Configure by right-click: frequency name, role (input/output/both), priority,
   and any subset of redstone, items, fluids, energy, signals, ME, and provider.
-- Nine whitelist filter slots (click with an item, or a bucket for its fluid);
-  an empty filter allows everything.
 - The GUI's status line shows the same-network endpoint count, this endpoint's ME
   lane state, and diagnostics like CABLED LOOP.
 - Costs one channel and idles at 1 AE/t. Frequencies never cross networks - the
   network the endpoints sit on is the carrier.
 
-Crafted by fusing all seven [Typed Mesh Endpoints](typed-mesh-endpoints.md) - the
-single-transport versions you'll build first:
+Crafted from any P2P tunnel, a Regulus Crystal - the "every transport" token - and
+an engineering processor; the [Typed Mesh Endpoints](typed-mesh-endpoints.md) are
+the cheaper single-transport versions you'll build first:
 
 <RecipeFor id="mesh_endpoint" />
 

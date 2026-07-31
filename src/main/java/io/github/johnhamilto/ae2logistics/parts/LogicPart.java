@@ -193,7 +193,9 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
 
     @Override
     public float getCableConnectionLength(AECableType cable) {
-        return 16;
+        // Depth from the face our housing occupies; the cable draws its attachment
+        // stub out to this point, but only for values in (0, 8] - 16 means no stub.
+        return 4;
     }
 
     @Override

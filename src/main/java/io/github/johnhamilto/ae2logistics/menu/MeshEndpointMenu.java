@@ -1,31 +1,26 @@
 package io.github.johnhamilto.ae2logistics.menu;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.DataSlot;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
-import appeng.api.behaviors.ContainerItemStrategies;
-import appeng.api.stacks.AEFluidKey;
-import appeng.api.stacks.AEItemKey;
-import appeng.api.stacks.GenericStack;
 import appeng.menu.AEBaseMenu;
-import appeng.menu.SlotSemantics;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 
-public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.GhostSlotTarget {
+public class MeshEndpointMenu extends AEBaseMenu {
+
+    /** How many roster rows travel per sync; the GUI scrolls through them. */
+    private static final int ROSTER_LIMIT = 64;
 
     @Nullable
     private final MeshEndpointPart part;
@@ -38,12 +33,33 @@ public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.Gho
     public final int capabilities;
     public final boolean capabilitiesLocked;
 
-    private final SimpleContainer filterContainer = new SimpleContainer(MeshEndpointPart.FILTER_SLOTS);
-    private int filterSlotStart = -1;
+    /** Same-network endpoints on this frequency; re-pushed by the server on config edits. */
+    private List<EndpointInfo> roster = List.of();
+    private int rosterTotal;
 
-    private int statusValue;
-    private int countValue;
-    private int meStateValue;
+    /** One roster row; {@code connected} is the block on the endpoint's face, as an item. */
+    public record EndpointInfo(BlockPos pos, byte role, int priority, byte status, byte meState,
+            boolean self, ItemStack connected) {
+
+        public static void write(RegistryFriendlyByteBuf buffer, EndpointInfo info) {
+            buffer.writeBlockPos(info.pos);
+            buffer.writeByte(info.role);
+            buffer.writeVarInt(info.priority);
+            buffer.writeByte(info.status);
+            buffer.writeByte(info.meState);
+            buffer.writeBoolean(info.self);
+            ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, info.connected);
+        }
+
+        public static EndpointInfo read(RegistryFriendlyByteBuf buffer) {
+            return new EndpointInfo(buffer.readBlockPos(), buffer.readByte(), buffer.readVarInt(),
+                    buffer.readByte(), buffer.readByte(), buffer.readBoolean(),
+                    ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
+        }
+    }
+
+    public record Roster(List<EndpointInfo> rows, int total) {
+    }
 
     public MeshEndpointMenu(int containerId, Inventory inventory, MeshEndpointPart part) {
         super(AE2Logistics.MESH_ENDPOINT_MENU.get(), containerId, inventory, part);
@@ -56,42 +72,6 @@ public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.Gho
         this.priority = part.priority();
         this.capabilities = part.capabilityMask();
         this.capabilitiesLocked = part.capabilityLocked();
-
-        for (int i = 0; i < MeshEndpointPart.FILTER_SLOTS; i++) {
-            filterContainer.setItem(i, displayStack(part.filterSlot(i)));
-        }
-        addSlots(inventory);
-
-        addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return MeshRegistry.statusOf(part);
-            }
-
-            @Override
-            public void set(int value) {
-            }
-        });
-        addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return MeshRegistry.carrierEndpointCount(part);
-            }
-
-            @Override
-            public void set(int value) {
-            }
-        });
-        addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return part.meLinkState();
-            }
-
-            @Override
-            public void set(int value) {
-            }
-        });
     }
 
     public MeshEndpointMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
@@ -104,62 +84,13 @@ public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.Gho
         this.priority = buffer.readVarInt();
         this.capabilities = buffer.readVarInt();
         this.capabilitiesLocked = buffer.readBoolean();
-        for (int i = 0; i < MeshEndpointPart.FILTER_SLOTS; i++) {
-            filterContainer.setItem(i, ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
+        this.rosterTotal = buffer.readVarInt();
+        int sent = buffer.readVarInt();
+        var list = new ArrayList<EndpointInfo>(sent);
+        for (int i = 0; i < sent; i++) {
+            list.add(EndpointInfo.read(buffer));
         }
-        addSlots(inventory);
-
-        addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return statusValue;
-            }
-
-            @Override
-            public void set(int value) {
-                statusValue = value;
-            }
-        });
-        addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return countValue;
-            }
-
-            @Override
-            public void set(int value) {
-                countValue = value;
-            }
-        });
-        addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return meStateValue;
-            }
-
-            @Override
-            public void set(int value) {
-                meStateValue = value;
-            }
-        });
-    }
-
-    private void addSlots(Inventory inventory) {
-        filterSlotStart = slots.size();
-        for (int i = 0; i < MeshEndpointPart.FILTER_SLOTS; i++) {
-            addSlot(new Slot(filterContainer, i, 0, 0) {
-                @Override
-                public boolean mayPickup(Player player) {
-                    return false;
-                }
-
-                @Override
-                public boolean mayPlace(ItemStack stack) {
-                    return false;
-                }
-            }, SlotSemantics.CONFIG);
-        }
-        createPlayerInventorySlots(inventory);
+        this.roster = List.copyOf(list);
     }
 
     public static void writeOpenData(RegistryFriendlyByteBuf buffer, MeshEndpointPart part) {
@@ -171,90 +102,70 @@ public class MeshEndpointMenu extends AEBaseMenu implements GhostSlotPayload.Gho
         buffer.writeVarInt(part.priority());
         buffer.writeVarInt(part.capabilityMask());
         buffer.writeBoolean(part.capabilityLocked());
-        for (int i = 0; i < MeshEndpointPart.FILTER_SLOTS; i++) {
-            ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, displayStack(part.filterSlot(i)));
+
+        var built = buildRoster(part);
+        buffer.writeVarInt(built.total());
+        buffer.writeVarInt(built.rows().size());
+        for (var info : built.rows()) {
+            EndpointInfo.write(buffer, info);
         }
     }
 
-    public byte status() {
-        return (byte) statusValue;
-    }
-
-    public int endpointCount() {
-        return countValue;
-    }
-
-    public byte meState() {
-        return (byte) meStateValue;
-    }
-
-    @Override
-    public boolean acceptsGhost(int slotIndex) {
-        return filterSlotStart >= 0 && slotIndex >= filterSlotStart
-                && slotIndex < filterSlotStart + MeshEndpointPart.FILTER_SLOTS;
-    }
-
-    @Override
-    public void setGhost(int slotIndex, ItemStack stack) {
-        int index = slotIndex - filterSlotStart;
-        var filter = filterFromCarried(stack);
-        if (part != null) {
-            part.setFilterSlot(index, filter);
+    /** Server-side roster snapshot for this part's frequency, capped at the wire limit. */
+    public static Roster buildRoster(MeshEndpointPart part) {
+        var linked = part.frequency().isBlank()
+                ? List.<MeshEndpointPart>of()
+                : MeshRegistry.carrierEndpoints(part);
+        int sent = Math.min(linked.size(), ROSTER_LIMIT);
+        var rows = new ArrayList<EndpointInfo>(sent);
+        for (int i = 0; i < sent; i++) {
+            var endpoint = linked.get(i);
+            var endpointHost = endpoint.getHost().getBlockEntity();
+            rows.add(new EndpointInfo(endpointHost.getBlockPos(), endpoint.role(),
+                    endpoint.priority(), MeshRegistry.statusOf(endpoint), endpoint.meLinkState(),
+                    endpoint == part, connectedDisplay(endpointHost, endpoint)));
         }
-        filterContainer.setItem(index, displayStack(filter));
+        return new Roster(List.copyOf(rows), linked.size());
     }
 
-    @Override
-    public void clicked(int slotId, int button, ClickType clickType, Player player) {
-        if (filterSlotStart >= 0 && slotId >= filterSlotStart
-                && slotId < filterSlotStart + MeshEndpointPart.FILTER_SLOTS) {
-            int index = slotId - filterSlotStart;
-            var stack = filterFromCarried(getCarried());
-            if (part != null) {
-                part.setFilterSlot(index, stack);
-            }
-            filterContainer.setItem(index, displayStack(stack));
-            return;
-        }
-        super.clicked(slotId, button, clickType, player);
+    public List<EndpointInfo> roster() {
+        return roster;
+    }
+
+    public int rosterTotal() {
+        return rosterTotal;
+    }
+
+    public boolean matches(BlockPos payloadPos, byte payloadSide) {
+        return pos.equals(payloadPos) && side.ordinal() == payloadSide;
+    }
+
+    /** Applied client-side when the server re-pushes the roster after a config edit. */
+    public void updateRoster(List<EndpointInfo> rows, int total) {
+        this.roster = List.copyOf(rows);
+        this.rosterTotal = total;
     }
 
     /**
-     * Carried item to filter entry: wrapped generic stacks and container items (a water
-     * bucket becomes a water filter when the endpoint moves fluids) beat plain items.
+     * What the endpoint's face touches, as a display item: the part on the facing side
+     * of a cable bus (or its center cable), else the plain block.
      */
-    @Nullable
-    private GenericStack filterFromCarried(ItemStack carried) {
-        if (carried.isEmpty()) {
-            return null;
-        }
-        var unwrapped = GenericStack.fromItemStack(carried);
-        if (unwrapped != null) {
-            return new GenericStack(unwrapped.what(), 1);
-        }
-        boolean fluidAttuned = part != null
-                ? part.attuned(MeshRegistry.TYPE_FLUID)
-                : (capabilities & MeshRegistry.TYPE_FLUID) != 0;
-        if (fluidAttuned) {
-            var contained = ContainerItemStrategies.getContainedStack(carried);
-            if (contained != null) {
-                return new GenericStack(contained.what(), 1);
-            }
-        }
-        var key = AEItemKey.of(carried);
-        return key != null ? new GenericStack(key, 1) : null;
-    }
-
-    private static ItemStack displayStack(@Nullable GenericStack stack) {
-        if (stack == null) {
+    private static ItemStack connectedDisplay(
+            net.minecraft.world.level.block.entity.BlockEntity endpointHost, MeshEndpointPart endpoint) {
+        var level = endpointHost.getLevel();
+        if (level == null) {
             return ItemStack.EMPTY;
         }
-        if (stack.what() instanceof AEItemKey itemKey) {
-            return itemKey.toStack();
+        var facePos = endpointHost.getBlockPos().relative(endpoint.getSide());
+        if (level.getBlockEntity(facePos) instanceof appeng.api.parts.IPartHost partHost) {
+            var part = partHost.getPart(endpoint.getSide().getOpposite());
+            if (part == null) {
+                part = partHost.getPart(null);
+            }
+            if (part != null) {
+                return new ItemStack(part.getPartItem().asItem());
+            }
         }
-        if (stack.what() instanceof AEFluidKey fluidKey && fluidKey.getFluid().getBucket() != Items.AIR) {
-            return new ItemStack(fluidKey.getFluid().getBucket());
-        }
-        return GenericStack.wrapInItemStack(stack);
+        return new ItemStack(level.getBlockState(facePos).getBlock());
     }
 }

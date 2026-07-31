@@ -2,27 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "ae2logistics:mesh_endpoint_redstone"
-    },
-    {
-      "item": "ae2logistics:mesh_endpoint_item"
-    },
-    {
-      "item": "ae2logistics:mesh_endpoint_fluid"
-    },
-    {
-      "item": "ae2logistics:mesh_endpoint_energy"
-    },
-    {
-      "item": "ae2logistics:mesh_endpoint_signal"
-    },
-    {
-      "item": "ae2logistics:mesh_endpoint_me"
-    },
-    {
-      "item": "ae2logistics:mesh_endpoint_provider"
-    }
+    {"tag": "ae2logistics:p2p_tunnels"},
+    {"item": "ae2logistics:regulus_crystal"},
+    {"item": "ae2:engineering_processor"}
   ],
   "result": {
     "count": 1,

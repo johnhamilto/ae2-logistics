@@ -24,7 +24,7 @@ import io.github.johnhamilto.ae2logistics.signal.SignalMath;
 public class RedstoneIOPart extends LogicPart {
 
     @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/redstone_io"));
+    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/redstone_port"));
 
     private int emitted;
 
@@ -39,6 +39,11 @@ public class RedstoneIOPart extends LogicPart {
 
     private boolean isOutputMode() {
         return flag;
+    }
+
+    /** op selects the emission style in output mode: 0 = strong (default), 1 = weak only. */
+    private boolean emitsStrong() {
+        return op == 0;
     }
 
     @Override
@@ -82,12 +87,26 @@ public class RedstoneIOPart extends LogicPart {
 
     @Override
     public int isProvidingStrongPower() {
-        return isOutputMode() ? emitted : 0;
+        return isOutputMode() && emitsStrong() ? emitted : 0;
     }
 
     @Override
     public int isProvidingWeakPower() {
         return isOutputMode() ? emitted : 0;
+    }
+
+    @Override
+    protected void onConfigChanged() {
+        super.onConfigChanged();
+        // Strong/weak or mode flips must repropagate immediately, not wait for the
+        // next emitted-value change.
+        var host = getHost().getBlockEntity();
+        var level = host.getLevel();
+        if (level != null && !level.isClientSide() && getSide() != null) {
+            var block = level.getBlockState(host.getBlockPos()).getBlock();
+            level.updateNeighborsAt(host.getBlockPos(), block);
+            level.updateNeighborsAt(host.getBlockPos().relative(getSide()), block);
+        }
     }
 
     @Override

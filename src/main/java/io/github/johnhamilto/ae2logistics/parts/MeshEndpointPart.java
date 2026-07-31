@@ -78,14 +78,11 @@ public class MeshEndpointPart extends AEBasePart {
     public static final byte ROLE_OUT = 1;
     public static final byte ROLE_BOTH = 2;
 
-    public static final int FILTER_SLOTS = 9;
 
     private String frequency = "";
     private byte role = ROLE_IN;
     private int priority;
-    private int capabilities;
-    private final appeng.api.stacks.GenericStack[] filter =
-            new appeng.api.stacks.GenericStack[FILTER_SLOTS];
+    private int capabilities = MeshRegistry.TYPE_ALL;
 
     private int meshRedstone;
     /** Transient ME link state, maintained by {@link MeshRegistry#tick}. */
@@ -173,29 +170,6 @@ public class MeshEndpointPart extends AEBasePart {
         meLinkState = state;
     }
 
-    @Nullable
-    public appeng.api.stacks.GenericStack filterSlot(int slot) {
-        return filter[slot];
-    }
-
-    public void setFilterSlot(int slot, @Nullable appeng.api.stacks.GenericStack stack) {
-        filter[slot] = stack == null ? null : new appeng.api.stacks.GenericStack(stack.what(), 1);
-        getHost().markForSave();
-    }
-
-    /** An empty filter accepts everything; otherwise the key must match a slot exactly. */
-    public boolean filterAccepts(appeng.api.stacks.AEKey key) {
-        boolean empty = true;
-        for (var slot : filter) {
-            if (slot != null) {
-                if (slot.what().equals(key)) {
-                    return true;
-                }
-                empty = false;
-            }
-        }
-        return empty;
-    }
 
     public long stableKey() {
         var host = getHost().getBlockEntity();
@@ -286,16 +260,6 @@ public class MeshEndpointPart extends AEBasePart {
             tag.putInt("priority", priority);
             tag.putInt("capabilities", capabilities);
             builder.set(AE2Logistics.EXPORTED_MESH_SETTINGS.get(), tag);
-            var stacks = new java.util.ArrayList<appeng.api.stacks.GenericStack>(FILTER_SLOTS);
-            boolean any = false;
-            for (var stack : filter) {
-                stacks.add(stack);
-                any |= stack != null;
-            }
-            if (any) {
-                builder.set(AE2Logistics.EXPORTED_MESH_FILTER.get(),
-                        java.util.Collections.unmodifiableList(stacks));
-            }
         }
     }
 
@@ -310,10 +274,6 @@ public class MeshEndpointPart extends AEBasePart {
         if (tag != null) {
             applyMeshConfig(tag.getString("freq"), (byte) Math.floorMod(tag.getByte("role"), 3),
                     tag.getInt("priority"), tag.getInt("capabilities") & MeshRegistry.TYPE_ALL);
-            var stacks = input.get(AE2Logistics.EXPORTED_MESH_FILTER.get());
-            for (int i = 0; i < FILTER_SLOTS; i++) {
-                setFilterSlot(i, stacks != null && i < stacks.size() ? stacks.get(i) : null);
-            }
         }
     }
 
@@ -474,7 +434,7 @@ public class MeshEndpointPart extends AEBasePart {
 
         @Override
         public boolean accepts(MeshEndpointPart target, appeng.api.stacks.AEKey what) {
-            return target.isValidTarget(MeshRegistry.TYPE_PROVIDER) && target.filterAccepts(what);
+            return target.isValidTarget(MeshRegistry.TYPE_PROVIDER);
         }
 
         @Override
@@ -486,6 +446,14 @@ public class MeshEndpointPart extends AEBasePart {
         @Override
         public boolean isBusy(MeshEndpointPart target) {
             return target.isBusy();
+        }
+
+        @Override
+        public boolean blockingMode() {
+            var host = getHost().getBlockEntity();
+            return host.getLevel() instanceof net.minecraft.server.level.ServerLevel level
+                    && io.github.johnhamilto.ae2logistics.provider.ProviderTargets
+                            .blockingModeAt(level, host.getBlockPos(), getSide());
         }
 
         @Override
@@ -537,8 +505,7 @@ public class MeshEndpointPart extends AEBasePart {
 
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            var key = appeng.api.stacks.AEItemKey.of(stack);
-            if (key == null || !filterAccepts(key)) {
+            if (appeng.api.stacks.AEItemKey.of(stack) == null) {
                 return stack;
             }
             return MeshRegistry.forwardItem(MeshEndpointPart.this, stack, simulate);
@@ -556,8 +523,7 @@ public class MeshEndpointPart extends AEBasePart {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            var key = appeng.api.stacks.AEItemKey.of(stack);
-            return key != null && filterAccepts(key);
+            return appeng.api.stacks.AEItemKey.of(stack) != null;
         }
     }
 
@@ -584,7 +550,7 @@ public class MeshEndpointPart extends AEBasePart {
 
         @Override
         public int fill(FluidStack resource, FluidAction action) {
-            if (resource.isEmpty() || !filterAccepts(appeng.api.stacks.AEFluidKey.of(resource))) {
+            if (resource.isEmpty()) {
                 return 0;
             }
             return MeshRegistry.forwardFluid(MeshEndpointPart.this, resource, action.simulate());
@@ -691,15 +657,6 @@ public class MeshEndpointPart extends AEBasePart {
         data.putByte("role", role);
         data.putInt("priority", priority);
         data.putInt("capabilities", capabilities);
-        var filterList = new net.minecraft.nbt.ListTag();
-        for (int i = 0; i < FILTER_SLOTS; i++) {
-            var tag = new CompoundTag();
-            if (filter[i] != null) {
-                tag.put("key", filter[i].what().toTagGeneric(registries));
-            }
-            filterList.add(tag);
-        }
-        data.put("filter", filterList);
         if (carriedNode != null) {
             carriedNode.saveToNBT(data);
         }
@@ -715,17 +672,6 @@ public class MeshEndpointPart extends AEBasePart {
         var typed = typedVariant();
         if (typed != null) {
             capabilities = typed.mask();
-        }
-        var filterList = data.getList("filter", net.minecraft.nbt.Tag.TAG_COMPOUND);
-        for (int i = 0; i < FILTER_SLOTS; i++) {
-            filter[i] = null;
-            if (i < filterList.size()) {
-                var tag = filterList.getCompound(i);
-                if (tag.contains("key")) {
-                    var key = appeng.api.stacks.AEKey.fromTagGeneric(registries, tag.getCompound("key"));
-                    filter[i] = key == null ? null : new appeng.api.stacks.GenericStack(key, 1);
-                }
-            }
         }
         if ((capabilities & MeshRegistry.TYPE_ME) != 0 && !isClientSide()) {
             carriedInstance().loadFromNBT(data);

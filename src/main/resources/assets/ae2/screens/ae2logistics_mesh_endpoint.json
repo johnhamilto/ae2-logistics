@@ -1,23 +1,18 @@
 {
   "helpTopic": "ae2logistics:mesh-endpoint.md",
   "includes": [
-    "common/common.json",
-    "common/player_inventory.json"
+    "common/common.json"
   ],
-  "background": {
-    "texture": "guis/ae2logistics/mesh_endpoint.png",
-    "srcRect": [
-      0,
-      0,
-      200,
-      251
-    ]
+  "generatedBackground": {
+    "width": 200,
+    "height": 178
   },
-  "slots": {
-    "CONFIG": {
-      "left": 19,
-      "top": 137,
-      "grid": "HORIZONTAL"
+  "widgets": {
+    "scrollbar": {
+      "left": 188,
+      "top": 83,
+      "width": 7,
+      "height": 86
     }
   },
   "text": {

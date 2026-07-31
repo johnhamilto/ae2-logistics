@@ -23,8 +23,9 @@ bridges, the ME Wireless Bridge) - not the frequency.
 
 Endpoints come in seven single-transport flavors - the
 [Typed Mesh Endpoints](typed-mesh-endpoints.md) - and the universal part that
-carries any mix. Craft a typed endpoint from an ME P2P Tunnel, a logic processor,
-and an item matching the transport; fuse all seven into the universal:
+carries any mix. Craft a typed endpoint from any P2P tunnel, a logic processor,
+and an item matching the transport; the universal swaps the transport item for a
+Regulus Crystal and an engineering processor:
 
 <RecipeFor id="mesh_endpoint" />
 
@@ -40,9 +41,10 @@ mix freely on a frequency.
   whole on one destination.
 - **Provider** - its own transport: point a pattern provider at a provider-attuned
   input endpoint and it behaves as if it were adjacent to every machine behind the
-  frequency's provider outputs: each batch goes complete to the first machine that has
-  finished its previous batch, and when all machines are still working, nothing is
-  pushed until one frees up - true per-machine blocking, at range, over one face. Like
+  frequency's provider outputs: each batch goes complete to one machine, rotating
+  round-robin, and the provider's own blocking mode maps through - with it on, busy
+  machines are skipped and pushes wait until one frees up; with it off, the rotation
+  never waits. Like
   a provider itself it is **key-type agnostic**: items, fluids, and any companion-mod
   key type (Mekanism chemicals, flux) push through. A provider facing an item-only
   input endpoint still pushes, but as a plain pipe - batches split and blocking loses
@@ -76,18 +78,6 @@ channel, each lane tops out at AE2's 32-channel dense ceiling, and channels rout
 AE2's normal pathing. Pathing assigns each device the nearest lane, so spread far-side
 cabling between exit endpoints rather than funneling everything through one.
 
-# Filters
-
-Each endpoint has nine whitelist slots: click one with an item (or a bucket, to filter
-the contained fluid) to set it; click with an empty hand to clear. An empty filter
-allows everything. An **input** endpoint refuses non-matching insertions outright; an
-**output** endpoint is skipped as a destination for stacks its filter rejects - so one
-frequency can sort, with each machine declaring what it takes. Provider batches respect
-filters as a whole: a batch only lands on a machine whose filter accepts **every**
-ingredient in it, and moves complete to another machine otherwise. Matching is exact
-(components included); filters apply to items, fluids, and the provider transport, not
-to redstone, energy, signals, or ME.
-
 # Diagnostics
 
 The endpoint's own screen shows a live readout: how many endpoints share the frequency,
@@ -95,12 +85,13 @@ whether this one owns an ME lane (or sits on standby as a spare on a larger side
 a status. The status also appears per endpoint in the P2P Frequency Terminal's mesh
 rows.
 
-**CABLED LOOP** means every fed network on the frequency is already one cabled
-network, so the mesh has nothing to bridge - its links would only add redundant
-parallel paths, the classic half-a-base-offline debugging trap. Remove the cable or
-retune an endpoint. Sides and lanes are computed when a frequency's links (re)build;
-after recabling, `/ae2logistics mesh relink <frequency>` forces a rebuild and a fresh
-diagnosis.
+If every fed network on the frequency is already one cabled network, the mesh has
+nothing to bridge and quietly builds no ME lane - links would only add redundant
+parallel paths, the classic half-a-base-offline debugging trap. Everything keeps
+working through the existing cables; `/ae2logistics mesh status <frequency>` notes
+"cabled (no ME lane needed)" per endpoint. Sides and lanes are computed when a
+frequency's links (re)build; after recabling, `/ae2logistics mesh relink <frequency>`
+forces a rebuild.
 
 For servers and bug reports: `/ae2logistics mesh list` prints every frequency with
 endpoint counts and capabilities, and `/ae2logistics mesh status <frequency>` prints

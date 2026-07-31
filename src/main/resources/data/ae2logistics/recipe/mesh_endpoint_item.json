@@ -2,9 +2,18 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:me_p2p_tunnel"},
-    {"item": "ae2:logic_processor"},
-    {"item": "minecraft:hopper"}
+    {
+      "tag": "ae2logistics:p2p_tunnels"
+    },
+    {
+      "item": "ae2:logic_processor"
+    },
+    {
+      "item": "minecraft:hopper"
+    }
   ],
-  "result": {"count": 1, "id": "ae2logistics:mesh_endpoint_item"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:mesh_endpoint_item"
+  }
 }

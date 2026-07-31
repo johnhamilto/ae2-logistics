@@ -141,9 +141,6 @@ public class AE2Logistics {
                     .invalidPatternTooltip(AdaptivePattern::getInvalidPatternTooltip)
                     .build());
 
-    public static final DeferredItem<Item> GUIDE_TABLET = ITEMS.register("guide_tablet",
-            () -> new io.github.johnhamilto.ae2logistics.item.GuideTabletItem(new Item.Properties().stacksTo(1)));
-
     /** The mod's themed resource: forms when charged certus, redstone, and glowstone meet water. */
     public static final DeferredItem<Item> REGULUS_CRYSTAL = ITEMS.register("regulus_crystal",
             () -> new Item(new Item.Properties()));
@@ -188,11 +185,6 @@ public class AE2Logistics {
             DATA_COMPONENTS.register("exported_mesh_settings",
                     () -> DataComponentType.<net.minecraft.nbt.CompoundTag>builder()
                             .persistent(net.minecraft.nbt.CompoundTag.CODEC).build());
-    public static final Supplier<DataComponentType<java.util.List<appeng.api.stacks.GenericStack>>> EXPORTED_MESH_FILTER =
-            DATA_COMPONENTS.register("exported_mesh_filter",
-                    () -> DataComponentType.<java.util.List<appeng.api.stacks.GenericStack>>builder()
-                            .persistent(appeng.api.stacks.GenericStack.FAULT_TOLERANT_NULLABLE_LIST_CODEC)
-                            .build());
 
     public static final DeferredBlock<PatternWorkbenchBlock> PATTERN_WORKBENCH = BLOCKS.register(
             "pattern_workbench",
@@ -368,6 +360,12 @@ public class AE2Logistics {
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart>> SUBNET_LINK_PART = part(
             "subnet_link", io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart.class,
             io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart::new);
+    // AE2's storage bus menu under our own type, so the window titles as a Subnet Link.
+    public static final Supplier<MenuType<appeng.menu.implementations.StorageBusMenu>> SUBNET_LINK_MENU =
+            MENUS.register("subnet_link", () -> appeng.menu.implementations.MenuTypeBuilder
+                    .create(appeng.menu.implementations.StorageBusMenu::new,
+                            io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart.class)
+                    .buildUnregistered(id("subnet_link")));
     public static final Supplier<MenuType<P2PFrequencyTerminalMenu>> P2P_TERMINAL_MENU = MENUS.register(
             "p2p_frequency_terminal", () -> IMenuTypeExtension.create(P2PFrequencyTerminalMenu::new));
 
@@ -416,7 +414,6 @@ public class AE2Logistics {
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(SUBNET_LINK_PART.get());
                         output.accept(REGULUS_CRYSTAL.get());
-                        output.accept(GUIDE_TABLET.get());
                     })
                     .build());
 
@@ -480,6 +477,9 @@ public class AE2Logistics {
                     P2PDataPayload::handle);
             registrar.playToServer(ConfigureMeshPayload.TYPE, ConfigureMeshPayload.STREAM_CODEC,
                     ConfigureMeshPayload::handle);
+            registrar.playToClient(io.github.johnhamilto.ae2logistics.menu.MeshRosterPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.MeshRosterPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.MeshRosterPayload::handle);
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload::handle);
@@ -521,6 +521,15 @@ public class AE2Logistics {
             event.register(AECapabilities.ME_STORAGE,
                     (part, context) -> part.exposedStorage(),
                     io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
+            event.register(AECapabilities.GENERIC_INTERNAL_INV,
+                    (part, context) -> part.exposedReturnGenericInv(),
+                    io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    (part, context) -> part.exposedReturnItemHandler(),
+                    io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+                    (part, context) -> part.exposedReturnFluidHandler(),
+                    io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
             event.register(AECapabilities.ME_STORAGE,
                     (part, context) -> part.exposedMeStorage(), MeshEndpointPart.class);
             event.register(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
@@ -546,6 +555,7 @@ public class AE2Logistics {
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.MeshCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.QueryCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.WirelessCommands::register);
+        NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.TestWorldCommands::register);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             AE2LogisticsClient.initialize(modBus);

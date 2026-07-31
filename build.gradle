@@ -27,6 +27,11 @@ repositories {
         url = uri("https://maven.blamejared.com")
         content { includeGroup "mezz.jei" }
     }
+    maven {
+        // CurseForge-only compat mods (Network Analyser, AE2 JEI Integration).
+        url = uri("https://cursemaven.com")
+        content { includeGroup "curse.maven" }
+    }
 }
 
 dependencies {
@@ -38,6 +43,18 @@ dependencies {
     compileOnly "mezz.jei:jei-1.21.1-common-api:${project.jei_version}"
     compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${project.jei_version}"
     runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${project.jei_version}"
+
+    // The de facto standard AE2 suite, runtime only: integration tests detect these
+    // via ModList and skip when absent, so none of them are real dependencies.
+    runtimeOnly "maven.modrinth:glodium:${project.glodium_version}"
+    runtimeOnly "maven.modrinth:extended-ae:${project.extendedae_version}"
+    runtimeOnly "maven.modrinth:mega:${project.megacells_version}"
+    runtimeOnly "maven.modrinth:applied-mekanistics:${project.appmek_version}"
+    runtimeOnly "maven.modrinth:mekanism:${project.mekanism_version}"
+    runtimeOnly "maven.modrinth:merequester:${project.merequester_version}"
+    runtimeOnly "maven.modrinth:applied-energistics-2-wireless-terminals:${project.ae2wtlib_version}"
+    runtimeOnly "curse.maven:ae2-network-analyser-961856:${project.network_analyser_fileid}"
+    runtimeOnly "curse.maven:ae2-jei-integration-1074338:${project.ae2_jei_integration_fileid}"
 }
 
 sourceSets {

@@ -71,7 +71,7 @@ public class MemoryCardGameTests {
         });
     }
 
-    /** Mesh endpoint settings incl. filters round-trip and re-register under the new frequency. */
+    /** Mesh endpoint settings round-trip and re-register under the new frequency. */
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void memoryCardRoundTripsMeshConfig(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
@@ -88,8 +88,6 @@ public class MemoryCardGameTests {
         helper.runAfterDelay(10, () -> {
             source.applyMeshConfig("mc-mesh", MeshEndpointPart.ROLE_OUT, 7,
                     MeshRegistry.TYPE_ITEM | MeshRegistry.TYPE_FLUID);
-            source.setFilterSlot(0, new GenericStack(AEItemKey.of(Items.IRON_INGOT), 1));
-            source.setFilterSlot(4, new GenericStack(AEFluidKey.of(Fluids.WATER), 1));
 
             var settings = source.exportSettings(SettingsFrom.MEMORY_CARD);
             target.importSettings(SettingsFrom.MEMORY_CARD, settings, null);
@@ -99,13 +97,6 @@ public class MemoryCardGameTests {
             helper.assertTrue(target.priority() == 7, "priority must round-trip");
             helper.assertTrue(target.capabilityMask() == (MeshRegistry.TYPE_ITEM | MeshRegistry.TYPE_FLUID),
                     "capabilities must round-trip");
-            var slot0 = target.filterSlot(0);
-            var slot4 = target.filterSlot(4);
-            helper.assertTrue(slot0 != null && slot0.what().equals(AEItemKey.of(Items.IRON_INGOT)),
-                    "item filter must round-trip");
-            helper.assertTrue(slot4 != null && slot4.what().equals(AEFluidKey.of(Fluids.WATER)),
-                    "fluid filter must round-trip");
-            helper.assertTrue(target.filterSlot(1) == null, "empty slots must stay empty");
             helper.assertTrue(MeshRegistry.endpoints("mc-mesh").size() == 2,
                     "the pasted endpoint must register on the frequency");
             helper.succeed();

@@ -237,6 +237,32 @@ public class SchedulerGameTests {
         });
     }
 
+    /** Strong emission conducts through a solid block; weak emission must not. */
+    @GameTest(template = EMPTY, timeoutTicks = 200)
+    public void redstoneOutputStrongVsWeak(GameTestHelper helper) {
+        var busPos = setupNetwork(helper);
+        var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
+        var port = place(helper, busPos, Direction.SOUTH, AE2Logistics.REDSTONE_IO_PART.get());
+        helper.setBlock(new BlockPos(2, 1, 2), Blocks.STONE);
+        helper.setBlock(new BlockPos(2, 1, 3), Blocks.REDSTONE_LAMP);
+
+        constant.applyConfig(SRC, null, null, 0, 15, 0, false);
+        port.applyConfig(null, SRC, null, 0, 0, 0, true);
+
+        helper.runAfterDelay(20, () -> {
+            var lamp = helper.getBlockState(new BlockPos(2, 1, 3));
+            helper.assertTrue(lamp.getValue(net.minecraft.world.level.block.RedstoneLampBlock.LIT),
+                    "strong mode must power the lamp through the stone");
+            port.applyConfig(null, SRC, null, 1, 0, 0, true);
+        });
+        helper.runAfterDelay(40, () -> {
+            var lamp = helper.getBlockState(new BlockPos(2, 1, 3));
+            helper.assertTrue(!lamp.getValue(net.minecraft.world.level.block.RedstoneLampBlock.LIT),
+                    "weak mode must not conduct through the stone");
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = EMPTY)
     public void redstoneOutputEmits(GameTestHelper helper) {
         var busPos = setupNetwork(helper);

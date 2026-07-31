@@ -23,6 +23,8 @@ check: ## Compile and run verification tasks without assembling jars
 
 test: ## Run in-game gametests on a headless server
 	$(GRADLE) runGametest
+	@grep -q "required tests passed" build/gametest/logs/latest.log \
+		|| (echo "gametest server crashed before running tests - check build/gametest/logs/latest.log" && exit 1)
 
 client: ## Launch a Minecraft client with the mod + AE2 loaded
 	$(GRADLE) runClient

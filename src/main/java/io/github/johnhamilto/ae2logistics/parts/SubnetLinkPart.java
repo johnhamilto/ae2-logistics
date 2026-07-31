@@ -128,11 +128,31 @@ public class SubnetLinkPart extends StorageBusPart {
         }
     }
 
+    /** Our own menu type re-titles AE2's storage bus window as a Subnet Link. */
+    @Override
+    public net.minecraft.world.inventory.MenuType<?> getMenuType() {
+        return AE2Logistics.SUBNET_LINK_MENU.get();
+    }
+
     /** Shown in the storage bus GUI's "connected to" line. */
     @Override
     public Component getConnectedToDescription() {
         var subnet = subnetGrid();
-        return Component.literal(subnet == null ? "Subnet" : "Subnet - " + subnet.size() + " devices");
+        if (subnet == null) {
+            return Component.literal("Subnet");
+        }
+        // Devices as a player counts them: not the cables, not our own link node.
+        int devices = 0;
+        for (var node : subnet.getNodes()) {
+            if (subnetNode != null && node == subnetNode.getNode()) {
+                continue;
+            }
+            if (node.getOwner() instanceof appeng.parts.networking.CablePart) {
+                continue;
+            }
+            devices++;
+        }
+        return Component.literal("Subnet - " + devices + (devices == 1 ? " device" : " devices"));
     }
 
     private java.util.Collection<appeng.me.service.EnergyService> mainEnergyServices() {

@@ -36,6 +36,7 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
     private static final String[] THRESHOLD_OPS = {"<", "<=", "=", ">=", ">"};
     private static final String[] ARITHMETIC_OPS = {"+", "-", "x", "/", "min", "max", "mod"};
     private static final String[] BOOLEAN_OPS = {"AND", "OR", "XOR", "NOT"};
+    private static final String[] SIGNAL_OPS = {"Strong", "Weak"};
 
     private enum Field {
         OUT, IN_A, IN_B, VALUE_A, VALUE_B
@@ -165,6 +166,7 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
             case THRESHOLD -> THRESHOLD_OPS;
             case ARITHMETIC -> ARITHMETIC_OPS;
             case BOOLEAN -> BOOLEAN_OPS;
+            case REDSTONE_IO -> SIGNAL_OPS;
             default -> null;
         };
     }

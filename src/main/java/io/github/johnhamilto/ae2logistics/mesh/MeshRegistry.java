@@ -46,11 +46,12 @@ public final class MeshRegistry {
     public static final byte ME_STATE_LOOP = 3;
     public static final byte ME_STATE_STANDBY = 4;
 
-    // Overall endpoint status for UI and commands.
+    // Overall endpoint status for UI and commands. An already-cabled frequency
+    // (ME_STATE_LOOP) is deliberately NOT a status: skipping the redundant lane is
+    // correct behavior, not a problem to alert on.
     public static final byte STATUS_OK = 0;
     public static final byte STATUS_OFFLINE = 1;
     public static final byte STATUS_ME_WAITING = 2;
-    public static final byte STATUS_CABLED_LOOP = 3;
 
     private static final Map<String, Set<MeshEndpointPart>> BY_FREQUENCY = new HashMap<>();
     private static final Map<String, MeshEndpointPart> STICKY_ITEM = new HashMap<>();
@@ -89,7 +90,6 @@ public final class MeshRegistry {
         }
         return switch (part.meLinkState()) {
             case ME_STATE_WAITING -> STATUS_ME_WAITING;
-            case ME_STATE_LOOP -> STATUS_CABLED_LOOP;
             default -> STATUS_OK;
         };
     }
@@ -113,13 +113,18 @@ public final class MeshRegistry {
 
     /** How many endpoints share this part's frequency ON ITS NETWORK (itself included). */
     public static int carrierEndpointCount(MeshEndpointPart part) {
-        int count = 0;
+        return carrierEndpoints(part).size();
+    }
+
+    /** Every endpoint sharing this part's frequency on the same host network, self included. */
+    public static List<MeshEndpointPart> carrierEndpoints(MeshEndpointPart part) {
+        var list = new ArrayList<MeshEndpointPart>();
         for (var candidate : endpoints(part.frequency())) {
             if (candidate == part || sameCarrier(part, candidate)) {
-                count++;
+                list.add(candidate);
             }
         }
-        return count;
+        return list;
     }
 
     public static java.util.SortedMap<String, List<MeshEndpointPart>> allFrequencies() {
@@ -203,22 +208,6 @@ public final class MeshRegistry {
         return list;
     }
 
-    /** Priority-ordered valid targets, narrowed to those whose filter accepts the key. */
-    private static List<MeshEndpointPart> targets(String frequency, int type,
-            MeshEndpointPart from, @Nullable appeng.api.stacks.AEKey key) {
-        var list = outputs(frequency, type, from);
-        if (key == null) {
-            return list;
-        }
-        var filtered = new ArrayList<MeshEndpointPart>(list.size());
-        for (var part : list) {
-            if (part.filterAccepts(key)) {
-                filtered.add(part);
-            }
-        }
-        return filtered;
-    }
-
     /** The endpoint the next item/fluid transfer would go to; used for blocking-mode mirroring. */
     @Nullable
     public static MeshEndpointPart peekTarget(String frequency, int type, MeshEndpointPart from) {
@@ -232,11 +221,10 @@ public final class MeshRegistry {
         var stickyTick = type == TYPE_FLUID ? STICKY_FLUID_TICK : STICKY_ITEM_TICK;
         var current = sticky.get(frequency);
         if (current != null && stickyTick.getOrDefault(frequency, -1L) == gameTick
-                && current.isValidTarget(type) && current != from && sameCarrier(from, current)
-                && (key == null || current.filterAccepts(key))) {
+                && current.isValidTarget(type) && current != from && sameCarrier(from, current)) {
             return current;
         }
-        var candidates = targets(frequency, type, from, key);
+        var candidates = outputs(frequency, type, from);
         if (candidates.isEmpty()) {
             return null;
         }
@@ -251,11 +239,10 @@ public final class MeshRegistry {
         var stickyTick = type == TYPE_FLUID ? STICKY_FLUID_TICK : STICKY_ITEM_TICK;
         var current = sticky.get(frequency);
         if (current != null && stickyTick.getOrDefault(frequency, -1L) == gameTick
-                && current.isValidTarget(type) && current != from && sameCarrier(from, current)
-                && (key == null || current.filterAccepts(key))) {
+                && current.isValidTarget(type) && current != from && sameCarrier(from, current)) {
             return current;
         }
-        var candidates = targets(frequency, type, from, key);
+        var candidates = outputs(frequency, type, from);
         if (candidates.isEmpty()) {
             return null;
         }

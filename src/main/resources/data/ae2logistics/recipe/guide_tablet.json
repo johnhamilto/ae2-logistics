@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    {"item": "minecraft:book"},
-    {"item": "ae2:certus_quartz_crystal"}
-  ],
-  "result": {"count": 1, "id": "ae2logistics:guide_tablet"}
-}

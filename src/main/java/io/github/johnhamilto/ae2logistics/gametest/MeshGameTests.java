@@ -119,9 +119,9 @@ public class MeshGameTests {
     }
 
     /**
-     * True provider P2P: a pattern provider pushing two batches through one mesh input
-     * must land each complete batch on a DIFFERENT machine, because the first machine
-     * still holds its batch (per-machine blocking through the mesh).
+     * True provider P2P: a BLOCKING-MODE pattern provider pushing two batches through
+     * one mesh input must land each complete batch on a DIFFERENT machine, because the
+     * first machine still holds its batch - the provider's own setting maps through.
      */
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void providerP2PDistributesBatchesAcrossMachines(GameTestHelper helper) {
@@ -168,6 +168,8 @@ public class MeshGameTests {
                         .ofTag(ResourceLocation.parse("minecraft:planks"))));
         if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
             providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
+            providerBe.getLogic().getConfigManager().putSetting(
+                    appeng.api.config.Settings.BLOCKING_MODE, appeng.api.config.YesNo.YES);
         } else {
             helper.fail("no pattern provider");
         }
@@ -293,6 +295,8 @@ public class MeshGameTests {
                         .ofTag(ResourceLocation.parse("minecraft:planks"))));
         if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
             providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
+            providerBe.getLogic().getConfigManager().putSetting(
+                    appeng.api.config.Settings.BLOCKING_MODE, appeng.api.config.YesNo.YES);
         }
 
         var job = new Object() {

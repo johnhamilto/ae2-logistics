@@ -111,12 +111,12 @@ public final class MeshCommands {
         var status = switch (MeshRegistry.statusOf(endpoint)) {
             case MeshRegistry.STATUS_OFFLINE -> "offline";
             case MeshRegistry.STATUS_ME_WAITING -> "waiting for ME peer";
-            case MeshRegistry.STATUS_CABLED_LOOP -> "CABLED LOOP";
             default -> "OK";
         };
         return switch (endpoint.meLinkState()) {
             case MeshRegistry.ME_STATE_LINKED -> status + ", ME lane";
             case MeshRegistry.ME_STATE_STANDBY -> status + ", ME standby";
+            case MeshRegistry.ME_STATE_LOOP -> status + ", cabled (no ME lane needed)";
             default -> status;
         };
     }

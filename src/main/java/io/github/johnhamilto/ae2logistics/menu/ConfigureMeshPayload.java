@@ -47,5 +47,12 @@ public record ConfigureMeshPayload(BlockPos pos, byte side, String frequency, by
                 (byte) Math.floorMod(payload.role, 3),
                 payload.priority,
                 payload.capabilities & io.github.johnhamilto.ae2logistics.mesh.MeshRegistry.TYPE_ALL);
+        // Registry membership updates synchronously above, so the viewer's Linked
+        // Endpoints list can follow the edit immediately.
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            var roster = MeshEndpointMenu.buildRoster(endpoint);
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(serverPlayer,
+                    new MeshRosterPayload(payload.pos, payload.side, roster.total(), roster.rows()));
+        }
     }
 }

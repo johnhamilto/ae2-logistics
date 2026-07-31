@@ -496,24 +496,6 @@ PART_P2P_TERMINAL = """
 ################
 """
 
-ITEM_GUIDE_TABLET = """
-................
-..OOOOOOOOOOOO..
-..OFFFFFFFFFFO..
-..OFSSSSSSSSFO..
-..OFS......SFO..
-..OFS.rr...SFO..
-..OFS.rr.r.SFO..
-..OFS..r.r.SFO..
-..OFS..rrr.SFO..
-..OFS......SFO..
-..OFSSSSSSSSFO..
-..OFFFFFFFFFFO..
-..OFFFgggFFFFO..
-..OOOOOOOOOOOO..
-................
-................
-"""
 
 PART_MESH_ENDPOINT = """
 ################
@@ -601,7 +583,6 @@ PART_SUBNET_LINK = """
 write_png(OUT / "part" / "subnet_link.png", PART_SUBNET_LINK, PART)
 
 write_png(OUT / "part" / "p2p_frequency_terminal.png", PART_P2P_TERMINAL, PART)
-write_png(OUT / "item" / "guide_tablet.png", ITEM_GUIDE_TABLET, PART | CARD)
 
 write_png(OUT / "part" / "tracer_terminal.png", PART_TRACER, PART)
 write_panel(OUT / "gui" / "tracer_panel.png", 236, 190)
