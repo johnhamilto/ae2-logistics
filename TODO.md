@@ -42,8 +42,8 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 - Query Export Bus
 - ME Config Terminal
 - P2P Frequency Terminal
-- Universal Mesh Endpoint (GUI reworked 0.24: sub-screen, live roster - model/guide/recipe still due)
-- Typed Mesh Endpoints (redstone / item / fluid / energy / signal / ME / provider)
+- Mesh endpoints (universal + 7 typed): better sprite art ONLY - needs a new texture
+  approach, deferred; GUI, 3D item models, guide, recipes, and tests closed out 0.24.x
 - Provider P2P Tunnel
 - ME Subnet Link
 

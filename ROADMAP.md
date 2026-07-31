@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.24.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (102 tests, run
+Status as of v0.24.1 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (106 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -45,6 +45,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Design | Mesh endpoint 9-slot filters REMOVED (routing is frequency + transport mask only); cabled-loop demoted from alert status to silent skip - an already-cabled frequency doing the right thing is not a diagnosis | 0.24.0 |
 | QoL | Part items render on AE2's 3D part/tunnel model bases (was flat sprites); typed-endpoint recipes take any P2P tunnel via the ae2logistics:p2p_tunnels tag, universal endpoint = tunnel + regulus + engineering processor (fuse-all-seven retired), provider tunnel crafted only by attunement; Redstone Port strong/weak emission option (repropagates on flip); Subnet Link window titles as itself; guide tablet item retired (screen help buttons + hold-G reach every page) | 0.24.0 |
 | Infra | Interactive test plots (@TestPlotClass scan + /ae2logistics testworld builds our row), 8-mod compat suite as runtime-only deps on NeoForge 21.1.247 (CompatGameTests skip when absent), make test crash guard, TestPlotGameTests guards the plot scan + template loading | 0.24.0 |
+| Infra | Mesh endpoint polish closed out (art deferred): roster gametests (carrier scoping, self row, typed rows, live config), open-default + tag-recipe-resolution tests, guide pages match the cog sub-screen / roster / tag recipes / retired fuse recipe | 0.24.1 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -52,14 +53,11 @@ representation).
 
 ## Next session
 
-1. Close out the mesh endpoint polish line: gametests for the 0.24.0 roster/transport
-   rework (functionality human-verified in-game), guide + recipe + tooltip accuracy.
-   Better endpoint textures stay deferred on TODO.md.
-2. Mesh provider transport return path (parity with the tunnel's returns), as its own
+1. Mesh provider transport return path (parity with the tunnel's returns), as its own
    minor version.
-3. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
+2. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
    then Modrinth + CurseForge uploads.
-4. Later: F10 bundles go/no-go, upstream PR implementations.
+3. Later: F10 bundles go/no-go, upstream PR implementations.
 
 ## Longer term
 - **F10 bundles** (DESIGN.md 4.3): the last unbuilt design-doc feature. Preconditions

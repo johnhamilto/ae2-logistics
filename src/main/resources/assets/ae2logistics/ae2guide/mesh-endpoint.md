@@ -16,10 +16,12 @@ One part, every transport: endpoints on one network sharing a named frequency
 form a universal point-to-point tunnel - or, with more of them, a
 [mesh](mesh.md).
 
-- Configure by right-click: frequency name, role (input/output/both), priority,
-  and any subset of redstone, items, fluids, energy, signals, ME, and provider.
-- The GUI's status line shows the same-network endpoint count, this endpoint's ME
-  lane state, and diagnostics like CABLED LOOP.
+- Configure by right-click: frequency name, role (input/output/both), and
+  priority; the cog opens the transport toggles - any subset of redstone, items,
+  fluids, energy, signals, ME, and provider.
+- A live roster lists every endpoint of the frequency on this network: role,
+  priority, what the face touches, and status with ME lane state. The server
+  re-pushes it as endpoints are reconfigured.
 - Costs one channel and idles at 1 AE/t. Frequencies never cross networks - the
   network the endpoints sit on is the carrier.
 

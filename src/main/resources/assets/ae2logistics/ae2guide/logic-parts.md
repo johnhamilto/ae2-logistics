@@ -71,7 +71,7 @@ with a signal mesh. One monitor per network — two on the same prefix double ev
 
 AE2 memory cards work on every part in this mod: shift-click to save a part's full
 settings (a logic part's channels and constants, the sensor's watched item, a mesh
-endpoint's frequency, role, priorities, and filters), click to apply to another part of
+endpoint's frequency, role, priority, and transports), click to apply to another part of
 the same type.
 
 # A worked example: keep 10-50k iron in stock

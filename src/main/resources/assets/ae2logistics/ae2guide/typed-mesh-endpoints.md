@@ -40,8 +40,8 @@ it is key-type agnostic (companion-mod chemicals and the like ride through). The
 frequency-scoped cousin of the [Provider P2P Tunnel](provider-p2p-tunnel.md); details
 in [the Mesh](mesh.md).
 
-Each is crafted like the classic endpoint - an ME P2P Tunnel and a logic processor -
-plus one item matching the transport:
+Each is crafted from any P2P tunnel and a logic processor, plus one item matching
+the transport:
 
 <RecipeFor id="mesh_endpoint_redstone" />
 <RecipeFor id="mesh_endpoint_item" />
@@ -51,7 +51,8 @@ plus one item matching the transport:
 <RecipeFor id="mesh_endpoint_me" />
 <RecipeFor id="mesh_endpoint_provider" />
 
-Combine all seven to fuse their attunements into a
-[Universal Mesh Endpoint](mesh-endpoint.md):
+When one face should carry several transports at once, the
+[Universal Mesh Endpoint](mesh-endpoint.md) is its own recipe - any P2P tunnel, a
+Regulus Crystal, and an engineering processor:
 
 <RecipeFor id="mesh_endpoint" />

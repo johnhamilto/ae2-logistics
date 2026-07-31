@@ -3,11 +3,13 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -23,6 +25,7 @@ import appeng.me.service.P2PService;
 import appeng.parts.p2p.P2PTunnelPart;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
+import io.github.johnhamilto.ae2logistics.menu.MeshEndpointMenu;
 import io.github.johnhamilto.ae2logistics.menu.P2PActionPayload;
 import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
@@ -340,5 +343,135 @@ public class MeshPolishGameTests {
                     "both endpoints of an already-cabled frequency must be flagged, flagged " + loops);
             helper.succeed();
         });
+    }
+
+    /**
+     * The GUI roster is the carrier-scoped frequency membership: every same-network
+     * endpoint of the frequency appears exactly once (typed and universal alike),
+     * exactly one row marks itself, rows carry live role and priority, and other
+     * frequencies never leak in.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void rosterListsCarrierFrequencyWithSelf(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 1));
+        placeCable(helper, new BlockPos(3, 1, 1));
+        placeCable(helper, new BlockPos(1, 1, 2));
+
+        var self = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "roster-a",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ALL);
+        var out = placeEndpoint(helper, new BlockPos(2, 1, 1), Direction.UP, "roster-a",
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ALL);
+        out.applyMeshConfig("roster-a", MeshEndpointPart.ROLE_OUT, 7, MeshRegistry.TYPE_ALL);
+        // A typed endpoint joins the same frequency - the roster does not care which
+        // part item a row came from.
+        var typed = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(3, 1, 1)),
+                Direction.UP, null, AE2Logistics.MESH_ENDPOINT_ITEM_PART.get());
+        typed.applyMeshConfig("roster-a", MeshEndpointPart.ROLE_BOTH, 0, 0);
+        // Same network, different frequency: never in this roster.
+        placeEndpoint(helper, new BlockPos(1, 1, 2), Direction.UP, "roster-b",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ALL);
+
+        helper.runAfterDelay(60, () -> {
+            var roster = MeshEndpointMenu.buildRoster(self);
+            helper.assertTrue(roster.total() == 3, "expected 3 roster rows, got " + roster.total());
+            int selfRows = 0;
+            boolean sawOut = false;
+            var positions = new java.util.HashSet<BlockPos>();
+            for (var row : roster.rows()) {
+                positions.add(row.pos());
+                if (row.self()) {
+                    selfRows++;
+                    helper.assertTrue(row.pos().equals(helper.absolutePos(new BlockPos(1, 1, 1))),
+                            "self row must sit at the opening endpoint");
+                }
+                if (row.pos().equals(helper.absolutePos(new BlockPos(2, 1, 1)))) {
+                    sawOut = true;
+                    helper.assertTrue(row.role() == MeshEndpointPart.ROLE_OUT && row.priority() == 7,
+                            "roster row must carry the endpoint's live role and priority");
+                }
+            }
+            helper.assertTrue(selfRows == 1, "exactly one row marks itself, got " + selfRows);
+            helper.assertTrue(sawOut, "configured output endpoint missing from the roster");
+            helper.assertTrue(positions.contains(helper.absolutePos(new BlockPos(3, 1, 1))),
+                    "typed endpoint missing from the roster");
+            helper.assertTrue(!positions.contains(helper.absolutePos(new BlockPos(1, 1, 2))),
+                    "other frequency leaked into the roster");
+            helper.succeed();
+        });
+    }
+
+    /** Same frequency on two ISOLATED networks: each roster sees only its own carrier. */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void rosterScopesToCarrierNetwork(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 0),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 0));
+        placeCable(helper, new BlockPos(2, 1, 0));
+        helper.setBlock(new BlockPos(0, 1, 3),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 3));
+
+        var nearA = placeEndpoint(helper, new BlockPos(1, 1, 0), Direction.UP, "roster-x",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ALL);
+        placeEndpoint(helper, new BlockPos(2, 1, 0), Direction.UP, "roster-x",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ALL);
+        var far = placeEndpoint(helper, new BlockPos(1, 1, 3), Direction.UP, "roster-x",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ALL);
+
+        helper.runAfterDelay(60, () -> {
+            helper.assertTrue(MeshRegistry.endpoints("roster-x").size() == 3,
+                    "registry must hold all three endpoints of the frequency");
+            int nearTotal = MeshEndpointMenu.buildRoster(nearA).total();
+            int farTotal = MeshEndpointMenu.buildRoster(far).total();
+            helper.assertTrue(nearTotal == 2, "two-endpoint carrier must roster 2, got " + nearTotal);
+            helper.assertTrue(farTotal == 1, "lone carrier must roster only itself, got " + farTotal);
+            helper.succeed();
+        });
+    }
+
+    /** A raw-placed universal endpoint starts open: every transport, unlocked, no frequency. */
+    @GameTest(template = "empty5", timeoutTicks = 100)
+    public void universalPlacesOpenAndUnlocked(GameTestHelper helper) {
+        placeCable(helper, new BlockPos(1, 1, 1));
+        var part = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
+                Direction.UP, null, AE2Logistics.MESH_ENDPOINT_PART.get());
+        helper.assertTrue(part != null, "universal endpoint placement failed");
+        helper.assertTrue(part.capabilityMask() == MeshRegistry.TYPE_ALL,
+                "universal must place attuned to every transport");
+        helper.assertTrue(!part.capabilityLocked(), "universal mask must stay editable");
+        helper.assertTrue(MeshEndpointMenu.buildRoster(part).total() == 0,
+                "a blank frequency must roster empty");
+        helper.succeed();
+    }
+
+    /**
+     * Recipe sanity for the tag-driven endpoint recipes: the p2p_tunnels tag resolves
+     * against live AE2 ids (upstream id drift would silently break every recipe), and
+     * the endpoint recipes actually accept a tag member as their tunnel ingredient.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 100)
+    public void endpointRecipesRideTheTunnelTag(GameTestHelper helper) {
+        var tag = TagKey.create(Registries.ITEM,
+                ResourceLocation.fromNamespaceAndPath(AE2Logistics.MOD_ID, "p2p_tunnels"));
+        var ae2Tunnel = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:redstone_p2p_tunnel"));
+        helper.assertTrue(new ItemStack(ae2Tunnel).is(tag),
+                "AE2's tunnels must sit in the recipe tag");
+        helper.assertTrue(new ItemStack(AE2Logistics.PROVIDER_P2P_TUNNEL_PART.get()).is(tag),
+                "the provider tunnel must sit in the recipe tag");
+
+        var manager = helper.getLevel().getRecipeManager();
+        for (var id : new String[] {"mesh_endpoint", "mesh_endpoint_item", "mesh_endpoint_provider"}) {
+            var recipe = manager.byKey(ResourceLocation.fromNamespaceAndPath(AE2Logistics.MOD_ID, id));
+            helper.assertTrue(recipe.isPresent(), id + " recipe must exist");
+            boolean tunnelSlot = false;
+            for (var ingredient : recipe.get().value().getIngredients()) {
+                tunnelSlot |= ingredient.test(new ItemStack(ae2Tunnel));
+            }
+            helper.assertTrue(tunnelSlot, id + " must accept any tagged tunnel");
+        }
+        helper.succeed();
     }
 }
