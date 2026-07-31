@@ -47,7 +47,8 @@ mix freely on a frequency.
   never waits. Machines return results through their own face: pushing into an
   Output endpoint delivers to what the frequency's input endpoints face, highest
   priority first, as if the machine pushed into the provider directly (Output role
-  only - a Both endpoint's face keeps the push direction). Like
+  only - a Both endpoint's face keeps the push direction; with Applied Mekanistics
+  installed the face also speaks Mekanism's own chemical capability). Like
   a provider itself it is **key-type agnostic**: items, fluids, and any companion-mod
   key type (Mekanism chemicals, flux) push through. A provider facing an item-only
   input endpoint still pushes, but as a plain pipe - batches split and blocking loses

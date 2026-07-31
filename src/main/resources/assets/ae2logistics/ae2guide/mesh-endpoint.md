@@ -20,8 +20,9 @@ form a universal point-to-point tunnel - or, with more of them, a
   priority; the cog opens the transport toggles - any subset of redstone, items,
   fluids, energy, signals, ME, and provider.
 - A live roster lists every endpoint of the frequency on this network: role,
-  priority, what the face touches, and status with ME lane state. The server
-  re-pushes it as endpoints are reconfigured.
+  priority, what the face touches, and status with ME lane state - streamed live,
+  so status flips and edits by other players show up while the GUI is open. Click
+  a row to close the GUI and flash a locator box around that endpoint's cable.
 - Costs one channel and idles at 1 AE/t. Frequencies never cross networks - the
   network the endpoints sit on is the carrier.
 

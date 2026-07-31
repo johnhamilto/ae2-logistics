@@ -71,4 +71,28 @@ public class CompatGameTests {
         helper.assertTrue(found, "Applied Mekanistics must register an AE key type");
         helper.succeed();
     }
+
+    /**
+     * Mekanism machines eject through their OWN chemical capability: provider return
+     * faces expose it natively (the AppMekReturns bridge), and a returned chemical
+     * crosses the mesh into the chemical tank behind the input face.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void appMekChemicalsReturnThroughProviderFaces(GameTestHelper helper) {
+        if (!CompatMods.loaded(CompatMods.APPLIED_MEKANISTICS)) {
+            helper.succeed();
+            return;
+        }
+        AppMekCompatHooks.chemicalReturnRoundTrip(helper);
+    }
+
+    /** Same bridge on the tunnel part: chemical cap on outputs, never on inputs. */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void appMekChemicalCapGatesOnTunnelDirection(GameTestHelper helper) {
+        if (!CompatMods.loaded(CompatMods.APPLIED_MEKANISTICS)) {
+            helper.succeed();
+            return;
+        }
+        AppMekCompatHooks.tunnelOutputExposesChemicalReturn(helper);
+    }
 }

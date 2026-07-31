@@ -446,6 +446,12 @@ public class MeshEndpointPart extends AEBasePart {
         return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnGenericInv : null;
     }
 
+    /** The bare return path, for compat bridges wrapping their own capability around it. */
+    @Nullable
+    public appeng.api.storage.MEStorage exposedProviderReturnPath() {
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? providerReturnPath : null;
+    }
+
     /** Insert-only view forwarding output-face returns to the frequency's input faces. */
     private class ProviderReturnPath implements appeng.api.storage.MEStorage {
 

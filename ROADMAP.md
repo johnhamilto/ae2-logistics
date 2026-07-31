@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.25.1 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (111 tests, run
+Status as of v0.26.0 (2026-07-30). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (113 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -48,6 +48,8 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Infra | Mesh endpoint polish closed out (art deferred): roster gametests (carrier scoping, self row, typed rows, live config), open-default + tag-recipe-resolution tests, guide pages match the cog sub-screen / roster / tag recipes / retired fuse recipe | 0.24.1 |
 | F11.6 | Mesh provider return path, parity with the tunnel's: strict-Output provider endpoints expose the return surfaces (generic internal inv for any key type, plain item/fluid caps, ME storage) forwarding to the frequency's input faces highest-priority-first with spill; input faces expose the push router only (never the generic inv - a provider standing there must not chain into returns); shared ReturnAdapters behind tunnel + mesh | 0.25.0 |
 | F11.6 | Assembler crossing VERIFIED end to end (was claimed, untested): a real vanilla crafting pattern reaches a molecular assembler only through the tunnel and the result returns to networked storage, plus a two-step chain (logs -> planks -> sticks) whose intermediate re-enters through the same tunnel. The MAE2-trick TODO closes via the replica route - no input-face ICraftingMachine needed, replicas push into crafting machines via the public ICraftingMachine.of | 0.25.1 |
+| F11 polish | Transport tail closed (art deferred): roster streamed LIVE (menu re-pushes on any change - status flips, other players' edits, face blocks), click a roster row to close and flash a pulsing locator box at that endpoint (EndpointHighlighter), self row gets an accent bar; P2P Frequency Terminal onto generatedBackground + ScrollingRowList + shared Palette (ROW/OUT/REMOTE promoted); guide staleness fixed (LOOP status gone) | 0.26.0 |
+| Compat | Applied Mekanistics native chemical returns: provider return faces (tunnel outputs + strict-Output mesh endpoints) expose mekanism:chemical_handler via the guarded AppMekReturns bridge (compileOnly deps, classloaded only when present) - Mekanism machines auto-eject into the faces natively; gametested round trip lands hydrogen in the input-side provider's return slots through AppMek's own generic-inv bridge | 0.26.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
@@ -55,9 +57,14 @@ representation).
 
 ## Next session
 
-1. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
+1. Signal & Logic system sweep (the whole family at once): Register Bank, Logic Core,
+   Signal Card, the ten LogicPartScreen parts, Stock Sensor + Rate Meter - shared
+   screen onto Palette + padding rhythm, generated backgrounds, guide + recipes.
+   Textures stay deferred with the transport family's.
+2. Then telemetry boards (Tracer Terminal, Job Monitor + its ScrollingRowList entry).
+3. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
    then Modrinth + CurseForge uploads.
-2. Later: F10 bundles go/no-go, upstream PR implementations.
+4. Later: F10 bundles go/no-go, upstream PR implementations.
 
 ## Longer term
 - **F10 bundles** (DESIGN.md 4.3): the last unbuilt design-doc feature. Preconditions

@@ -31,7 +31,9 @@ behaves as if it were physically adjacent to every machine behind the outputs:
   provider directly.
 - **Key-type agnostic, like a provider itself**: items, fluids, and any key type a
   companion mod registers (Mekanism chemicals via Applied Mekanistics, flux, ...)
-  push through the same way.
+  push through the same way. With Applied Mekanistics installed, output faces also
+  speak Mekanism's own chemical capability, so Mekanism machines auto-eject their
+  results straight into the tunnel.
 - **Same network only**: like a physical provider, patterns serve the network the
   provider is on - the tunnel does not bridge patterns across networks.
 

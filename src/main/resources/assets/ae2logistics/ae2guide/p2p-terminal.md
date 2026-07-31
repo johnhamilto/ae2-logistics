@@ -35,8 +35,8 @@ accident. Roles (input vs output) are still set the usual way when placing tunne
 
 The table also lists every **mesh frequency** that touches this network, with all of its
 endpoints server-wide: role, capabilities, whether the endpoint sits on this grid or a
-remote one, and a live status - `OK`, `off` (unpowered), `wait` (an ME endpoint with no
-peer), or `LOOP` (see the mesh chapter). Selecting a mesh row and pressing **Rename**
+remote one, and a live status - `OK`, `off` (unpowered), or `wait` (an ME endpoint with
+no peer). Selecting a mesh row and pressing **Rename**
 retags every loaded endpoint of that frequency in one action; endpoints in unloaded
 chunks keep the old frequency until they load and are renamed again.
 

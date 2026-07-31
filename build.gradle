@@ -46,6 +46,11 @@ dependencies {
 
     // The de facto standard AE2 suite, runtime only: integration tests detect these
     // via ModList and skip when absent, so none of them are real dependencies.
+    // AppMek + Mekanism also sit on the COMPILE classpath for the guarded chemical
+    // bridge (compat/AppMekReturns, classloaded only when the mod is present) -
+    // compileOnly adds no runtime requirement and neoforge.mods.toml lists neither.
+    compileOnly "maven.modrinth:applied-mekanistics:${project.appmek_version}"
+    compileOnly "maven.modrinth:mekanism:${project.mekanism_version}"
     runtimeOnly "maven.modrinth:glodium:${project.glodium_version}"
     runtimeOnly "maven.modrinth:extended-ae:${project.extendedae_version}"
     runtimeOnly "maven.modrinth:mega:${project.megacells_version}"

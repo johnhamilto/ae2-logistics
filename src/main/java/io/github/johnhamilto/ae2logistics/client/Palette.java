@@ -9,6 +9,12 @@ public final class Palette {
     public static final int OK = 0x2E8B57;
     public static final int WAIT = 0xA8760B;
     public static final int ALERT = 0xB33A36;
+    /** Body text on list rows; darker than HINT, quieter than LABEL. */
+    public static final int ROW = 0x505A62;
+    /** Output-direction accent (P2P outputs, mesh Output roles). */
+    public static final int OUT = 0xA85E1F;
+    /** Things on another grid or in another dimension. */
+    public static final int REMOTE = 0x7C4FB3;
 
     /** AE2's darker inset - the "here be info" accent its terminals use for slots. */
     public static final int WELL = 0x2E10102C;

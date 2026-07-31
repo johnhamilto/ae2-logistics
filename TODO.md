@@ -41,10 +41,9 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 - Query Sensor
 - Query Export Bus
 - ME Config Terminal
-- P2P Frequency Terminal
-- Mesh endpoints (universal + 7 typed): better sprite art ONLY - needs a new texture
-  approach, deferred; GUI, 3D item models, guide, recipes, and tests closed out 0.24.x
-- Provider P2P Tunnel
+- Transport family (mesh endpoints, P2P Frequency Terminal, Provider P2P Tunnel):
+  better sprite art ONLY - needs a new texture approach, deferred; GUI, models,
+  guide, recipes, and tests closed out 0.24.x-0.26.0
 - ME Subnet Link
 
 ## Features
@@ -56,11 +55,6 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 - Generated backgrounds everywhere: adopt `generatedBackground` for the remaining
   screens as each is touched; verify slot-grid screens (Stock Sensor, Pattern
   Workbench) draw slot insets correctly without a baked texture.
-- Roster follow-ups: click a row to highlight the endpoint in world; stream status
-  changes live (today only config edits refresh); self-row emphasis if the color
-  distinction stays too subtle.
 - ME Job Monitor board onto ScrollingRowList + Palette.
 - Logic part screens onto Palette + the padding rhythm when next touched.
-- Applied Mekanistics native chemical capability on our tunnel faces (one
-  registration on either side; AE2-aware paths already work).
 - Pre-release modpack soak against the standard suite (see CLAUDE.md).

@@ -81,6 +81,17 @@ public final class ScrollingRowList {
         }
     }
 
+    /** The row index under the mouse (well area only, gutter excluded), or -1. */
+    public int rowAt(double mouseX, double mouseY, int leftPos, int topPos) {
+        int localX = (int) mouseX - leftPos;
+        int localY = (int) mouseY - topPos;
+        if (localX < left || localX >= right - 10 || localY < top + 2 || localY >= bottom - 1) {
+            return -1;
+        }
+        int index = scrollbar.getCurrentScroll() + (localY - top - 2) / step;
+        return index < rowCount ? index : -1;
+    }
+
     /** Wheel-scrolls when hovering the list area; returns whether the event was consumed. */
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaY,
             int leftPos, int topPos, int imageWidth) {

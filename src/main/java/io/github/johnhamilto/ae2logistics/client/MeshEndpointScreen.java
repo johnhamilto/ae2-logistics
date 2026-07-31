@@ -167,6 +167,21 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         return super.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
     }
 
+    /** Clicking a roster row closes the screen and flashes a box at that endpoint. */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        int index = roster.rowAt(mouseX, mouseY, leftPos, topPos);
+        if (index >= 0 && index < menu.roster().size()) {
+            var info = menu.roster().get(index);
+            if (!info.self()) {
+                EndpointHighlighter.highlight(info.pos());
+                onClose();
+            }
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
     private static String coords(MeshEndpointMenu.EndpointInfo info) {
         return info.pos().getX() + ", " + info.pos().getY() + ", " + info.pos().getZ();
     }
@@ -193,6 +208,10 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         }
         roster.drawRows(guiGraphics, (g, index, y) -> {
             var info = menu.roster().get(index);
+            if (info.self()) {
+                // Accent bar on the well's left edge: "this row is the endpoint you opened".
+                g.fill(8, y - 2, 10, y + 15, 0xFF2E6E9E);
+            }
             g.renderItem(info.connected(), 10, y);
             g.drawString(font, coords(info), 30, y + 4, info.self() ? Palette.LABEL : Palette.HINT, false);
             g.drawString(font, roleLabel(info.role()), 112, y + 4, Palette.LABEL, false);

@@ -8,8 +8,10 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.menu.AEBaseMenu;
 
@@ -24,6 +26,14 @@ public class MeshEndpointMenu extends AEBaseMenu {
 
     @Nullable
     private final MeshEndpointPart part;
+    @Nullable
+    private final ServerPlayer serverPlayer;
+
+    /** Live-stream state: the roster as last pushed to this menu's player. */
+    @Nullable
+    private List<EndpointInfo> lastSentRows;
+    private int lastSentTotal;
+    private int rosterTicks;
 
     public final BlockPos pos;
     public final Direction side;
@@ -64,6 +74,7 @@ public class MeshEndpointMenu extends AEBaseMenu {
     public MeshEndpointMenu(int containerId, Inventory inventory, MeshEndpointPart part) {
         super(AE2Logistics.MESH_ENDPOINT_MENU.get(), containerId, inventory, part);
         this.part = part;
+        this.serverPlayer = inventory.player instanceof ServerPlayer sp ? sp : null;
         var host = part.getHost().getBlockEntity();
         this.pos = host.getBlockPos();
         this.side = part.getSide();
@@ -77,6 +88,7 @@ public class MeshEndpointMenu extends AEBaseMenu {
     public MeshEndpointMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
         super(AE2Logistics.MESH_ENDPOINT_MENU.get(), containerId, inventory, null);
         this.part = null;
+        this.serverPlayer = null;
         this.pos = buffer.readBlockPos();
         this.side = Direction.values()[buffer.readByte()];
         this.frequency = buffer.readUtf();
@@ -144,6 +156,45 @@ public class MeshEndpointMenu extends AEBaseMenu {
     public void updateRoster(List<EndpointInfo> rows, int total) {
         this.roster = List.copyOf(rows);
         this.rosterTotal = total;
+    }
+
+    /**
+     * Live roster streaming: every half second the server rebuilds the roster and
+     * re-pushes it when anything changed - status flips, priority edits by OTHER
+     * players, machines placed against endpoint faces. Config edits through this menu
+     * still push instantly via {@link ConfigureMeshPayload}.
+     */
+    @Override
+    public void broadcastChanges() {
+        super.broadcastChanges();
+        if (part == null || serverPlayer == null || ++rosterTicks % 10 != 0) {
+            return;
+        }
+        var built = buildRoster(part);
+        if (built.total() == lastSentTotal && rosterEquals(built.rows(), lastSentRows)) {
+            return;
+        }
+        lastSentRows = built.rows();
+        lastSentTotal = built.total();
+        PacketDistributor.sendToPlayer(serverPlayer,
+                new MeshRosterPayload(pos, (byte) side.ordinal(), built.total(), built.rows()));
+    }
+
+    private static boolean rosterEquals(List<EndpointInfo> a, @Nullable List<EndpointInfo> b) {
+        if (b == null || a.size() != b.size()) {
+            return false;
+        }
+        for (int i = 0; i < a.size(); i++) {
+            var fresh = a.get(i);
+            var sent = b.get(i);
+            if (!fresh.pos().equals(sent.pos()) || fresh.role() != sent.role()
+                    || fresh.priority() != sent.priority() || fresh.status() != sent.status()
+                    || fresh.meState() != sent.meState() || fresh.self() != sent.self()
+                    || !ItemStack.matches(fresh.connected(), sent.connected())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

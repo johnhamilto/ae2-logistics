@@ -540,6 +540,11 @@ public class AE2Logistics {
                     (part, context) -> part.exposedFluidHandler(), MeshEndpointPart.class);
             event.register(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
                     (part, context) -> part.exposedEnergyHandler(), MeshEndpointPart.class);
+            // Guarded compat: only classloads AppMekReturns (and Mekanism API) when present.
+            if (io.github.johnhamilto.ae2logistics.compat.CompatMods
+                    .loaded(io.github.johnhamilto.ae2logistics.compat.CompatMods.APPLIED_MEKANISTICS)) {
+                io.github.johnhamilto.ae2logistics.compat.AppMekReturns.register(event);
+            }
         });
 
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) ->
