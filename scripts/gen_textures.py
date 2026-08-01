@@ -530,6 +530,23 @@ SIGNAL_FACE = [(134, 44, 158, 255), (238, 116, 255, 255), (186, 78, 206, 255)]
 write_png_pixels(OUT / "color_palette" / "p2p_face_key.png", [P2P_FACE_KEY])
 write_png_pixels(OUT / "color_palette" / "signal_face.png", [SIGNAL_FACE])
 
+# P2P chassis, house edition: ae2's tunnel chassis grays pulled to a light cool
+# gray so our parts read as ours next to vanilla tunnels (the faces stay ae2's,
+# and the ME-purple connector nub on back2 stays purple on purpose - it really
+# does plug into ME, so its colors are simply absent from the key). The curve
+# is the one lever for how dark.
+P2P_CHASSIS_KEY = [
+    (242, 242, 242, 255), (232, 232, 234, 255), (213, 214, 220, 255),
+    (204, 204, 204, 255), (193, 195, 208, 255), (168, 168, 168, 255),
+    (166, 166, 166, 255), (135, 143, 165, 255), (120, 126, 151, 255),
+    (102, 102, 102, 255), (89, 89, 89, 255), (77, 77, 103, 255),
+    (66, 66, 66, 255), (65, 65, 65, 255), (64, 64, 64, 255), (65, 63, 84, 255),
+]
+CHASSIS_GRAY = [(int(r * 0.82), int(g * 0.84), min(255, int(b * 0.88) + 6), 255)
+                for r, g, b, _ in P2P_CHASSIS_KEY]
+write_png_pixels(OUT / "color_palette" / "p2p_chassis_key.png", [P2P_CHASSIS_KEY])
+write_png_pixels(OUT / "color_palette" / "chassis_gray.png", [CHASSIS_GRAY])
+
 
 # The universal face is the one still drawn here: a rainbow swirl - every
 # transport at once.

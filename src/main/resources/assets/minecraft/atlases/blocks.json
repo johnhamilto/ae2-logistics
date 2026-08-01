@@ -9,6 +9,19 @@
       "permutations": {
         "logistics_signal": "ae2logistics:color_palette/signal_face"
       }
+    },
+    {
+      "type": "paletted_permutations",
+      "textures": [
+        "ae2:part/p2p_tunnel_front",
+        "ae2:part/p2p_tunnel_sides",
+        "ae2:part/p2p_tunnel_back",
+        "ae2:part/p2p_tunnel_back2"
+      ],
+      "palette_key": "ae2logistics:color_palette/p2p_chassis_key",
+      "permutations": {
+        "logistics_gray": "ae2logistics:color_palette/chassis_gray"
+      }
     }
   ]
 }
