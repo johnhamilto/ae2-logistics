@@ -17,20 +17,16 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 
 - Adaptive Processing Pattern
 - Guarded Pattern
-- Config Blueprint
 - Regulus Crystal
 
 ## Polish pass - cable parts
 
-- Query Terminal
-- Query Sensor
-- Query Export Bus
-- ME Config Terminal
 - Deferred sprite art (needs a new texture approach): transport family (mesh
   endpoints, P2P Frequency Terminal, Provider P2P Tunnel; closed out 0.24.x-0.26.0),
   signal family (ten logic parts, Register Bank, Logic Core, Signal Card; 0.28.0),
-  telemetry boards (Tracer Terminal, Job Monitor; 0.29.0) - GUI, models, guide,
-  recipes, tests all done
+  telemetry boards (Tracer Terminal, Job Monitor; 0.29.0), queries + config
+  (Query Terminal/Sensor/Export Bus, Config Terminal, Config Blueprint; 0.30.0) -
+  GUI, models, guide, recipes, tests all done
 - ME Subnet Link
 
 ## Features
@@ -117,9 +113,8 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
     edge for free; what it lacks is backpressure (sustained overflow fills general
     storage as a buffer instead of refusing). Could ship as the sweep half of the
     card, upgraded to true refusal when the upstream hook lands.
-- Generated backgrounds everywhere: adopt `generatedBackground` for the remaining
-  screens as each is touched (queries, Pattern Workbench, Job Scheduler, Guarded
-  Provider, Query/Config terminals). Slot insets over a
+- Generated backgrounds everywhere: Pattern Workbench, Job Scheduler, Guarded
+  Provider remain (the last three baked-chrome screens). Slot insets over a
   generated panel are solved: Icon.SLOT_BACKGROUND per active slot (see
   LogicPartScreen).
 - Pre-release modpack soak against the standard suite (see CLAUDE.md).

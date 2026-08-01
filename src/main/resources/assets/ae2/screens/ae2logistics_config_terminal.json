@@ -3,14 +3,17 @@
   "includes": [
     "common/common.json"
   ],
-  "background": {
-    "texture": "guis/ae2logistics/terminal_236x190.png",
-    "srcRect": [
-      0,
-      0,
-      236,
-      190
-    ]
+  "generatedBackground": {
+    "width": 236,
+    "height": 190
+  },
+  "widgets": {
+    "scrollbar": {
+      "left": 220,
+      "top": 35,
+      "width": 7,
+      "height": 91
+    }
   },
   "text": {
     "dialog_title": {

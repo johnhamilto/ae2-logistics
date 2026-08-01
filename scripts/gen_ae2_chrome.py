@@ -98,10 +98,6 @@ def main() -> None:
     stamp_slots(out, slot, player_inventory(200))
     emit("pattern_workbench", out)
 
-    # Plain slotless part panels (Job Monitor, Query Sensor, Query Export Bus, and
-    # the plain logic-part variant via LogicPartScreen's own drawBG).
-    emit("panel_200x166", dialog(source, 200, 166))
-
     # Guarded Pattern Provider: 9 pattern slots up top, guard strip, player inventory.
     out = dialog(source, 200, 231)
     stamp_slots(out, slot, grid(18, 19, 9, 1))
@@ -114,9 +110,6 @@ def main() -> None:
     stamp_slots(out, slot, player_inventory(231))
     emit("job_scheduler", out)
 
-    # The slotless terminals (Tracer, Query, Config) share this; P2P Frequency
-    # Terminal moved to a generatedBackground in 0.26.0.
-    emit("terminal_236x190", dialog(source, 236, 190))
 
 
 if __name__ == "__main__":

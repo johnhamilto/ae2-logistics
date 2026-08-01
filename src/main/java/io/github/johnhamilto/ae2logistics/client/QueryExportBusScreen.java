@@ -15,18 +15,12 @@ import io.github.johnhamilto.ae2logistics.menu.QueryExportBusMenu;
 
 public class QueryExportBusScreen extends AEBaseScreen<QueryExportBusMenu> {
 
-    private static final int LABEL = 0x404040;
-    private static final int HINT = 0x7b7b7b;
-    private static final int VALUE = 0x2E6E9E;
-    private static final int ALERT = 0xB33A36;
-
     private AETextField expressionBox;
 
     public QueryExportBusScreen(QueryExportBusMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 200;
-        this.imageHeight = 166;
+        // Window size comes from the style doc's generatedBackground.
     }
 
     @Override
@@ -72,14 +66,14 @@ public class QueryExportBusScreen extends AEBaseScreen<QueryExportBusMenu> {
 
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Query", 10, 18, LABEL, false);
+        guiGraphics.drawString(font, "Query", 10, 18, Palette.LABEL, false);
         if (!menu.source.isBlank() && !menu.sourceValid()) {
-            guiGraphics.drawString(font, "query has a syntax error", 10, 54, ALERT, false);
+            guiGraphics.drawString(font, "query has a syntax error", 10, 54, Palette.ALERT, false);
         }
-        guiGraphics.drawString(font, "Exports matching items into the", 10, 74, HINT, false);
-        guiGraphics.drawString(font, "inventory this bus faces.", 10, 86, HINT, false);
-        guiGraphics.drawString(font, "Use @name for saved queries.", 10, 98, HINT, false);
+        guiGraphics.drawString(font, "Exports matching items into the", 10, 74, Palette.HINT, false);
+        guiGraphics.drawString(font, "inventory this bus faces.", 10, 86, Palette.HINT, false);
+        guiGraphics.drawString(font, "Use @name for saved queries.", 10, 98, Palette.HINT, false);
         guiGraphics.drawString(font, "Moved: " + menu.movedLastOperation() + "/op", 78,
-                imageHeight - 22, VALUE, false);
+                imageHeight - 22, Palette.VALUE, false);
     }
 }

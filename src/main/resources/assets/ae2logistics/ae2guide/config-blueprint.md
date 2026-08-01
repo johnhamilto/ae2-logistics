@@ -22,3 +22,5 @@ box, apply it to a rebuilt copy.
   type-matching devices. Sneak-use in air to clear the blueprint.
 - Pairs with the [ME Config Terminal](config-terminal.md) for single-device
   copy/paste and fleet-wide paste.
+
+<RecipeFor id="config_blueprint" />

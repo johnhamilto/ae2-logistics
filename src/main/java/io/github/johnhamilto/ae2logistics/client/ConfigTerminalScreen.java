@@ -23,22 +23,13 @@ import io.github.johnhamilto.ae2logistics.menu.ConfigTerminalMenu;
 
 public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
 
-    private static final int LABEL = 0x404040;
-    private static final int HINT = 0x7b7b7b;
-    private static final int ROW = 0x505A62;
-    private static final int CHANGED = 0xA8760B;
-    private static final int ADDED = 0x2E6E9E;
-    private static final int GONE = 0xB33A36;
-
-    private static final int LIST_X = 10;
     private static final int LIST_Y = 34;
-    private static final int ROW_HEIGHT = 18;
-    private static final int VISIBLE_ROWS = 5;
     private static final int DETAIL_Y = 128;
+
+    private final ScrollingRowList list = new ScrollingRowList(8, 228, LIST_Y, LIST_Y + 93, 18);
 
     private AETextField searchBox;
     private AETextField priorityBox;
-    private int scroll;
     private boolean changedOnly;
     private final List<Button> settingButtons = new ArrayList<>();
     private List<ConfigTerminalMenu.SettingLine> lastSettings = List.of();
@@ -46,8 +37,8 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
     public ConfigTerminalScreen(ConfigTerminalMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 236;
-        this.imageHeight = 190;
+        // Window size comes from the style doc's generatedBackground.
+        list.register(widgets, "scrollbar");
     }
 
     @Override
@@ -108,6 +99,7 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
     @Override
     protected void updateBeforeRender() {
         super.updateBeforeRender();
+        list.setRowCount(filteredIndices().size());
         if (!menu.detailSettings.equals(lastSettings)) {
             lastSettings = List.copyOf(menu.detailSettings);
             rebuildSettingButtons();
@@ -149,51 +141,55 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
     }
 
     @Override
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+            float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        list.drawBackground(guiGraphics, offsetX, offsetY);
+    }
+
+    @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         if (!menu.clientNotice.isEmpty()) {
             guiGraphics.drawString(font, menu.clientNotice,
-                    imageWidth - 10 - font.width(menu.clientNotice), 6, CHANGED, false);
+                    imageWidth - 10 - font.width(menu.clientNotice), 6, Palette.WAIT, false);
         }
 
         var indices = filteredIndices();
-        int max = Math.max(0, indices.size() - VISIBLE_ROWS);
-        scroll = Math.min(scroll, max);
-
-        for (int i = 0; i < VISIBLE_ROWS && scroll + i < indices.size(); i++) {
-            int rowIndex = indices.get(scroll + i);
+        if (indices.isEmpty()) {
+            guiGraphics.drawString(font, "No configurable devices", 12, LIST_Y + 4,
+                    Palette.HINT, false);
+        }
+        list.drawRows(guiGraphics, (g, index, y) -> {
+            int rowIndex = indices.get(index);
             var row = menu.rows.get(rowIndex);
-            int y = LIST_Y + i * ROW_HEIGHT;
             if (rowIndex == menu.selectedIndex) {
-                guiGraphics.fill(LIST_X - 2, y - 1, LIST_X + 218, y + ROW_HEIGHT - 2, 0x332E6E9E);
+                g.fill(9, y - 2, 218, y + 14, 0x332E6E9E);
             }
             var name = row.name();
             if (name.length() > 20) {
                 name = name.substring(0, 19) + "..";
             }
             int nameColor = switch (row.diff()) {
-                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_CHANGED -> CHANGED;
-                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_NEW -> ADDED;
-                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_GONE -> GONE;
-                default -> ROW;
+                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_CHANGED -> Palette.WAIT;
+                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_NEW -> Palette.VALUE;
+                case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_GONE -> Palette.ALERT;
+                default -> Palette.ROW;
             };
-            guiGraphics.drawString(font, name, LIST_X + 20, y, nameColor, false);
+            g.drawString(font, name, 30, y, nameColor, false);
             var info = row.hasPos()
                     ? row.pos().getX() + "," + row.pos().getY() + "," + row.pos().getZ()
                     : "";
             if (row.hasPriority()) {
                 info = info + "  p" + row.priority();
             }
-            guiGraphics.drawString(font, info, LIST_X + 20, y + 8, HINT, false);
+            g.drawString(font, info, 30, y + 8, Palette.HINT, false);
 
             var item = BuiltInRegistries.ITEM.getOptional(ResourceLocation.tryParse(row.itemId()))
                     .orElse(null);
             if (item != null) {
-                guiGraphics.renderItem(new ItemStack(item), LIST_X, y);
+                g.renderItem(new ItemStack(item), 10, y - 1);
             }
-        }
-        if (indices.isEmpty()) {
-            guiGraphics.drawString(font, "No configurable devices", LIST_X, LIST_Y + 4, HINT, false);
-        }
+        });
 
         for (int i = 0; i < menu.detailSettings.size() && i < 4; i++) {
             var line = menu.detailSettings.get(i);
@@ -201,30 +197,27 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
             if (text.length() > 33) {
                 text = text.substring(0, 32) + "..";
             }
-            guiGraphics.drawString(font, text, 10, DETAIL_Y + i * 10, LABEL, false);
+            guiGraphics.drawString(font, text, 10, DETAIL_Y + i * 10, Palette.LABEL, false);
         }
         if (menu.selectedIndex >= 0 && menu.detailSettings.isEmpty()) {
-            guiGraphics.drawString(font, "no generic settings", 10, DETAIL_Y, HINT, false);
+            guiGraphics.drawString(font, "no generic settings", 10, DETAIL_Y, Palette.HINT, false);
         }
-        guiGraphics.drawString(font, "Pri", 10, DETAIL_Y + 46, LABEL, false);
+        guiGraphics.drawString(font, "Pri", 10, DETAIL_Y + 46, Palette.LABEL, false);
         if (!menu.clientClipboardType.isEmpty()) {
             var clip = "clip: " + menu.clientClipboardType;
             if (clip.length() > 34) {
                 clip = clip.substring(0, 33) + "..";
             }
-            guiGraphics.drawString(font, clip, 10, DETAIL_Y + 58, HINT, false);
+            guiGraphics.drawString(font, clip, 10, DETAIL_Y + 58, Palette.HINT, false);
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int localX = (int) mouseX - leftPos;
-        int localY = (int) mouseY - topPos;
-        if (localX >= LIST_X - 2 && localX < LIST_X + 218 && localY >= LIST_Y - 1
-                && localY < LIST_Y + VISIBLE_ROWS * ROW_HEIGHT) {
+        int visibleIndex = list.rowAt(mouseX, mouseY, leftPos, topPos);
+        if (visibleIndex >= 0) {
             var indices = filteredIndices();
-            int visibleIndex = scroll + (localY - LIST_Y + 1) / ROW_HEIGHT;
-            if (visibleIndex >= 0 && visibleIndex < indices.size()) {
+            if (visibleIndex < indices.size()) {
                 int rowIndex = indices.get(visibleIndex);
                 send(ConfigTerminalActionPayload.ACTION_SELECT, rowIndex, "", 0);
                 menu.selectedIndex = rowIndex;
@@ -240,8 +233,9 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int max = Math.max(0, filteredIndices().size() - VISIBLE_ROWS);
-        scroll = (int) Math.max(0, Math.min(max, scroll - scrollY));
-        return true;
+        if (list.mouseScrolled(mouseX, mouseY, scrollY, leftPos, topPos, imageWidth)) {
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 }

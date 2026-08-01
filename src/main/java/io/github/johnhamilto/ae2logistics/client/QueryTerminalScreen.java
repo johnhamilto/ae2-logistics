@@ -18,30 +18,20 @@ import io.github.johnhamilto.ae2logistics.menu.QueryTerminalMenu;
 
 public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
 
-    private static final int LABEL = 0x404040;
-    private static final int HINT = 0x7b7b7b;
-    private static final int ROW = 0x505A62;
-    private static final int SELECTED = 0x2E6E9E;
-    private static final int OK = 0x2E8B57;
-    private static final int ALERT = 0xB33A36;
-
-    private static final int LIST_X = 10;
     private static final int LIST_Y = 62;
-    private static final int LIST_WIDTH = 96;
-    private static final int ROW_HEIGHT = 11;
-    private static final int VISIBLE_ROWS = 9;
     private static final int RESULTS_X = 114;
+
+    private final ScrollingRowList list = new ScrollingRowList(8, 108, LIST_Y, LIST_Y + 102, 11);
 
     private AETextField expressionBox;
     private AETextField nameBox;
     private String lastRequested = "";
-    private int scroll;
 
     public QueryTerminalScreen(QueryTerminalMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 236;
-        this.imageHeight = 190;
+        // Window size comes from the style doc's generatedBackground.
+        list.register(widgets, "scrollbar");
     }
 
     @Override
@@ -80,6 +70,7 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
     @Override
     protected void updateBeforeRender() {
         super.updateBeforeRender();
+        list.setRowCount(savedNames().size());
         var current = expressionBox.getValue();
         if (!current.equals(lastRequested)) {
             lastRequested = current;
@@ -93,36 +84,40 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
     }
 
     @Override
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+            float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        list.drawBackground(guiGraphics, offsetX, offsetY);
+    }
+
+    @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Saved", LIST_X, LIST_Y - 10, LABEL, false);
+        guiGraphics.drawString(font, "Saved", 10, LIST_Y - 10, Palette.LABEL, false);
 
         var names = savedNames();
-        int max = Math.max(0, names.size() - VISIBLE_ROWS);
-        scroll = Math.min(scroll, max);
         if (names.isEmpty()) {
-            guiGraphics.drawString(font, "none yet", LIST_X, LIST_Y + 2, HINT, false);
+            guiGraphics.drawString(font, "none yet", 12, LIST_Y + 2, Palette.HINT, false);
         }
-        for (int i = 0; i < VISIBLE_ROWS && scroll + i < names.size(); i++) {
-            var name = names.get(scroll + i);
+        list.drawRows(guiGraphics, (g, index, y) -> {
+            var name = names.get(index);
             var label = "@" + name;
-            if (label.length() > 15) {
-                label = label.substring(0, 14) + "..";
+            if (label.length() > 14) {
+                label = label.substring(0, 13) + "..";
             }
             boolean selected = name.equals(nameBox.getValue());
-            guiGraphics.drawString(font, label, LIST_X, LIST_Y + i * ROW_HEIGHT,
-                    selected ? SELECTED : ROW, false);
-        }
+            g.drawString(font, label, 10, y, selected ? Palette.VALUE : Palette.ROW, false);
+        });
 
         if (!menu.previewError.isEmpty()) {
             var error = menu.previewError;
             if (error.length() > 36) {
                 error = error.substring(0, 35) + "..";
             }
-            guiGraphics.drawString(font, error, 10, imageHeight - 14, ALERT, false);
+            guiGraphics.drawString(font, error, 10, imageHeight - 14, Palette.ALERT, false);
         } else if (!lastRequested.isBlank()) {
             guiGraphics.drawString(font,
                     menu.previewMatches + " kinds, " + menu.previewTotal + " total",
-                    RESULTS_X, LIST_Y - 10, OK, false);
+                    RESULTS_X, LIST_Y - 10, Palette.OK, false);
         }
 
         for (int i = 0; i < menu.previewStacks.size(); i++) {
@@ -132,32 +127,28 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
                 guiGraphics.renderItem(stack, RESULTS_X, y);
             }
             guiGraphics.drawString(font, "x" + menu.previewAmounts.get(i),
-                    RESULTS_X + 20, y + 5, ROW, false);
+                    RESULTS_X + 20, y + 5, Palette.ROW, false);
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int localX = (int) mouseX - leftPos;
-        int localY = (int) mouseY - topPos;
-        if (localX >= LIST_X && localX < LIST_X + LIST_WIDTH && localY >= LIST_Y
-                && localY < LIST_Y + VISIBLE_ROWS * ROW_HEIGHT) {
-            int index = scroll + (localY - LIST_Y) / ROW_HEIGHT;
-            var names = savedNames();
-            if (index >= 0 && index < names.size()) {
-                var name = names.get(index);
-                nameBox.setValue(name);
-                expressionBox.setValue(menu.library.getOrDefault(name, ""));
-                return true;
-            }
+        int index = list.rowAt(mouseX, mouseY, leftPos, topPos);
+        var names = savedNames();
+        if (index >= 0 && index < names.size()) {
+            var name = names.get(index);
+            nameBox.setValue(name);
+            expressionBox.setValue(menu.library.getOrDefault(name, ""));
+            return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int max = Math.max(0, savedNames().size() - VISIBLE_ROWS);
-        scroll = (int) Math.max(0, Math.min(max, scroll - scrollY));
-        return true;
+        if (list.mouseScrolled(mouseX, mouseY, scrollY, leftPos, topPos, imageWidth)) {
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 }

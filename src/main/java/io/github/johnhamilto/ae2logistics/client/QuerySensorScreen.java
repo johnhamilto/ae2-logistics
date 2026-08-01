@@ -15,19 +15,13 @@ import io.github.johnhamilto.ae2logistics.menu.QuerySensorMenu;
 
 public class QuerySensorScreen extends AEBaseScreen<QuerySensorMenu> {
 
-    private static final int LABEL = 0x404040;
-    private static final int HINT = 0x7b7b7b;
-    private static final int VALUE = 0x2E6E9E;
-    private static final int ALERT = 0xB33A36;
-
     private AETextField channelBox;
     private AETextField expressionBox;
 
     public QuerySensorScreen(QuerySensorMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 200;
-        this.imageHeight = 166;
+        // Window size comes from the style doc's generatedBackground.
     }
 
     @Override
@@ -79,13 +73,13 @@ public class QuerySensorScreen extends AEBaseScreen<QuerySensorMenu> {
 
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Output", 10, 22, LABEL, false);
-        guiGraphics.drawString(font, "Query", 10, 42, LABEL, false);
+        guiGraphics.drawString(font, "Output", 10, 22, Palette.LABEL, false);
+        guiGraphics.drawString(font, "Query", 10, 42, Palette.LABEL, false);
         if (!menu.source.isBlank() && !menu.sourceValid()) {
-            guiGraphics.drawString(font, "query has a syntax error", 10, 78, ALERT, false);
+            guiGraphics.drawString(font, "query has a syntax error", 10, 78, Palette.ALERT, false);
         }
-        guiGraphics.drawString(font, "Writes total matching amount", 10, 96, HINT, false);
-        guiGraphics.drawString(font, "e.g. tag:c:ores AND stored", 10, 108, HINT, false);
-        guiGraphics.drawString(font, "Out: " + menu.liveValue(), 78, imageHeight - 22, VALUE, false);
+        guiGraphics.drawString(font, "Writes total matching amount", 10, 96, Palette.HINT, false);
+        guiGraphics.drawString(font, "e.g. tag:c:ores AND stored", 10, 108, Palette.HINT, false);
+        guiGraphics.drawString(font, "Out: " + menu.liveValue(), 78, imageHeight - 22, Palette.VALUE, false);
     }
 }
