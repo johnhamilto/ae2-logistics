@@ -79,6 +79,24 @@ public final class LogisticsTestPlots {
     }
 
     /**
+     * Janitor demo: misplaced crafting tables sit in the unfiltered chest; the other
+     * chest's bus is partitioned to tables at higher priority. Open the janitor,
+     * press Rejigger, watch the stock re-settle.
+     */
+    @TestPlot("logistics_janitor")
+    public static void janitor(PlotBuilder plot) {
+        plot.creativeEnergyCell("0 0 0");
+        plot.cable("1 0 0").part(Direction.NORTH, AEParts.STORAGE_BUS);
+        plot.cable("2 0 0").part(Direction.NORTH, AEParts.STORAGE_BUS, bus -> {
+            bus.setPriority(10);
+            bus.getConfig().setStack(0, new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1));
+        });
+        plot.block("3 0 0", AE2Logistics.STORAGE_JANITOR.get());
+        plot.chest("1 0 -1", new ItemStack(Items.CRAFTING_TABLE, 40));
+        plot.chest("2 0 -1");
+    }
+
+    /**
      * One backbone, two lanes. Item lane: a hopper feeds the typed input endpoint and
      * deliveries land in the output chests. ME lane: two typed ME endpoints fuse the
      * creative cells on their faces into one carried grid (inspect with a network tool).

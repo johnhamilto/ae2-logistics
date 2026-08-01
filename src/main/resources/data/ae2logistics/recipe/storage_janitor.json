@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ae2:io_port"
+    },
+    {
+      "item": "ae2logistics:regulus_crystal"
+    },
+    {
+      "item": "ae2:logic_processor"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:storage_janitor"
+  }
+}

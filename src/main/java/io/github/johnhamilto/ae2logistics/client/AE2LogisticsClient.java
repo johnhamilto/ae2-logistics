@@ -71,6 +71,10 @@ public final class AE2LogisticsClient {
                     AE2Logistics.LOGIC_CORE_MENU.get(),
                     LogicCoreScreen::new,
                     "/screens/ae2logistics_logic_core.json");
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.STORAGE_JANITOR_MENU.get(),
+                    StorageJanitorScreen::new,
+                    "/screens/ae2logistics_storage_janitor.json");
             // AE2's storage bus screen, our style doc - retitles the window.
             appeng.init.client.InitScreens.register(event,
                     AE2Logistics.SUBNET_LINK_MENU.get(),

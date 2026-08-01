@@ -1,0 +1,21 @@
+{
+  "helpTopic": "ae2logistics:storage-janitor.md",
+  "includes": [
+    "common/common.json"
+  ],
+  "generatedBackground": {
+    "width": 200,
+    "height": 110
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "block.ae2logistics.storage_janitor"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

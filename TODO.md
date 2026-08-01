@@ -34,28 +34,6 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
     buffers via the signal service, independent of any Tracer Terminal) and
     synced to watching clients at ~1/s, throttled and cached.
   - Guide page + plot from day one; sprite/model art joins the deferred-art line.
-- **ME Storage Janitor**: an in-place IO Port for the whole network, external
-  storages included - trigger it and stored stock re-settles to wherever CURRENT
-  filters, partitions, and priorities say it belongs. The new-drawer-wall flow:
-  filter the buses, run the janitor, done - no bus-breaking, no manual import.
-  Fully buildable on public API (no upstream hook): per-key shuffle - extract a
-  chunk network-wide into a small internal buffer, re-insert through normal
-  routing; AE2's own insert ordering IS the placement policy, so misplaced stock
-  lands in its new home and correctly-placed stock returns to the same cell.
-  Decisions and edge cases:
-  - One-shot triggered pass (device button + /ae2logistics janitor), chunked over
-    ticks with house-style per-operation caps - never a continuous loop (a
-    converged network would churn forever for nothing).
-  - It is a DEFRAG: two-way swaps between full storages resolve through the
-    buffer, so progress needs some free space somewhere; report "cannot make
-    progress" instead of spinning.
-  - Nothing is ever lost: the buffer is real and visible, re-insert shortfall
-    returns via normal fall-through, abort flushes the buffer first.
-  - Key-type agnostic; signals excluded by the query contract. Power cost per
-    item moved (IO Port-ish); pause when grid power is low.
-  - GUI: progress + moved-count readout; generatedBackground from day one.
-  - Shares its sweep engine with the future [Sticky Card] janitor half - build
-    this first and sticky's migration story is free.
 - **Sticky Card** (from AE2UEL/GTNH): upgrade card for storage cells and storage buses
   (Subnet Link included - it IS a bus). Keys covered by a sticky device's partition are
   CLAIMED: they may only be stored on sticky-carded storages; when those are full the
@@ -91,10 +69,7 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
     buffer edge. A mounted storage can say "I took N" but never "nobody may take
     the rest". True refusal needs the storage-service insert-filter hook (ROADMAP
     upstream list); no partial our-devices-only version.
-  - Viable TODAY as an interim: the JANITOR variant - the claim registry
-    periodically sweeps claimed keys out of non-sticky storages into sticky ones.
-    Convergent placement without lies, and it solves the scattered-stock migration
-    edge for free; what it lacks is backpressure (sustained overflow fills general
-    storage as a buffer instead of refusing). Could ship as the sweep half of the
-    card, upgraded to true refusal when the upstream hook lands.
+  - The ME Storage Janitor (shipped 0.32.0) already covers the migration half:
+    a run re-settles claimed keys into their partitioned homes. What sticky still
+    needs from upstream is refusal/backpressure only.
 - Pre-release modpack soak against the standard suite (see CLAUDE.md).

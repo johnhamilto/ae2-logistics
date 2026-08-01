@@ -121,6 +121,19 @@ public class AE2Logistics {
             .register("register_bank", () -> BlockEntityType.Builder
                     .of(RegisterBankBlockEntity::new, REGISTER_BANK.get()).build(null));
 
+    public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.StorageJanitorBlock> STORAGE_JANITOR =
+            BLOCKS.register("storage_janitor",
+                    () -> new io.github.johnhamilto.ae2logistics.block.StorageJanitorBlock(
+                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+    public static final DeferredItem<BlockItem> STORAGE_JANITOR_ITEM = ITEMS.registerSimpleBlockItem(STORAGE_JANITOR);
+    public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity>> STORAGE_JANITOR_BE =
+            BLOCK_ENTITIES.register("storage_janitor", () -> BlockEntityType.Builder
+                    .of(io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity::new,
+                            STORAGE_JANITOR.get()).build(null));
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.StorageJanitorMenu>> STORAGE_JANITOR_MENU =
+            MENUS.register("storage_janitor", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.StorageJanitorMenu::new));
+
     public static final Supplier<DataComponentType<ResourceLocation>> SIGNAL_CHANNEL = DATA_COMPONENTS
             .register("signal_channel", () -> DataComponentType.<ResourceLocation>builder()
                     .persistent(ResourceLocation.CODEC)
@@ -378,6 +391,7 @@ public class AE2Logistics {
                     .icon(() -> REGISTER_BANK_ITEM.get().getDefaultInstance())
                     .displayItems((params, output) -> {
                         output.accept(REGISTER_BANK_ITEM.get());
+                        output.accept(STORAGE_JANITOR_ITEM.get());
                         output.accept(PATTERN_WORKBENCH_ITEM.get());
                         output.accept(GUARDED_PROVIDER_ITEM.get());
                         output.accept(JOB_SCHEDULER_ITEM.get());
@@ -486,6 +500,9 @@ public class AE2Logistics {
             registrar.playToClient(io.github.johnhamilto.ae2logistics.menu.JobBoardPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.JobBoardPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.JobBoardPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.JanitorTogglePayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.JanitorTogglePayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.JanitorTogglePayload::handle);
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload::handle);
@@ -569,6 +586,7 @@ public class AE2Logistics {
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.QueryCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.WirelessCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.TestWorldCommands::register);
+        NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.JanitorCommands::register);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             AE2LogisticsClient.initialize(modBus);
