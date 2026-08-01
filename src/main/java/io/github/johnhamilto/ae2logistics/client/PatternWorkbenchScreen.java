@@ -17,6 +17,7 @@ import appeng.api.ids.AEComponents;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -37,8 +38,6 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
 
     private static final int GRID_X = 26;
     private static final int GRID_Y = 17;
-    private static final int TEXT_DARK = 0x404040;
-    private static final int TEXT_MUTED = 0x7b7b7b;
 
     private AETextField guardChannelBox;
     private AETextField guardValueBox;
@@ -50,8 +49,20 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     public PatternWorkbenchScreen(PatternWorkbenchMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 176;
-        this.imageHeight = 200;
+        // Window size comes from the style doc's generatedBackground.
+    }
+
+    @Override
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+            float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        // Generated chrome carries no slot art: give every active slot AE2's inset.
+        for (var slot : menu.slots) {
+            if (slot.isActive()) {
+                Icon.SLOT_BACKGROUND.getBlitter()
+                        .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
+            }
+        }
     }
 
     @Override
@@ -161,18 +172,18 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         if (menu.patternStack().isEmpty()) {
-            guiGraphics.drawString(font, "Insert an encoded pattern", 8, 78, TEXT_MUTED, false);
+            guiGraphics.drawString(font, "Insert an encoded pattern", 8, 78, Palette.HINT, false);
             return;
         }
         var encoded = decoded();
         if (encoded == null) {
             // Crafting/smithing/stonecutting patterns match exactly; guards still apply.
-            guiGraphics.drawString(font, "No adaptive matching", 9, 31, TEXT_MUTED, false);
-            guiGraphics.drawString(font, "for this pattern type", 9, 43, TEXT_MUTED, false);
-            guiGraphics.drawString(font, "Guard", 8, 76, TEXT_DARK, false);
+            guiGraphics.drawString(font, "No adaptive matching", 9, 31, Palette.HINT, false);
+            guiGraphics.drawString(font, "for this pattern type", 9, 43, Palette.HINT, false);
+            guiGraphics.drawString(font, "Guard", 8, 76, Palette.LABEL, false);
             return;
         }
-        guiGraphics.drawString(font, "Guard", 8, 76, TEXT_DARK, false);
+        guiGraphics.drawString(font, "Guard", 8, 76, Palette.LABEL, false);
 
         var inputs = encoded.sparseInputs();
         for (int i = 0; i < 9 && i < inputs.size(); i++) {

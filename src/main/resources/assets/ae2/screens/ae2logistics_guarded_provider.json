@@ -4,14 +4,9 @@
     "common/common.json",
     "common/player_inventory.json"
   ],
-  "background": {
-    "texture": "guis/ae2logistics/guarded_provider.png",
-    "srcRect": [
-      0,
-      0,
-      200,
-      231
-    ]
+  "generatedBackground": {
+    "width": 200,
+    "height": 231
   },
   "slots": {
     "ENCODED_PATTERN": {

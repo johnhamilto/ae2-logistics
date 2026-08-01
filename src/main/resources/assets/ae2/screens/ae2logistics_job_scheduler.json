@@ -4,14 +4,9 @@
     "common/common.json",
     "common/player_inventory.json"
   ],
-  "background": {
-    "texture": "guis/ae2logistics/job_scheduler.png",
-    "srcRect": [
-      0,
-      0,
-      200,
-      231
-    ]
+  "generatedBackground": {
+    "width": 200,
+    "height": 231
   },
   "text": {
     "dialog_title": {

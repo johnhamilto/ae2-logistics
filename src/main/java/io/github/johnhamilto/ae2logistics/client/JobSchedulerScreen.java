@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -16,11 +17,6 @@ import io.github.johnhamilto.ae2logistics.menu.JobSchedulerMenu;
 
 public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
 
-    private static final int HINT = 0x7b7b7b;
-    private static final int IDLE = 0x606A72;
-    private static final int RUN = 0x2E8B57;
-    private static final int WARN = 0xA8760B;
-    private static final int BAD = 0xB33A36;
 
     private static final String[] CLASS_NAMES = {"bulk", "maint"};
 
@@ -34,8 +30,20 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
     public JobSchedulerScreen(JobSchedulerMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 200;
-        this.imageHeight = 231;
+        // Window size comes from the style doc's generatedBackground.
+    }
+
+    @Override
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+            float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        // Generated chrome carries no slot art: give every active slot AE2's inset.
+        for (var slot : menu.slots) {
+            if (slot.isActive()) {
+                Icon.SLOT_BACKGROUND.getBlitter()
+                        .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
+            }
+        }
     }
 
     @Override
@@ -166,20 +174,20 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
     private static int stateColor(int state) {
         return switch (state) {
             case JobSchedulerBlockEntity.STATE_MISSING, JobSchedulerBlockEntity.STATE_NO_CPU,
-                    JobSchedulerBlockEntity.STATE_DEADLINE -> BAD;
-            case JobSchedulerBlockEntity.STATE_RUNNING -> RUN;
+                    JobSchedulerBlockEntity.STATE_DEADLINE -> Palette.ALERT;
+            case JobSchedulerBlockEntity.STATE_RUNNING -> Palette.OK;
             case JobSchedulerBlockEntity.STATE_GUARD_HOLD, JobSchedulerBlockEntity.STATE_RATE_WAIT,
-                    JobSchedulerBlockEntity.STATE_PREEMPTED -> WARN;
-            default -> IDLE;
+                    JobSchedulerBlockEntity.STATE_PREEMPTED -> Palette.WAIT;
+            default -> Palette.ROW;
         };
     }
 
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "floor", 34, 12, HINT, false);
-        guiGraphics.drawString(font, "batch", 78, 12, HINT, false);
-        guiGraphics.drawString(font, "class", 116, 12, HINT, false);
-        guiGraphics.drawString(font, "guard", 156, 12, HINT, false);
+        guiGraphics.drawString(font, "floor", 34, 12, Palette.HINT, false);
+        guiGraphics.drawString(font, "batch", 78, 12, Palette.HINT, false);
+        guiGraphics.drawString(font, "class", 116, 12, Palette.HINT, false);
+        guiGraphics.drawString(font, "guard", 156, 12, Palette.HINT, false);
 
         for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
             int state = menu.ruleStateValue(i);
@@ -187,6 +195,6 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
                     JobSchedulerMenu.GHOST_Y + i * JobSchedulerMenu.ROW_STEP + 19,
                     stateColor(state), false);
         }
-        guiGraphics.drawString(font, "second line: deadline sec + preemption", 10, 124, HINT, false);
+        guiGraphics.drawString(font, "second line: deadline sec + preemption", 10, 124, Palette.HINT, false);
     }
 }

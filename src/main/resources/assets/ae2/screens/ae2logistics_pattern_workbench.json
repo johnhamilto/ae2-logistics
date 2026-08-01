@@ -4,14 +4,9 @@
     "common/common.json",
     "common/player_inventory.json"
   ],
-  "background": {
-    "texture": "guis/ae2logistics/pattern_workbench.png",
-    "srcRect": [
-      0,
-      0,
-      176,
-      200
-    ]
+  "generatedBackground": {
+    "width": 176,
+    "height": 200
   },
   "slots": {
     "MACHINE_INPUT": {

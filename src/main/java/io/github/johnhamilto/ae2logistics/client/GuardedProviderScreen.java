@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -16,10 +17,6 @@ import io.github.johnhamilto.ae2logistics.menu.GuardedProviderMenu;
 
 public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
 
-    private static final int LABEL = 0x404040;
-    private static final int HINT = 0x7b7b7b;
-    private static final int PASS = 0x2E8B57;
-    private static final int HOLD = 0xA8760B;
 
     private AETextField guardChannelBox;
     private AETextField guardValueBox;
@@ -31,8 +28,20 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
     public GuardedProviderScreen(GuardedProviderMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 200;
-        this.imageHeight = 231;
+        // Window size comes from the style doc's generatedBackground.
+    }
+
+    @Override
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+            float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        // Generated chrome carries no slot art: give every active slot AE2's inset.
+        for (var slot : menu.slots) {
+            if (slot.isActive()) {
+                Icon.SLOT_BACKGROUND.getBlitter()
+                        .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
+            }
+        }
     }
 
     @Override
@@ -129,12 +138,12 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
 
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        var status = menu.guardPassing() ? "PASS" : "HOLD";
+        var status = menu.guardPassing() ? "Palette.OK" : "Palette.WAIT";
         var statusText = status + "  p" + menu.livePriority();
         guiGraphics.drawString(font, statusText, imageWidth - 10 - font.width(statusText), 6,
-                menu.guardPassing() ? PASS : HOLD, false);
-        guiGraphics.drawString(font, "Guard", 10, 48, LABEL, false);
-        guiGraphics.drawString(font, "passes if", 10, 70, HINT, false);
-        guiGraphics.drawString(font, "Priority", 10, 116, LABEL, false);
+                menu.guardPassing() ? Palette.OK : Palette.WAIT, false);
+        guiGraphics.drawString(font, "Guard", 10, 48, Palette.LABEL, false);
+        guiGraphics.drawString(font, "passes if", 10, 70, Palette.HINT, false);
+        guiGraphics.drawString(font, "Priority", 10, 116, Palette.LABEL, false);
     }
 }

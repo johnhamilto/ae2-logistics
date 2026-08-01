@@ -5,29 +5,13 @@ this file tracks what is rough or wanted. A "polish pass" on an entry means: ite
 in-world model, GUI (generated background, consistent padding rhythm, Palette /
 ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 
-## Polish pass - blocks
+## Polish
 
-- Pattern Workbench
-- Guarded Pattern Provider
-- ME Job Scheduler
-- Dense Wireless Access Point
-- ME Wireless Bridge
-
-## Polish pass - items
-
-- Adaptive Processing Pattern
-- Guarded Pattern
-- Regulus Crystal
-
-## Polish pass - cable parts
-
-- Deferred sprite art (needs a new texture approach): transport family (mesh
-  endpoints, P2P Frequency Terminal, Provider P2P Tunnel; closed out 0.24.x-0.26.0),
-  signal family (ten logic parts, Register Bank, Logic Core, Signal Card; 0.28.0),
-  telemetry boards (Tracer Terminal, Job Monitor; 0.29.0), queries + config
-  (Query Terminal/Sensor/Export Bus, Config Terminal, Config Blueprint; 0.30.0) -
-  GUI, models, guide, recipes, tests all done
-- ME Subnet Link
+- Deferred sprite art ONLY (needs a new texture approach) - every device family is
+  otherwise closed out (GUI, models, guides, recipes, tests): transport
+  (0.24.x-0.26.0), signal (0.28.0), telemetry boards (0.29.0), queries + config
+  (0.30.0), crafting blocks + scheduler + wireless pair + remaining items + Subnet
+  Link (0.31.0).
 
 ## Features
 
@@ -113,8 +97,4 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
     edge for free; what it lacks is backpressure (sustained overflow fills general
     storage as a buffer instead of refusing). Could ship as the sweep half of the
     card, upgraded to true refusal when the upstream hook lands.
-- Generated backgrounds everywhere: Pattern Workbench, Job Scheduler, Guarded
-  Provider remain (the last three baked-chrome screens). Slot insets over a
-  generated panel are solved: Icon.SLOT_BACKGROUND per active slot (see
-  LogicPartScreen).
 - Pre-release modpack soak against the standard suite (see CLAUDE.md).
