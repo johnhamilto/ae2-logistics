@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.26.4 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (113 tests, run
+Status as of v0.27.0 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (114 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -53,6 +53,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F11 polish | Locator affordances: roster rows wash on hover (clickability), clicking prints a gray chat line naming the endpoint's part item + coords + distance ("... is in the Nether/the End/another dimension" for cross-dimension rows, GUI stays open - grids span dimensions, rosters carry each row's level id now) | 0.26.1 |
 | Fix | Locator box actually renders through walls and thick: the 0.26.1 no-depth render type never applied its state through the buffer path; replaced with AE2's own overlay scheme - two immediate-mode passes at AFTER_LEVEL with explicit state (LEQUAL bright where visible, GREATER dim ghost where occluded, RenderSystem.lineWidth feeding the line shader's 4px expansion) | 0.26.2 |
 | Fix | Locator visibility: translucent filled faces under the outline in both depth passes (a wireframe alone vanishes against busy scenes), brighter cyan, line width scales with the window like vanilla's outline (fixed 4px was sub-vanilla on retina) | 0.26.3 |
+| F11 | Terminal actions reach mesh rows (were silent no-ops): Rename works from endpoint rows too (retags the frequency), Mark target remembers a mesh frequency, Retune to target moves the selected same-network endpoint onto it keeping role/priority/transports (MeshRetunePayload anchors auth on the TERMINAL - the endpoint may sit far away or in another dimension, identified by pos+side+level id among loaded endpoints); buttons disable when they would do nothing | 0.27.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer

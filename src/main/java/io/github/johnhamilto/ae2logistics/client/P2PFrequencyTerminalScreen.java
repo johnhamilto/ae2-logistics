@@ -43,9 +43,15 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
     private final ScrollingRowList list = new ScrollingRowList(8, 228, LIST_Y, LIST_Y + 112, ROW_HEIGHT);
     private short targetFrequency;
     private boolean hasTarget;
+    /** A marked MESH frequency; mutually exclusive with the P2P target above. */
+    @Nullable
+    private String meshTarget;
     @Nullable
     private Line selected;
     private AETextField nameBox;
+    private AE2Button renameButton;
+    private AE2Button markButton;
+    private AE2Button retuneButton;
 
     public P2PFrequencyTerminalScreen(P2PFrequencyTerminalMenu menu, Inventory inventory,
             Component title, ScreenStyle style) {
@@ -61,12 +67,15 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
         nameBox.setBordered(false);
         nameBox.setMaxLength(32);
         addRenderableWidget(nameBox);
-        addRenderableWidget(new AE2Button(leftPos + 146, topPos + imageHeight - 48, 80, 18,
-                Component.literal("Rename"), b -> rename()));
-        addRenderableWidget(new AE2Button(leftPos + 10, topPos + imageHeight - 26, 108, 18,
-                Component.literal("Mark target"), b -> markTarget()));
-        addRenderableWidget(new AE2Button(leftPos + 126, topPos + imageHeight - 26, 100, 18,
-                Component.literal("Retune to target"), b -> retuneSelected()));
+        renameButton = new AE2Button(leftPos + 146, topPos + imageHeight - 48, 80, 18,
+                Component.literal("Rename"), b -> rename());
+        markButton = new AE2Button(leftPos + 10, topPos + imageHeight - 26, 108, 18,
+                Component.literal("Mark target"), b -> markTarget());
+        retuneButton = new AE2Button(leftPos + 126, topPos + imageHeight - 26, 100, 18,
+                Component.literal("Retune to target"), b -> retuneSelected());
+        addRenderableWidget(renameButton);
+        addRenderableWidget(markButton);
+        addRenderableWidget(retuneButton);
     }
 
     private List<Line> buildLines() {
@@ -98,6 +107,13 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
         if (selected instanceof P2PLine line) {
             targetFrequency = line.row().frequency();
             hasTarget = true;
+            meshTarget = null;
+        } else if (selected instanceof MeshHeaderLine header) {
+            meshTarget = header.frequency();
+            hasTarget = false;
+        } else if (selected instanceof MeshEndpointLine endpointLine) {
+            meshTarget = endpointLine.row().frequency();
+            hasTarget = false;
         }
     }
 
@@ -106,9 +122,17 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
             PacketDistributor.sendToServer(new P2PActionPayload(
                     P2PActionPayload.ACTION_RETUNE, line.row().pos(), line.row().side(),
                     targetFrequency, "", ""));
+        } else if (selected instanceof MeshEndpointLine endpointLine && meshTarget != null) {
+            var row = endpointLine.row();
+            if (row.sameGrid() && !row.frequency().equals(meshTarget)) {
+                PacketDistributor.sendToServer(new io.github.johnhamilto.ae2logistics.menu.MeshRetunePayload(
+                        menu.pos, (byte) menu.side.ordinal(), row.frequency(),
+                        row.pos(), row.side(), row.dimension(), meshTarget));
+            }
         }
     }
 
+    /** Renaming a mesh row - header or endpoint - retags the whole frequency. */
     private void rename() {
         if (selected instanceof P2PLine line) {
             PacketDistributor.sendToServer(new P2PActionPayload(
@@ -118,7 +142,30 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
             PacketDistributor.sendToServer(new P2PActionPayload(
                     P2PActionPayload.ACTION_MESH_RENAME, menu.pos, (byte) menu.side.ordinal(),
                     (short) 0, nameBox.getValue(), header.frequency()));
+        } else if (selected instanceof MeshEndpointLine endpointLine) {
+            PacketDistributor.sendToServer(new P2PActionPayload(
+                    P2PActionPayload.ACTION_MESH_RENAME, menu.pos, (byte) menu.side.ordinal(),
+                    (short) 0, nameBox.getValue(), endpointLine.row().frequency()));
         }
+    }
+
+    /** No silent no-ops: a button that would do nothing right now renders disabled. */
+    private void updateButtonStates() {
+        if (renameButton == null) {
+            return;
+        }
+        renameButton.active = selected != null;
+        markButton.active = selected != null;
+        retuneButton.active = canRetuneSelection();
+    }
+
+    private boolean canRetuneSelection() {
+        if (selected instanceof P2PLine && hasTarget) {
+            return true;
+        }
+        return selected instanceof MeshEndpointLine endpointLine && meshTarget != null
+                && endpointLine.row().sameGrid()
+                && !endpointLine.row().frequency().equals(meshTarget);
     }
 
     private static String freqLabel(P2PFrequencyTerminalMenu.Row row) {
@@ -150,6 +197,7 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
     protected void updateBeforeRender() {
         super.updateBeforeRender();
         list.setRowCount(buildLines().size());
+        updateButtonStates();
     }
 
     @Override
@@ -171,10 +219,15 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
 
         if (selected instanceof MeshEndpointLine endpointLine) {
             var row = endpointLine.row();
-            guiGraphics.drawString(font,
-                    "at " + row.pos().getX() + "," + row.pos().getY() + "," + row.pos().getZ()
-                            + " (" + shortDimension(row.dimension()) + ")",
-                    10, imageHeight - 58, Palette.HINT, false);
+            var where = "at " + row.pos().getX() + "," + row.pos().getY() + "," + row.pos().getZ()
+                    + " (" + shortDimension(row.dimension()) + ")";
+            if (meshTarget != null && !row.frequency().equals(meshTarget)) {
+                where += row.sameGrid() ? " -> " + meshTarget : " (remote: cannot retune)";
+            }
+            guiGraphics.drawString(font, where, 10, imageHeight - 58, Palette.HINT, false);
+        } else if (meshTarget != null) {
+            guiGraphics.drawString(font, "Target: " + meshTarget, 10, imageHeight - 58,
+                    Palette.WAIT, false);
         } else if (hasTarget) {
             guiGraphics.drawString(font, "Target: " + String.format("%04X", targetFrequency & 0xFFFF),
                     10, imageHeight - 58, Palette.WAIT, false);

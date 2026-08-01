@@ -474,4 +474,52 @@ public class MeshPolishGameTests {
         }
         helper.succeed();
     }
+
+    /**
+     * Terminal-driven mesh retune: exactly the identified endpoint moves onto the
+     * target frequency with role, priority, and transports intact; a stale identity
+     * (already moved) and a blank or same-frequency target are refused.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void meshEndpointRetunesAcrossFrequencies(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        placeCable(helper, new BlockPos(2, 1, 1));
+        placeCable(helper, new BlockPos(3, 1, 1));
+        placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "ret-a",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ALL);
+        var moved = placeEndpoint(helper, new BlockPos(2, 1, 1), Direction.UP, "ret-a",
+                MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ALL);
+        moved.applyMeshConfig("ret-a", MeshEndpointPart.ROLE_OUT, 7, MeshRegistry.TYPE_ALL);
+        placeEndpoint(helper, new BlockPos(3, 1, 1), Direction.UP, "ret-b",
+                MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ALL);
+
+        helper.runAfterDelay(40, () -> {
+            var grid = moved.getMainNode().getGrid();
+            helper.assertTrue(grid != null, "endpoint must be on a grid");
+            var dimension = helper.getLevel().dimension().location().toString();
+            var pos = helper.absolutePos(new BlockPos(2, 1, 1));
+            byte side = (byte) Direction.UP.ordinal();
+
+            helper.assertTrue(!MeshRegistry.retuneEndpoint(grid, "ret-a", pos, side, dimension, " "),
+                    "blank target must be refused");
+            helper.assertTrue(!MeshRegistry.retuneEndpoint(grid, "ret-a", pos, side, dimension, "ret-a"),
+                    "same-frequency target must be refused");
+            helper.assertTrue(MeshRegistry.retuneEndpoint(grid, "ret-a", pos, side, dimension, "ret-b"),
+                    "retune must find and move the endpoint");
+            helper.assertTrue(!MeshRegistry.retuneEndpoint(grid, "ret-a", pos, side, dimension, "ret-b"),
+                    "a stale identity must be refused after the move");
+
+            helper.assertTrue(MeshRegistry.endpoints("ret-a").size() == 1,
+                    "old frequency must keep only the untouched endpoint");
+            helper.assertTrue(MeshRegistry.endpoints("ret-b").size() == 2,
+                    "target frequency must gain the moved endpoint");
+            helper.assertTrue(moved.frequency().equals("ret-b")
+                    && moved.role() == MeshEndpointPart.ROLE_OUT && moved.priority() == 7
+                    && moved.capabilityMask() == MeshRegistry.TYPE_ALL,
+                    "retune must keep role, priority, and transports");
+            helper.succeed();
+        });
+    }
 }

@@ -480,6 +480,9 @@ public class AE2Logistics {
             registrar.playToClient(io.github.johnhamilto.ae2logistics.menu.MeshRosterPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.MeshRosterPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.MeshRosterPayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.MeshRetunePayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.MeshRetunePayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.MeshRetunePayload::handle);
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload::handle);

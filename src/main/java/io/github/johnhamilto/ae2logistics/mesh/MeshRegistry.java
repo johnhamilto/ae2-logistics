@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -206,6 +207,32 @@ public final class MeshRegistry {
         list.sort(Comparator.comparingInt(MeshEndpointPart::priority).reversed()
                 .thenComparingLong(MeshEndpointPart::stableKey));
         return list;
+    }
+
+    /**
+     * Moves ONE endpoint of {@code from} onto {@code to}, keeping its role, priority,
+     * and transports. The endpoint is identified by host position, side, and dimension
+     * among the frequency's loaded endpoints and must sit on the given carrier grid -
+     * frequencies never cross networks, and neither does retuning.
+     */
+    public static boolean retuneEndpoint(appeng.api.networking.IGrid carrier, String from,
+            BlockPos pos, byte side, String dimension, String to) {
+        var target = to.trim();
+        if (target.isBlank() || target.equals(from)) {
+            return false;
+        }
+        for (var part : endpoints(from)) {
+            var host = part.getHost().getBlockEntity();
+            var level = host.getLevel();
+            if (host.getBlockPos().equals(pos)
+                    && part.getSide() != null && part.getSide().ordinal() == side
+                    && level != null && level.dimension().location().toString().equals(dimension)
+                    && hostGrid(part) == carrier) {
+                part.applyMeshConfig(target, part.role(), part.priority(), part.capabilityMask());
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Source endpoints of the frequency on {@code from}'s network, priority-ordered; where returns land. */
