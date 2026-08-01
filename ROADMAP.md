@@ -1,6 +1,6 @@
 # Roadmap
 
-Status as of v0.28.0 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
+Status as of v0.29.0 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
 what exists, what is queued, and what is known debt. The gametest suite (114 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
@@ -54,6 +54,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Fix | Locator box actually renders through walls and thick: the 0.26.1 no-depth render type never applied its state through the buffer path; replaced with AE2's own overlay scheme - two immediate-mode passes at AFTER_LEVEL with explicit state (LEQUAL bright where visible, GREATER dim ghost where occluded, RenderSystem.lineWidth feeding the line shader's 4px expansion) | 0.26.2 |
 | Fix | Locator visibility: translucent filled faces under the outline in both depth passes (a wireframe alone vanishes against busy scenes), brighter cyan, line width scales with the window like vanilla's outline (fixed 4px was sub-vanilla on retina) | 0.26.3 |
 | F11 | Terminal actions reach mesh rows (were silent no-ops): Rename works from endpoint rows too (retags the frequency), Mark target remembers a mesh frequency, Retune to target moves the selected same-network endpoint onto it keeping role/priority/transports (MeshRetunePayload anchors auth on the TERMINAL - the endpoint may sit far away or in another dimension, identified by pos+side+level id among loaded endpoints); buttons disable when they would do nothing | 0.27.0 |
+| F5 polish | Telemetry boards closed out (art deferred): Job Monitor gained the LIVE BOARD - one row per crafting CPU (output item, remaining, crafting/stalled/idle, stalled first), streamed on the mesh-roster pattern (JobBoardPayload, half-second change-only re-push), window grown to 200x190 generatedBackground; Tracer Terminal onto ScrollingRowList + Palette + generatedBackground, sparkline renderer extracted to shared Sparkline (pre-paves the planned in-world Trace Panels); both guides verified, Job Monitor guide documents the board | 0.29.0 |
 | F1/F2 polish | Signal & Logic family closed out (art deferred): LogicPartScreen + LogicCoreScreen draw AE2's generated chrome at live size (BackgroundGenerator.draw handles the one-doc-two-sizes case) with Icon.SLOT_BACKGROUND insets per active slot - three baked chrome textures orphaned and removed (logic_sensor, core_panel, mesh_endpoint) with their gen_ae2_chrome emissions; screens onto the shared Palette (MUTED promoted); op notation unified with the guide and core screen (== and *); guides + themed recipes verified for all thirteen family members; Register Bank + Logic Core join the signal-chain plot | 0.28.0 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
@@ -62,9 +63,8 @@ representation).
 
 ## Next session
 
-1. Telemetry boards sweep (Tracer Terminal, Job Monitor + its ScrollingRowList/Palette
-   entry), then the queries family (Query Terminal / Sensor / Export Bus) - both ride
-   the panel_200x166 -> generatedBackground conversion.
+1. Queries family sweep (Query Terminal / Sensor / Export Bus + Config Terminal),
+   riding the panel_200x166 / terminal_236x190 -> generatedBackground conversions.
 2. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
    then Modrinth + CurseForge uploads.
 3. Later: F10 bundles go/no-go, upstream PR implementations.

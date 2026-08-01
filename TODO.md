@@ -22,16 +22,15 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 
 ## Polish pass - cable parts
 
-- ME Tracer Terminal
-- ME Job Monitor
 - Query Terminal
 - Query Sensor
 - Query Export Bus
 - ME Config Terminal
 - Deferred sprite art (needs a new texture approach): transport family (mesh
-  endpoints, P2P Frequency Terminal, Provider P2P Tunnel; closed out 0.24.x-0.26.0)
-  and signal family (ten logic parts, Register Bank, Logic Core, Signal Card;
-  closed out 0.28.0) - GUI, models, guide, recipes, tests all done
+  endpoints, P2P Frequency Terminal, Provider P2P Tunnel; closed out 0.24.x-0.26.0),
+  signal family (ten logic parts, Register Bank, Logic Core, Signal Card; 0.28.0),
+  telemetry boards (Tracer Terminal, Job Monitor; 0.29.0) - GUI, models, guide,
+  recipes, tests all done
 - ME Subnet Link
 
 ## Features
@@ -40,6 +39,21 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   (and ExtendedAE's Extended Pattern Terminal when present) and auto-imports patterns
   into that GUI's pattern slot. Must work in both the cable-part terminals and the
   wireless forms.
+- **Trace Panels** (in-world dashboards): multiblock monitor blocks that merge by
+  placement into one screen - 1x1 up to a sane cap (2x2, 2x3, ...) via coplanar
+  same-facing rectangle detection, Create-display-board style - and render signal
+  sparklines on the merged face. Notes:
+  - Bind channels by clicking the panel with a bound [Signal Card] (very much the
+    house item for "a channel in item form"); a small GUI lists/removes bound
+    traces; memory cards copy the set. Layout adapts to panel size (1 big trace or
+    a grid of small ones).
+  - Formation picks a master block that owns the ONE grid node and channel (the
+    rest are slaves, controller-style); breaking any block splits the panel back.
+  - Rendering is a BER over the merged face reusing the shared Sparkline helper
+    (extracted 0.29.0); history is recorded server-side in the master (own ring
+    buffers via the signal service, independent of any Tracer Terminal) and
+    synced to watching clients at ~1/s, throttled and cached.
+  - Guide page + plot from day one; sprite/model art joins the deferred-art line.
 - **ME Storage Janitor**: an in-place IO Port for the whole network, external
   storages included - trigger it and stored stock re-settles to wherever CURRENT
   filters, partitions, and priorities say it belongs. The new-drawer-wall flow:
@@ -104,9 +118,8 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
     storage as a buffer instead of refusing). Could ship as the sweep half of the
     card, upgraded to true refusal when the upstream hook lands.
 - Generated backgrounds everywhere: adopt `generatedBackground` for the remaining
-  screens as each is touched (queries, Job Monitor, Pattern Workbench, Job
-  Scheduler, Guarded Provider, Tracer/Query/Config terminals). Slot insets over a
+  screens as each is touched (queries, Pattern Workbench, Job Scheduler, Guarded
+  Provider, Query/Config terminals). Slot insets over a
   generated panel are solved: Icon.SLOT_BACKGROUND per active slot (see
   LogicPartScreen).
-- ME Job Monitor board onto ScrollingRowList + Palette.
 - Pre-release modpack soak against the standard suite (see CLAUDE.md).

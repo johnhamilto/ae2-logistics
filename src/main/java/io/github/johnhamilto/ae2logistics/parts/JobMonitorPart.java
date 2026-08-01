@@ -101,6 +101,13 @@ public class JobMonitorPart extends AEBasePart implements ILogicNode {
     }
 
     /** Live value of one of this monitor's channels, for the menu readout. */
+    /** Read-only stall check for the GUI board; tracker state advances only in evaluate(). */
+    public boolean isStalledForDisplay(Object cpu) {
+        var tracker = trackers.get(cpu);
+        return tracker != null && tracker.lastProgress >= 0
+                && tick - tracker.lastChangeTick >= stallSeconds * 20L;
+    }
+
     public long channelValue(String path) {
         var node = getMainNode().getNode();
         if (node == null || node.getGrid() == null) {

@@ -7,7 +7,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
-import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
 
 import io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload;
@@ -15,10 +14,8 @@ import io.github.johnhamilto.ae2logistics.menu.JobMonitorMenu;
 
 public class JobMonitorScreen extends AEBaseScreen<JobMonitorMenu> {
 
-    private static final int LABEL = 0x404040;
-    private static final int HINT = 0x7b7b7b;
-    private static final int VALUE = 0x2E6E9E;
-    private static final int ALERT = 0xB33A36;
+    // Vertical rhythm: config rows at 18/40, summary at 64, board well below.
+    private final ScrollingRowList board = new ScrollingRowList(8, 196, 74, 182, 17);
 
     private AETextField prefixBox;
     private AETextField stallBox;
@@ -26,8 +23,9 @@ public class JobMonitorScreen extends AEBaseScreen<JobMonitorMenu> {
     public JobMonitorScreen(JobMonitorMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 200;
-        this.imageHeight = 166;
+        // Window size comes from the style doc's generatedBackground.
+        board.register(widgets, "scrollbar");
+        board.setRowCount(menu.board().size());
     }
 
     @Override
@@ -44,7 +42,6 @@ public class JobMonitorScreen extends AEBaseScreen<JobMonitorMenu> {
         stallBox.setMaxLength(3);
         stallBox.setValue(Integer.toString(menu.stallSeconds));
         addRenderableWidget(stallBox);
-
     }
 
     private String snapshot() {
@@ -56,6 +53,7 @@ public class JobMonitorScreen extends AEBaseScreen<JobMonitorMenu> {
     @Override
     protected void updateBeforeRender() {
         super.updateBeforeRender();
+        board.setRowCount(menu.board().size());
         var current = snapshot();
         if (autoApply.shouldSend(current,
                 getFocused() instanceof net.minecraft.client.gui.components.EditBox)) {
@@ -84,19 +82,53 @@ public class JobMonitorScreen extends AEBaseScreen<JobMonitorMenu> {
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+        if (board.mouseScrolled(mouseX, mouseY, deltaY, leftPos, topPos, imageWidth)) {
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
+    }
+
+    @Override
+    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+            float partialTicks) {
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        board.drawBackground(guiGraphics, offsetX, offsetY);
+    }
+
+    @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Prefix", 10, 22, LABEL, false);
-        guiGraphics.drawString(font, "Stall (s)", 10, 44, LABEL, false);
+        guiGraphics.drawString(font, "Prefix", 10, 22, Palette.LABEL, false);
+        guiGraphics.drawString(font, "Stall (s)", 10, 44, Palette.LABEL, false);
 
         guiGraphics.drawString(font, "Jobs: " + menu.activeJobs()
-                + (menu.stalledJobs() > 0 ? "  (" + menu.stalledJobs() + " stalled)" : ""),
-                10, 72, menu.stalledJobs() > 0 ? ALERT : VALUE, false);
-        guiGraphics.drawString(font, "Pending items: " + menu.pendingItems(), 10, 86, LABEL, false);
+                + (menu.stalledJobs() > 0 ? "  (" + menu.stalledJobs() + " stalled)" : "")
+                + "   Pending: " + menu.pendingItems(),
+                10, 64, menu.stalledJobs() > 0 ? Palette.ALERT : Palette.VALUE, false);
 
-        guiGraphics.drawString(font, "Channels: " + menu.prefix + ":active / idle /", 10, 106,
-                HINT, false);
-        guiGraphics.drawString(font, "stalled / pending, plus per-named-CPU", 10, 118, HINT, false);
-        guiGraphics.drawString(font, menu.prefix + ":<name>/remaining and /stalled", 10, 130,
-                HINT, false);
+        if (menu.board().isEmpty()) {
+            guiGraphics.drawString(font, "no crafting CPUs on this network", 12, 78,
+                    Palette.HINT, false);
+            return;
+        }
+        board.drawRows(guiGraphics, (g, index, y) -> {
+            var row = menu.board().get(index);
+            g.renderItem(row.output(), 10, y);
+            var name = row.cpuName().isBlank() ? "(unnamed)" : row.cpuName();
+            g.drawString(font, truncate(name, 13), 30, y + 4,
+                    row.cpuName().isBlank() ? Palette.MUTED : Palette.LABEL, false);
+            if (row.busy()) {
+                var left = Long.toString(row.remaining());
+                g.drawString(font, left, 148 - font.width(left), y + 4, Palette.HINT, false);
+                g.drawString(font, row.stalled() ? "stalled" : "crafting", 152, y + 4,
+                        row.stalled() ? Palette.ALERT : Palette.OK, false);
+            } else {
+                g.drawString(font, "idle", 152, y + 4, Palette.MUTED, false);
+            }
+        });
+    }
+
+    private String truncate(String text, int max) {
+        return text.length() <= max ? text : text.substring(0, max - 1) + "~";
     }
 }

@@ -19,6 +19,9 @@ to what the CPUs are doing.
   outstanding). The prefix defaults to `craft`.
 - **Stalled** means a busy CPU whose progress has not changed for the configured
   window - a jammed machine or a blocked provider face.
+- The GUI shows a live board: one row per CPU with what it is crafting, items
+  remaining, and its state - stalled jobs float to the top, streamed while the
+  window is open.
 - Name a Crafting Storage with an anvil BEFORE assembling the CPU and the cluster
   gets its own `<prefix>:<name>/remaining` and `/stalled` channels.
 - One monitor per prefix per network: two on the same prefix sum and double every
