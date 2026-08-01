@@ -78,10 +78,13 @@ public final class LogisticsTestPlots {
      * One backbone, two lanes. Item lane: a hopper feeds the typed input endpoint and
      * deliveries land in the output chests. ME lane: two typed ME endpoints fuse the
      * creative cells on their faces into one carried grid (inspect with a network tool).
+     * The P2P Frequency Terminal on the riser lists both mesh frequencies; any endpoint
+     * GUI shows its frequency's live roster - hover a row, click to locate in world.
      */
     @TestPlot("logistics_mesh_hub")
     public static void meshHub(PlotBuilder plot) {
         plot.creativeEnergyCell("0 0 0");
+        plot.cable("0 1 0").part(Direction.NORTH, def(AE2Logistics.P2P_TERMINAL_PART));
         plot.cable("1 0 0").part(Direction.NORTH, def(AE2Logistics.MESH_ENDPOINT_ITEM_PART),
                 part -> part.applyMeshConfig("item-demo", MeshEndpointPart.ROLE_IN, 0, 0));
         plot.cable("2 0 0").part(Direction.UP, def(AE2Logistics.MESH_ENDPOINT_ITEM_PART),

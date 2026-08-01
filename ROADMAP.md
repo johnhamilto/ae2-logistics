@@ -1,6 +1,6 @@
 # Roadmap
 
-Status as of v0.26.3 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
+Status as of v0.26.4 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
 what exists, what is queued, and what is known debt. The gametest suite (113 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
