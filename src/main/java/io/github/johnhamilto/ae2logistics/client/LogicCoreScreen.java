@@ -22,12 +22,6 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
 
 public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
 
-    private static final int LABEL = 0x404040;
-    private static final int HINT = 0x7b7b7b;
-    private static final int MUTED = 0xA0A0A0;
-    private static final int OK = 0x2E8B57;
-    private static final int ALERT = 0xB33A36;
-
     /** Cycle order for the type button; REDSTONE_IO stays a physical part. */
     private static final LogicPartType[] TYPE_CYCLE = {
             LogicPartType.CONSTANT, LogicPartType.THRESHOLD, LogicPartType.HYSTERESIS,
@@ -285,6 +279,15 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
     public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        // The style doc's generatedBackground draws the panel; player slots need
+        // their insets drawn here. The ghost slot draws only when it means something
+        // (a stock-sensor entry is selected) - it always exists in the menu.
+        for (var slot : menu.slots) {
+            if (slot.isActive() && slot.container instanceof Inventory) {
+                Icon.SLOT_BACKGROUND.getBlitter()
+                        .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
+            }
+        }
         int selY = offsetY + LogicCoreMenu.ROW_Y + menu.selected() * LogicCoreMenu.ROW_STEP;
         guiGraphics.fill(offsetX + 7, selY - 1, offsetX + 193, selY + 11, 0x30405A78);
         if (selectedType() == LogicPartType.STOCK_SENSOR.ordinal()) {
@@ -297,25 +300,25 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
     @Override
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         guiGraphics.drawString(font, menu.coreActive() ? "online" : "offline", 160, 6,
-                menu.coreActive() ? OK : ALERT, false);
+                menu.coreActive() ? Palette.OK : Palette.ALERT, false);
 
         for (int i = 0; i < LogicCoreMenu.ROWS; i++) {
             int y = LogicCoreMenu.ROW_Y + i * LogicCoreMenu.ROW_STEP + 1;
             int type = menu.types[i];
             boolean active = menu.entryActive(i);
-            int labelColor = type < 0 ? MUTED : active ? LABEL : ALERT;
+            int labelColor = type < 0 ? Palette.MUTED : active ? Palette.LABEL : Palette.ALERT;
             guiGraphics.drawString(font, (i + 1) + " " + typeName(type), 10, y, labelColor, false);
             if (type >= 0) {
                 var out = menu.outs[i];
-                guiGraphics.drawString(font, truncate(out, 16), 62, y, HINT, false);
+                guiGraphics.drawString(font, truncate(out, 16), 62, y, Palette.HINT, false);
                 var value = Long.toString(menu.entryValue(i));
                 guiGraphics.drawString(font, value, 190 - font.width(value), y,
-                        active ? OK : MUTED, false);
+                        active ? Palette.OK : Palette.MUTED, false);
             }
         }
 
         if (selectedType() == LogicPartType.STOCK_SENSOR.ordinal()) {
-            guiGraphics.drawString(font, "click slot with held item to watch", 32, 141, HINT, false);
+            guiGraphics.drawString(font, "click slot with held item to watch", 32, 141, Palette.HINT, false);
         }
     }
 

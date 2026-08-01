@@ -102,18 +102,6 @@ def main() -> None:
     # the plain logic-part variant via LogicPartScreen's own drawBG).
     emit("panel_200x166", dialog(source, 200, 166))
 
-    # Stock Sensor variant of the logic-part screen: ghost slot + player inventory.
-    out = dialog(source, 200, 222)
-    stamp_slots(out, slot, [(9, 43)])
-    stamp_slots(out, slot, player_inventory(222))
-    emit("logic_sensor", out)
-
-    # Mesh Endpoint: control stack (three toggle rows), 9 filter ghosts, player inventory.
-    out = dialog(source, 200, 251)
-    stamp_slots(out, slot, grid(18, 136, 9, 1))
-    stamp_slots(out, slot, player_inventory(251))
-    emit("mesh_endpoint", out)
-
     # Guarded Pattern Provider: 9 pattern slots up top, guard strip, player inventory.
     out = dialog(source, 200, 231)
     stamp_slots(out, slot, grid(18, 19, 9, 1))
@@ -126,13 +114,8 @@ def main() -> None:
     stamp_slots(out, slot, player_inventory(231))
     emit("job_scheduler", out)
 
-    # Logic Core + Subnet Core share this: 8 entry rows + detail strip + player
-    # inventory; the ghost slot frame is drawn by the screens (conditional for logic).
-    out = dialog(source, 200, 252)
-    stamp_slots(out, slot, player_inventory(252))
-    emit("core_panel", out)
-
-    # The four slotless terminals (Tracer, Query, Config, P2P Frequency) share this.
+    # The slotless terminals (Tracer, Query, Config) share this; P2P Frequency
+    # Terminal moved to a generatedBackground in 0.26.0.
     emit("terminal_236x190", dialog(source, 236, 190))
 
 

@@ -11,7 +11,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.style.Blitter;
+import appeng.client.gui.Icon;
+import appeng.client.gui.style.BackgroundGenerator;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -22,19 +23,8 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
 
 public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
 
-    // One menu type, two dialog sizes: the style doc carries no background, and this
-    // screen blits the right composed chrome per variant instead.
-    private static final Blitter PANEL_BG =
-            Blitter.texture("guis/ae2logistics/panel_200x166.png", 256, 256).src(0, 0, 200, 166);
-    private static final Blitter SENSOR_BG =
-            Blitter.texture("guis/ae2logistics/logic_sensor.png", 256, 256).src(0, 0, 200, 222);
-
-    private static final int LABEL = 0x404040;
-    private static final int HINT = 0x7b7b7b;
-    private static final int VALUE = 0x2E6E9E;
-
-    private static final String[] THRESHOLD_OPS = {"<", "<=", "=", ">=", ">"};
-    private static final String[] ARITHMETIC_OPS = {"+", "-", "x", "/", "min", "max", "mod"};
+    private static final String[] THRESHOLD_OPS = {"<", "<=", "==", ">=", ">"};
+    private static final String[] ARITHMETIC_OPS = {"+", "-", "*", "/", "min", "max", "mod"};
     private static final String[] BOOLEAN_OPS = {"AND", "OR", "XOR", "NOT"};
     private static final String[] SIGNAL_OPS = {"Strong", "Weak"};
 
@@ -245,8 +235,16 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
     @Override
     public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
-        var background = menu.type == LogicPartType.STOCK_SENSOR ? SENSOR_BG : PANEL_BG;
-        background.dest(offsetX, offsetY).blit(guiGraphics);
+        // One menu type, two dialog sizes: the style doc carries no background (it
+        // could hold only one size), so the screen draws the generated chrome at its
+        // live size and gives every real slot AE2's standard inset.
+        BackgroundGenerator.draw(imageWidth, imageHeight, guiGraphics, offsetX, offsetY);
+        for (var slot : menu.slots) {
+            if (slot.isActive()) {
+                Icon.SLOT_BACKGROUND.getBlitter()
+                        .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
+            }
+        }
     }
 
     /** One screen serves ten part types, so the help button resolves per type. */
@@ -272,14 +270,14 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
     public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         int y = 22;
         for (var row : rows) {
-            guiGraphics.drawString(font, row.label, 10, y, LABEL, false);
+            guiGraphics.drawString(font, row.label, 10, y, Palette.LABEL, false);
             y += 22;
         }
         if (menu.type == LogicPartType.STOCK_SENSOR) {
-            guiGraphics.drawString(font, "Watch:", 10, 34, LABEL, false);
-            guiGraphics.drawString(font, "click with an item", 32, 49, HINT, false);
+            guiGraphics.drawString(font, "Watch:", 10, 34, Palette.LABEL, false);
+            guiGraphics.drawString(font, "click with an item", 32, 49, Palette.HINT, false);
         }
 
-        guiGraphics.drawString(font, "Out: " + menu.outputValue(), 78, controlY() + 5, VALUE, false);
+        guiGraphics.drawString(font, "Out: " + menu.outputValue(), 78, controlY() + 5, Palette.VALUE, false);
     }
 }

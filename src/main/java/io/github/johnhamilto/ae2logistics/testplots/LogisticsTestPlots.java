@@ -58,7 +58,9 @@ public final class LogisticsTestPlots {
     /**
      * Constant writes demo:level=500, threshold raises demo:alarm at >=100, the redstone
      * port emits the alarm onto a lamp. Edit the constant below 100 in its GUI and the
-     * lamp goes dark.
+     * lamp goes dark. A Register Bank (right-click lists the signals) and a Logic Core
+     * (the eight-entry list GUI) sit on the same run, so the whole signal family is
+     * pokeable in one scene.
      */
     @TestPlot("logistics_signal_chain")
     public static void signalChain(PlotBuilder plot) {
@@ -72,6 +74,8 @@ public final class LogisticsTestPlots {
                 .part(Direction.NORTH, def(AE2Logistics.REDSTONE_IO_PART),
                         part -> part.applyConfig(null, ALARM, null, 0, 0, 0, true));
         plot.block("2 0 -1", Blocks.REDSTONE_LAMP);
+        plot.block("3 0 0", AE2Logistics.REGISTER_BANK.get());
+        plot.block("4 0 0", AE2Logistics.LOGIC_CORE.get());
     }
 
     /**

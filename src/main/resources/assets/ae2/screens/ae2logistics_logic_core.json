@@ -4,14 +4,9 @@
     "common/common.json",
     "common/player_inventory.json"
   ],
-  "background": {
-    "texture": "guis/ae2logistics/core_panel.png",
-    "srcRect": [
-      0,
-      0,
-      200,
-      252
-    ]
+  "generatedBackground": {
+    "width": 200,
+    "height": 252
   },
   "slots": {
     "CONFIG": {

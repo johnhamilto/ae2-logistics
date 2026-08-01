@@ -9,6 +9,8 @@ public final class Palette {
     public static final int OK = 0x2E8B57;
     public static final int WAIT = 0xA8760B;
     public static final int ALERT = 0xB33A36;
+    /** Empty/disabled entries; lighter than HINT. */
+    public static final int MUTED = 0xA0A0A0;
     /** Body text on list rows; darker than HINT, quieter than LABEL. */
     public static final int ROW = 0x505A62;
     /** Output-direction accent (P2P outputs, mesh Output roles). */
