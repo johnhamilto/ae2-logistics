@@ -11,8 +11,11 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   otherwise closed out (GUI, models, guides, recipes, tests): transport
   (0.24.x-0.26.0), signal (0.28.0), telemetry boards (0.29.0), queries + config
   (0.30.0), crafting blocks + scheduler + wireless pair + remaining items + Subnet
-  Link (0.31.0). Placeholder block art to replace: Storage Janitor (reuses the
-  register bank cube), Trace Panel (generated front, bank sides).
+  Link (0.31.0). RESOLVED for the mesh family (0.33.1): typed endpoints + Provider
+  P2P Tunnel borrow AE2's own P2P/pattern-provider faces in their models, universal
+  is a generated rainbow swirl, signal keeps its starburst (no AE2 equivalent).
+  Placeholder block art to replace: Storage Janitor (reuses the register bank
+  cube), Trace Panel (generated front, bank sides).
 - Trace Panel follow-ups: a small management GUI (v1 binds by Signal Card click,
   sneak-card removes, sneak-empty clears); visual pass on the in-world renderer
   (orientation/handedness, label scale) once eyeballed in game.

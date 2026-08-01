@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Generate 16x16 RGBA PNG textures for ae2logistics from ASCII pixel grids."""
+import colorsys
+import math
 import struct
 import sys
 import zlib
@@ -23,6 +25,26 @@ def write_png(path, grid, palette, scale=1):
         return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c))
 
     ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)  # 8-bit RGBA
+    png = (b"\x89PNG\r\n\x1a\n"
+           + chunk(b"IHDR", ihdr)
+           + chunk(b"IDAT", zlib.compress(raw, 9))
+           + chunk(b"IEND", b""))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(png)
+    print(f"wrote {path}")
+
+
+def write_png_pixels(path, rows):
+    """Write a 16x16 RGBA PNG from rows of (r, g, b, a) pixels."""
+    raw = b""
+    for row in rows:
+        raw += b"\x00" + b"".join(bytes(px) for px in row)
+
+    def chunk(tag, data):
+        c = tag + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c))
+
+    ihdr = struct.pack(">IIBBBBB", 16, 16, 8, 6, 0, 0, 0)
     png = (b"\x89PNG\r\n\x1a\n"
            + chunk(b"IHDR", ihdr)
            + chunk(b"IDAT", zlib.compress(raw, 9))
@@ -516,49 +538,33 @@ PART_MESH_ENDPOINT = """
 ################
 """
 
-write_png(OUT / "part" / "mesh_endpoint.png", PART_MESH_ENDPOINT, PART)
+# The typed endpoints and the Provider P2P Tunnel borrow AE2's own faces in
+# their models (p2p_tunnel_item/fluid/energy/redstone/me, pattern_provider).
+# Only two faces are generated: signal, which has no AE2 P2P equivalent, keeps
+# the starburst; the universal gets a rainbow swirl - every transport at once.
+def mesh_universal_swirl():
+    rows = []
+    for y in range(16):
+        row = []
+        for x in range(16):
+            if x in (0, 15) or y in (0, 15):
+                row.append(PART["#"])
+            elif x in (1, 14) or y in (1, 14):
+                row.append(PART["D"])
+            else:
+                r = math.hypot(x - 7.5, y - 7.5)
+                hue = (math.atan2(y - 7.5, x - 7.5) / math.tau + r / 9.0) % 1.0
+                red, green, blue = colorsys.hsv_to_rgb(hue, 0.8, 0.95 - 0.045 * r)
+                row.append((int(red * 255), int(green * 255), int(blue * 255), 255))
+        rows.append(row)
+    return rows
 
-# Typed endpoints: the universal starburst with the accent recolored per transport.
-MESH_TYPE_COLORS = {
-    "redstone": ((240, 80, 48, 255), (130, 26, 12, 255)),
-    "item": ((255, 198, 72, 255), (148, 104, 28, 255)),
-    "fluid": ((84, 158, 250, 255), (28, 76, 150, 255)),
-    "energy": ((255, 226, 74, 255), (150, 126, 24, 255)),
-    "signal": ((238, 116, 255, 255), (134, 44, 158, 255)),
-    "me": ((193, 126, 255, 255), (104, 58, 160, 255)),
-    "provider": ((232, 232, 244, 255), (120, 122, 140, 255)),
-}
-for mesh_type, (bright, dim) in MESH_TYPE_COLORS.items():
-    typed = dict(PART)
-    typed.update({"C": bright, "c": dim})
-    write_png(OUT / "part" / f"mesh_endpoint_{mesh_type}.png", PART_MESH_ENDPOINT, typed)
 
-# Provider P2P tunnel face: a pattern-provider slot grid around a violet core.
-PART_PROVIDER_P2P_TUNNEL = """
-################
-#DDDDDDDDDDDDDD#
-#D............D#
-#D.PP..PP..PP.D#
-#D.PP..PP..PP.D#
-#D............D#
-#D.PP..vv..PP.D#
-#D.PP..vv..PP.D#
-#D............D#
-#D.PP..PP..PP.D#
-#D.PP..PP..PP.D#
-#D............D#
-#D....cccc....D#
-#D............D#
-#DDDDDDDDDDDDDD#
-################
-"""
+write_png_pixels(OUT / "part" / "mesh_endpoint.png", mesh_universal_swirl())
 
-PROVIDER_TUNNEL = dict(PART)
-PROVIDER_TUNNEL.update({
-    "P": (226, 228, 236, 255),  # pattern slot white
-    "v": (168, 110, 255, 255),  # provider violet core
-})
-write_png(OUT / "part" / "provider_p2p_tunnel.png", PART_PROVIDER_P2P_TUNNEL, PROVIDER_TUNNEL)
+signal = dict(PART)
+signal.update({"C": (238, 116, 255, 255), "c": (134, 44, 158, 255)})
+write_png(OUT / "part" / "mesh_endpoint_signal.png", PART_MESH_ENDPOINT, signal)
 
 # Subnet link: a split face - main network left, subnet right, bridged in the middle.
 PART_SUBNET_LINK = """
