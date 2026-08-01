@@ -35,7 +35,7 @@ def write_png(path, grid, palette, scale=1):
 
 
 def write_png_pixels(path, rows):
-    """Write a 16x16 RGBA PNG from rows of (r, g, b, a) pixels."""
+    """Write an RGBA PNG from rows of (r, g, b, a) pixels."""
     raw = b""
     for row in rows:
         raw += b"\x00" + b"".join(bytes(px) for px in row)
@@ -44,7 +44,7 @@ def write_png_pixels(path, rows):
         c = tag + data
         return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c))
 
-    ihdr = struct.pack(">IIBBBBB", 16, 16, 8, 6, 0, 0, 0)
+    ihdr = struct.pack(">IIBBBBB", len(rows[0]), len(rows), 8, 6, 0, 0, 0)
     png = (b"\x89PNG\r\n\x1a\n"
            + chunk(b"IHDR", ihdr)
            + chunk(b"IDAT", zlib.compress(raw, 9))
@@ -519,29 +519,20 @@ PART_P2P_TERMINAL = """
 """
 
 
-PART_MESH_ENDPOINT = """
-################
-#DDDDDDDDDDDDDD#
-#D.....CC.....D#
-#D.....CC.....D#
-#D..C..CC..C..D#
-#D...C.CC.C...D#
-#D....cccc....D#
-#DCCCcc.rrcccCD#
-#DCCCcc.rrcccCD#
-#D....cccc....D#
-#D...C.CC.C...D#
-#D..C..CC..C..D#
-#D.....CC.....D#
-#D.....CC.....D#
-#DDDDDDDDDDDDDD#
-################
-"""
+# Mesh faces: the typed endpoints and the Provider P2P Tunnel borrow AE2's own
+# faces in their models (p2p_tunnel_item/fluid/energy/redstone/me,
+# pattern_provider), and signal is a load-time hue swap of the light P2P face
+# (paletted_permutations in assets/minecraft/atlases/blocks.json). The key strip
+# must stay byte-exact with ae2's light-face ramp - unmatched pixels pass
+# through unrecolored, so an AE2 palette change shows up as a gold face.
+P2P_FACE_KEY = [(255, 207, 64, 255), (244, 255, 128, 255), (255, 227, 89, 255)]
+SIGNAL_FACE = [(134, 44, 158, 255), (238, 116, 255, 255), (186, 78, 206, 255)]
+write_png_pixels(OUT / "color_palette" / "p2p_face_key.png", [P2P_FACE_KEY])
+write_png_pixels(OUT / "color_palette" / "signal_face.png", [SIGNAL_FACE])
 
-# The typed endpoints and the Provider P2P Tunnel borrow AE2's own faces in
-# their models (p2p_tunnel_item/fluid/energy/redstone/me, pattern_provider).
-# Only two faces are generated: signal, which has no AE2 P2P equivalent, keeps
-# the starburst; the universal gets a rainbow swirl - every transport at once.
+
+# The universal face is the one still drawn here: a rainbow swirl - every
+# transport at once.
 def mesh_universal_swirl():
     rows = []
     for y in range(16):
@@ -561,10 +552,6 @@ def mesh_universal_swirl():
 
 
 write_png_pixels(OUT / "part" / "mesh_endpoint.png", mesh_universal_swirl())
-
-signal = dict(PART)
-signal.update({"C": (238, 116, 255, 255), "c": (134, 44, 158, 255)})
-write_png(OUT / "part" / "mesh_endpoint_signal.png", PART_MESH_ENDPOINT, signal)
 
 # Subnet link: a split face - main network left, subnet right, bridged in the middle.
 PART_SUBNET_LINK = """

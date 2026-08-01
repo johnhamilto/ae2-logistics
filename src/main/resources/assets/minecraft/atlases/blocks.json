@@ -1,0 +1,14 @@
+{
+  "sources": [
+    {
+      "type": "paletted_permutations",
+      "textures": [
+        "ae2:part/p2p_tunnel_light"
+      ],
+      "palette_key": "ae2logistics:color_palette/p2p_face_key",
+      "permutations": {
+        "logistics_signal": "ae2logistics:color_palette/signal_face"
+      }
+    }
+  ]
+}
