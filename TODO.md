@@ -61,11 +61,26 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
     re-imported. Pre-existing scattered stock never migrates by itself - document
     the manual migration (filtered IO / export-into-sticky), maybe a Config
     Terminal action later.
-  - BLOCKED ON UPSTREAM: enforcement means the network insert path consults claims
-    so every NON-sticky storage can veto - AE2 19.x has no such hook and the mod
-    stays mixin-free. Needs the storage-service insert-filter hook (added to the
-    ROADMAP upstream-PR list); prototype rides that PR, no partial version (sticky
-    that only our own devices honor is not the feature).
+  - REFUSAL IS BLOCKED ON UPSTREAM. Examined and rejected: a max-priority
+    interceptor storage sorts first and can capture + deliver claimed keys into
+    sticky storages (a grid-service mount plus our own sticky registry, no mixins),
+    but NetworkStorage.insert treats partial acceptance as fall-through - the
+    remainder continues to general storage and there is no event to cancel. The
+    only lies available are simulate/modulate divergence (AE2 calls that broken
+    storage), void (item deletion; vanilla partition+Void Card already covers
+    reserved-or-trash), or a buffer (kills the backpressure refusal exists for).
+    The "always report more space" variant plugs the fall-through but must then
+    put overflow SOMEWHERE: interceptor-held = infinite cell-less storage
+    (exploit), voided = deletion, bounded = the refusal problem returns at the
+    buffer edge. A mounted storage can say "I took N" but never "nobody may take
+    the rest". True refusal needs the storage-service insert-filter hook (ROADMAP
+    upstream list); no partial our-devices-only version.
+  - Viable TODAY as an interim: the JANITOR variant - the claim registry
+    periodically sweeps claimed keys out of non-sticky storages into sticky ones.
+    Convergent placement without lies, and it solves the scattered-stock migration
+    edge for free; what it lacks is backpressure (sustained overflow fills general
+    storage as a buffer instead of refusing). Could ship as the sweep half of the
+    card, upgraded to true refusal when the upstream hook lands.
 - Generated backgrounds everywhere: adopt `generatedBackground` for the remaining
   screens as each is touched (queries, Job Monitor, Pattern Workbench, Job
   Scheduler, Guarded Provider, Tracer/Query/Config terminals). Slot insets over a
