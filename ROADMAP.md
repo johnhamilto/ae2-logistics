@@ -83,8 +83,10 @@ representation).
   use internal `GridConnection.create`), dynamic per-node channel demand (would
   unlock per-capability mesh costing and true pooled accounting), a filter-provider
   API so query expressions could drive AE2's own view cells, bus filters, and cell
-  partitions (blocked on internals today; the mod stays mixin-free), and a
-  CPU-selection hook for foreign-job steering.
+  partitions (blocked on internals today; the mod stays mixin-free), a
+  CPU-selection hook for foreign-job steering, and a storage-service insert filter
+  so addons can veto placements network-wide (the Sticky Card in TODO.md - claimed
+  keys may only land on sticky-carded storages - is blocked on exactly this).
 
 ## Known debt and constraints
 
