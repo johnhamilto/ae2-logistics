@@ -16,7 +16,8 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   signal is a load-time paletted_permutations hue swap of the light P2P face,
   universal is a generated rainbow swirl, and all ten p2p-chassis parts (8
   endpoints, provider tunnel, Subnet Link) wear the house light-gray chassis
-  permutation (ME nub stays purple). Placeholder block art to replace: Storage
+  permutation (ME nub stays purple; non-tunnel members use the opaque generated
+  mesh_back2 because ae2's has frequency windows only real tunnels fill). Placeholder block art to replace: Storage
   Janitor (reuses the register bank cube), Trace Panel (generated front, bank
   sides).
 - Trace Panel follow-ups: a small management GUI (v1 binds by Signal Card click,

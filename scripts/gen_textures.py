@@ -542,10 +542,52 @@ P2P_CHASSIS_KEY = [
     (102, 102, 102, 255), (89, 89, 89, 255), (77, 77, 103, 255),
     (66, 66, 66, 255), (65, 65, 65, 255), (64, 64, 64, 255), (65, 63, 84, 255),
 ]
-CHASSIS_GRAY = [(int(r * 0.82), int(g * 0.84), min(255, int(b * 0.88) + 6), 255)
-                for r, g, b, _ in P2P_CHASSIS_KEY]
+
+
+def chassis_gray(r, g, b):
+    """House chassis curve - the one lever for how dark our p2p family reads."""
+    return (int(r * 0.78), int(g * 0.80), min(255, int(b * 0.85) + 5), 255)
+
+
+CHASSIS_GRAY = [chassis_gray(r, g, b) for r, g, b, _ in P2P_CHASSIS_KEY]
 write_png_pixels(OUT / "color_palette" / "p2p_chassis_key.png", [P2P_CHASSIS_KEY])
 write_png_pixels(OUT / "color_palette" / "chassis_gray.png", [CHASSIS_GRAY])
+
+# ae2's back2 is transparent at the four frequency windows BY DESIGN: real P2P
+# tunnels composite the frequency-glow layer behind them (P2PModels does this
+# for our provider tunnel too, so it keeps the permuted ae2 back2). The mesh
+# endpoints and Subnet Link are not tunnels - nothing fills the windows and you
+# see into the part - so they wear this opaque connector instead: chassis tones
+# through the same curve, ae2's ME-purple nub kept, windows lit dim cyan. Only
+# texels 5..11 are visible (the nub cube's uv region).
+MESH_BACK2 = """
+################
+################
+################
+################
+################
+#####LLggLL#####
+#####LmmmmL#####
+#####gmBPmg#####
+#####gmPdmg#####
+#####LmmmmL#####
+#####LLggLL#####
+################
+################
+################
+################
+################
+"""
+
+write_png(OUT / "part" / "mesh_back2.png", MESH_BACK2, {
+    "#": chassis_gray(65, 65, 65),
+    "L": chassis_gray(204, 204, 204),
+    "m": chassis_gray(102, 102, 102),
+    "g": (0, 90, 120, 255),      # dim cyan link light
+    "B": (226, 163, 227, 255),   # ae2 ME nub, bright
+    "P": (145, 93, 205, 255),    # ae2 ME nub, mid
+    "d": (90, 71, 158, 255),     # ae2 ME nub, dark
+})
 
 
 # The universal face is the one still drawn here: a rainbow swirl - every

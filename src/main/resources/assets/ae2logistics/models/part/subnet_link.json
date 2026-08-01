@@ -5,7 +5,7 @@
     "front": "ae2:part/p2p_tunnel_front_logistics_gray",
     "sides": "ae2:part/p2p_tunnel_sides_logistics_gray",
     "back": "ae2:part/p2p_tunnel_back_logistics_gray",
-    "back2": "ae2:part/p2p_tunnel_back2_logistics_gray",
+    "back2": "ae2logistics:part/mesh_back2",
     "particle": "ae2:part/p2p_tunnel_back_logistics_gray"
   }
 }
