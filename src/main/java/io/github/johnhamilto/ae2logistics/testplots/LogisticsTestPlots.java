@@ -79,6 +79,29 @@ public final class LogisticsTestPlots {
     }
 
     /**
+     * A 2x2 trace panel wall pre-bound to demo:level, fed by the signal-chain style
+     * constant: walk up and watch the sparkline crawl.
+     */
+    @TestPlot("logistics_trace_panels")
+    public static void tracePanels(PlotBuilder plot) {
+        plot.creativeEnergyCell("0 0 0");
+        plot.cable("1 0 0").part(Direction.UP, def(AE2Logistics.CONSTANT_PART),
+                part -> part.applyConfig(LEVEL, null, null, 0, 500, 0, false));
+        for (var offset : new String[] {"2 0 0", "3 0 0", "2 1 0", "3 1 0"}) {
+            plot.blockState(offset, AE2Logistics.TRACE_PANEL.get().defaultBlockState()
+                    .setValue(io.github.johnhamilto.ae2logistics.block.TracePanelBlock.FACING,
+                            Direction.NORTH));
+        }
+        plot.addPostInitAction((level, player, origin) -> {
+            var pos = origin.offset(2, 0, 0);
+            if (level.getBlockEntity(pos)
+                    instanceof io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity panel) {
+                panel.bind(LEVEL, false);
+            }
+        });
+    }
+
+    /**
      * Janitor demo: misplaced crafting tables sit in the unfiltered chest; the other
      * chest's bus is partitioned to tables at higher priority. Open the janitor,
      * press Rejigger, watch the stock re-settle.

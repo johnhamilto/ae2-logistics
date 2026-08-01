@@ -11,7 +11,11 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   otherwise closed out (GUI, models, guides, recipes, tests): transport
   (0.24.x-0.26.0), signal (0.28.0), telemetry boards (0.29.0), queries + config
   (0.30.0), crafting blocks + scheduler + wireless pair + remaining items + Subnet
-  Link (0.31.0).
+  Link (0.31.0). Placeholder block art to replace: Storage Janitor (reuses the
+  register bank cube), Trace Panel (generated front, bank sides).
+- Trace Panel follow-ups: a small management GUI (v1 binds by Signal Card click,
+  sneak-card removes, sneak-empty clears); visual pass on the in-world renderer
+  (orientation/handedness, label scale) once eyeballed in game.
 
 ## Features
 
@@ -19,21 +23,6 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   (and ExtendedAE's Extended Pattern Terminal when present) and auto-imports patterns
   into that GUI's pattern slot. Must work in both the cable-part terminals and the
   wireless forms.
-- **Trace Panels** (in-world dashboards): multiblock monitor blocks that merge by
-  placement into one screen - 1x1 up to a sane cap (2x2, 2x3, ...) via coplanar
-  same-facing rectangle detection, Create-display-board style - and render signal
-  sparklines on the merged face. Notes:
-  - Bind channels by clicking the panel with a bound [Signal Card] (very much the
-    house item for "a channel in item form"); a small GUI lists/removes bound
-    traces; memory cards copy the set. Layout adapts to panel size (1 big trace or
-    a grid of small ones).
-  - Formation picks a master block that owns the ONE grid node and channel (the
-    rest are slaves, controller-style); breaking any block splits the panel back.
-  - Rendering is a BER over the merged face reusing the shared Sparkline helper
-    (extracted 0.29.0); history is recorded server-side in the master (own ring
-    buffers via the signal service, independent of any Tracer Terminal) and
-    synced to watching clients at ~1/s, throttled and cached.
-  - Guide page + plot from day one; sprite/model art joins the deferred-art line.
 - **Sticky Card** (from AE2UEL/GTNH): upgrade card for storage cells and storage buses
   (Subnet Link included - it IS a bus). Keys covered by a sticky device's partition are
   CLAIMED: they may only be stored on sticky-carded storages; when those are full the

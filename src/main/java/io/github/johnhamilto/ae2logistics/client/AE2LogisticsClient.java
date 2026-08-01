@@ -15,6 +15,9 @@ public final class AE2LogisticsClient {
         // directly into AE2's own guide (GuideME collects that folder across mods).
         SignalRenderer.initialize(modBus);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(EndpointHighlighter::render);
+        modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) ->
+                event.registerBlockEntityRenderer(AE2Logistics.TRACE_PANEL_BE.get(),
+                        context -> new TracePanelRenderer()));
         modBus.addListener((RegisterMenuScreensEvent event) -> {
             appeng.init.client.InitScreens.register(event,
                     AE2Logistics.LOGIC_PART_MENU.get(),

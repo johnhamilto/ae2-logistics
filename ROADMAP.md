@@ -1,7 +1,7 @@
 # Roadmap
 
-Status as of v0.32.0 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
-what exists, what is queued, and what is known debt. The gametest suite (116 tests, run
+Status as of v0.33.0 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
+what exists, what is queued, and what is known debt. The gametest suite (118 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
 ## Done
@@ -54,6 +54,7 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | Fix | Locator box actually renders through walls and thick: the 0.26.1 no-depth render type never applied its state through the buffer path; replaced with AE2's own overlay scheme - two immediate-mode passes at AFTER_LEVEL with explicit state (LEQUAL bright where visible, GREATER dim ghost where occluded, RenderSystem.lineWidth feeding the line shader's 4px expansion) | 0.26.2 |
 | Fix | Locator visibility: translucent filled faces under the outline in both depth passes (a wireframe alone vanishes against busy scenes), brighter cyan, line width scales with the window like vanilla's outline (fixed 4px was sub-vanilla on retina) | 0.26.3 |
 | F11 | Terminal actions reach mesh rows (were silent no-ops): Rename works from endpoint rows too (retags the frequency), Mark target remembers a mesh frequency, Retune to target moves the selected same-network endpoint onto it keeping role/priority/transports (MeshRetunePayload anchors auth on the TERMINAL - the endpoint may sit far away or in another dimension, identified by pos+side+level id among loaded endpoints); buttons disable when they would do nothing | 0.27.0 |
+| Feature | Trace Panels: in-world signal dashboards - same-facing panel blocks merge by placement into rectangles up to 4x4 (every member independently computes the group, min-corner master owns bindings + 2-minute/1s ring buffers + client sync), bind by clicking with a bound Signal Card (sneak removes, sneak-empty clears, six traces max), BER draws the merged face (dark screen, per-channel sparkline rows + labels) from the master only; panels stitch grid connections to each other explicitly (passive in-world hosts have no driver - found by gametest); formation + cross-member binding + sampling gametested; guide, plot, generated placeholder art | 0.33.0 |
 | Feature | ME Storage Janitor: an in-place IO Port for the whole network, external storages included - a run walks every stored kind through a transient buffer and re-inserts via normal routing, so AE2's insert ordering re-decides placement; fixed two-pass runs (placement changes are unobservable through the aggregate API, so loop-until-no-progress cannot be detected), held-buffer guarantees nothing strands, power per kind, pauses unpowered; GUI (Rejigger/Stop + progress), /ae2logistics janitor look-at toggle, guide, plot; gametested rehoming + idempotence | 0.32.0 |
 | Polish | EVERY screen on generated chrome: Pattern Workbench, Guarded Provider, Job Scheduler converted (Icon.SLOT_BACKGROUND insets over generated panels, Palette everywhere) - the entire baked-chrome pipeline retired (gen_ae2_chrome.py + assets/ae2/textures/guis deleted); wireless pair, Adaptive/Guarded Pattern items, Regulus Crystal, Subnet Link verified (guides + recipes; patterns are workbench-encoded, no recipe embeds by design); the polish backlog is now sprite art only | 0.31.0 |
 | F6/F7 polish | Queries + Config family closed out (art deferred): Query Terminal (saved-list onto ScrollingRowList), Query Sensor, Query Export Bus, Config Terminal (device list onto ScrollingRowList) all on generatedBackground + Palette; panel_200x166 and terminal_236x190 chrome retired (gen script emissions removed) - three baked screens remain (workbench/scheduler/guarded); Config Blueprint guide gained its recipe embed | 0.30.0 |
@@ -66,7 +67,7 @@ representation).
 
 ## Next session
 
-1. Trace Panels (feature build; spec in TODO.md).
+1. Publishing pass: gallery screenshots, Modrinth + CurseForge uploads.
 2. Publishing pass: gallery screenshots (shot list in docs/publishing/modrinth.md),
    then Modrinth + CurseForge uploads.
 3. Later: F10 bundles go/no-go, upstream PR implementations.

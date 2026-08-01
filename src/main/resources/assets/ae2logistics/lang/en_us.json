@@ -40,5 +40,6 @@
   "block.ae2logistics.dense_wireless_access_point": "Dense Wireless Access Point",
   "block.ae2logistics.wireless_bridge": "ME Wireless Bridge",
   "item.ae2logistics.subnet_link": "ME Subnet Link",
-  "block.ae2logistics.storage_janitor": "ME Storage Janitor"
+  "block.ae2logistics.storage_janitor": "ME Storage Janitor",
+  "block.ae2logistics.trace_panel": "Trace Panel"
 }

@@ -835,12 +835,30 @@ write_png(OUT / "part" / "stock_sensor.png", PART_STOCK_SENSOR, PART)
 write_png(OUT / "part" / "rate.png", PART_RATE, PART)
 write_png(OUT / "part" / "counter.png", PART_COUNTER, PART)
 write_png(OUT / "part" / "timer.png", PART_TIMER, PART)
-write_panel(OUT / "gui" / "logic_panel.png", 200, 166)
-write_panel(OUT / "gui" / "mesh_panel.png", 200, 222)
-write_panel(OUT / "gui" / "core_panel.png", 200, 240)
 
 write_png(OUT / "block" / "register_bank_side.png", REGISTER_BANK_SIDE, STEEL)
 write_png(OUT / "block" / "register_bank_top.png", REGISTER_BANK_TOP, STEEL)
+
+TRACE_PANEL_FRONT = """
+################
+#..............#
+#..............#
+#...C..........#
+#..cC..C.......#
+#..cCc.Cc..C...#
+#.ccCccCcc.Cc..#
+#.ccCccCcccCc..#
+#..............#
+#......C.......#
+#...c..Cc......#
+#..cCc.Ccc.C...#
+#.ccCccCcccCc..#
+#..............#
+#..............#
+################
+"""
+
+write_png(OUT / "block" / "trace_panel_front.png", TRACE_PANEL_FRONT, STEEL)
 
 GUARDED_PROVIDER_SIDE = """
 ################

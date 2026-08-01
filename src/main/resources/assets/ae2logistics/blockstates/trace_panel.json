@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "ae2logistics:block/trace_panel"
+    },
+    "facing=south": {
+      "model": "ae2logistics:block/trace_panel",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "ae2logistics:block/trace_panel",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "ae2logistics:block/trace_panel",
+      "y": 90
+    }
+  }
+}
