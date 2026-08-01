@@ -1,6 +1,6 @@
 # Roadmap
 
-Status as of v0.26.1 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
+Status as of v0.26.2 (2026-07-31). DESIGN.md holds the full rationale; this file tracks
 what exists, what is queued, and what is known debt. The gametest suite (113 tests, run
 by CI and `make test`) is the source of truth for behavioral claims.
 
@@ -50,7 +50,8 @@ by CI and `make test`) is the source of truth for behavioral claims.
 | F11.6 | Assembler crossing VERIFIED end to end (was claimed, untested): a real vanilla crafting pattern reaches a molecular assembler only through the tunnel and the result returns to networked storage, plus a two-step chain (logs -> planks -> sticks) whose intermediate re-enters through the same tunnel. The MAE2-trick TODO closes via the replica route - no input-face ICraftingMachine needed, replicas push into crafting machines via the public ICraftingMachine.of | 0.25.1 |
 | F11 polish | Transport tail closed (art deferred): roster streamed LIVE (menu re-pushes on any change - status flips, other players' edits, face blocks), click a roster row to close and flash a pulsing locator box at that endpoint (EndpointHighlighter), self row gets an accent bar; P2P Frequency Terminal onto generatedBackground + ScrollingRowList + shared Palette (ROW/OUT/REMOTE promoted); guide staleness fixed (LOOP status gone) | 0.26.0 |
 | Compat | Applied Mekanistics native chemical returns: provider return faces (tunnel outputs + strict-Output mesh endpoints) expose mekanism:chemical_handler via the guarded AppMekReturns bridge (compileOnly deps, classloaded only when present) - Mekanism machines auto-eject into the faces natively; gametested round trip lands hydrogen in the input-side provider's return slots through AppMek's own generic-inv bridge | 0.26.0 |
-| F11 polish | Locator affordances: roster rows wash on hover (clickability), clicking prints a gray chat line naming the endpoint's part item + coords + distance ("... is in the Nether/the End/another dimension" for cross-dimension rows, GUI stays open - grids span dimensions, rosters carry each row's level id now), locator box renders THROUGH walls on 4px lines (custom no-depth line render type) | 0.26.1 |
+| F11 polish | Locator affordances: roster rows wash on hover (clickability), clicking prints a gray chat line naming the endpoint's part item + coords + distance ("... is in the Nether/the End/another dimension" for cross-dimension rows, GUI stays open - grids span dimensions, rosters carry each row's level id now) | 0.26.1 |
+| Fix | Locator box actually renders through walls and thick: the 0.26.1 no-depth render type never applied its state through the buffer path; replaced with AE2's own overlay scheme - two immediate-mode passes at AFTER_LEVEL with explicit state (LEQUAL bright where visible, GREATER dim ghost where occluded, RenderSystem.lineWidth feeding the line shader's 4px expansion) | 0.26.2 |
 
 Cut by decision: adaptive smithing/stonecutting patterns (exact-identity recipes have no
 fuzziness need). Evaluated and skipped: EMI/REI stack converters (signals have no viewer
