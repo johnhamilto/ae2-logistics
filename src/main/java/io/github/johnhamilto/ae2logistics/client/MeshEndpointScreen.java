@@ -174,12 +174,46 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         if (index >= 0 && index < menu.roster().size()) {
             var info = menu.roster().get(index);
             if (!info.self()) {
-                EndpointHighlighter.highlight(info.pos());
-                onClose();
+                locate(info);
             }
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /**
+     * Same dimension: flash the locator box, say how far, close so it is visible.
+     * Another dimension: nothing to point a box at - say where it is, stay open.
+     */
+    private void locate(MeshEndpointMenu.EndpointInfo info) {
+        var player = net.minecraft.client.Minecraft.getInstance().player;
+        if (player == null) {
+            return;
+        }
+        var name = info.endpoint().getHoverName().getString();
+        var at = coords(info);
+        var here = player.level().dimension().location().toString();
+        if (!info.dimension().isEmpty() && !info.dimension().equals(here)) {
+            player.displayClientMessage(Component.literal(name + " at " + at + " is in "
+                    + dimensionLabel(info.dimension()))
+                    .withStyle(net.minecraft.ChatFormatting.GRAY), false);
+            return;
+        }
+        EndpointHighlighter.highlight(info.pos());
+        int distance = (int) Math.round(Math.sqrt(
+                player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(info.pos()))));
+        player.displayClientMessage(Component.literal(name + " at " + at + " highlighted in world, "
+                + (distance == 1 ? "1 block" : distance + " blocks") + " away")
+                .withStyle(net.minecraft.ChatFormatting.GRAY), false);
+        onClose();
+    }
+
+    private static String dimensionLabel(String dimension) {
+        return switch (dimension) {
+            case "minecraft:the_nether" -> "the Nether";
+            case "minecraft:the_end" -> "the End";
+            default -> "another dimension (" + dimension.substring(dimension.indexOf(':') + 1) + ")";
+        };
     }
 
     private static String coords(MeshEndpointMenu.EndpointInfo info) {
@@ -206,8 +240,13 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
                     ? "set a frequency to link" : "none on this network", 12, 86, Palette.HINT, false);
             return;
         }
+        int hovered = roster.rowAt(mouseX, mouseY, leftPos, topPos);
         roster.drawRows(guiGraphics, (g, index, y) -> {
             var info = menu.roster().get(index);
+            if (index == hovered && !info.self()) {
+                // Hover wash: these rows are clickable (they locate the endpoint).
+                g.fill(9, y - 2, 186, y + 15, 0x332E6E9E);
+            }
             if (info.self()) {
                 // Accent bar on the well's left edge: "this row is the endpoint you opened".
                 g.fill(8, y - 2, 10, y + 15, 0xFF2E6E9E);

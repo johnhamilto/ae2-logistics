@@ -21,8 +21,10 @@ form a universal point-to-point tunnel - or, with more of them, a
   fluids, energy, signals, ME, and provider.
 - A live roster lists every endpoint of the frequency on this network: role,
   priority, what the face touches, and status with ME lane state - streamed live,
-  so status flips and edits by other players show up while the GUI is open. Click
-  a row to close the GUI and flash a locator box around that endpoint's cable.
+  so status flips and edits by other players show up while the GUI is open.
+  Hovering marks the clickable rows; clicking one closes the GUI, flashes a thick
+  locator box around that endpoint's cable (visible through walls), and prints how
+  far away it is. An endpoint in another dimension prints where it is instead.
 - Costs one channel and idles at 1 AE/t. Frequencies never cross networks - the
   network the endpoints sit on is the carrier.
 

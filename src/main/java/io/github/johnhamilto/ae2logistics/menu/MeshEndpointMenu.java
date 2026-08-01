@@ -47,9 +47,13 @@ public class MeshEndpointMenu extends AEBaseMenu {
     private List<EndpointInfo> roster = List.of();
     private int rosterTotal;
 
-    /** One roster row; {@code connected} is the block on the endpoint's face, as an item. */
+    /**
+     * One roster row; {@code connected} is the block on the endpoint's face as an item,
+     * {@code endpoint} the endpoint's own part item (names the row when located), and
+     * {@code dimension} its level id - grids span dimensions, rosters follow.
+     */
     public record EndpointInfo(BlockPos pos, byte role, int priority, byte status, byte meState,
-            boolean self, ItemStack connected) {
+            boolean self, ItemStack connected, ItemStack endpoint, String dimension) {
 
         public static void write(RegistryFriendlyByteBuf buffer, EndpointInfo info) {
             buffer.writeBlockPos(info.pos);
@@ -59,12 +63,15 @@ public class MeshEndpointMenu extends AEBaseMenu {
             buffer.writeByte(info.meState);
             buffer.writeBoolean(info.self);
             ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, info.connected);
+            ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, info.endpoint);
+            buffer.writeUtf(info.dimension);
         }
 
         public static EndpointInfo read(RegistryFriendlyByteBuf buffer) {
             return new EndpointInfo(buffer.readBlockPos(), buffer.readByte(), buffer.readVarInt(),
                     buffer.readByte(), buffer.readByte(), buffer.readBoolean(),
-                    ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer));
+                    ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer),
+                    ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer), buffer.readUtf());
         }
     }
 
@@ -133,9 +140,12 @@ public class MeshEndpointMenu extends AEBaseMenu {
         for (int i = 0; i < sent; i++) {
             var endpoint = linked.get(i);
             var endpointHost = endpoint.getHost().getBlockEntity();
+            var level = endpointHost.getLevel();
             rows.add(new EndpointInfo(endpointHost.getBlockPos(), endpoint.role(),
                     endpoint.priority(), MeshRegistry.statusOf(endpoint), endpoint.meLinkState(),
-                    endpoint == part, connectedDisplay(endpointHost, endpoint)));
+                    endpoint == part, connectedDisplay(endpointHost, endpoint),
+                    new ItemStack(endpoint.getPartItem().asItem()),
+                    level == null ? "" : level.dimension().location().toString()));
         }
         return new Roster(List.copyOf(rows), linked.size());
     }
@@ -190,7 +200,9 @@ public class MeshEndpointMenu extends AEBaseMenu {
             if (!fresh.pos().equals(sent.pos()) || fresh.role() != sent.role()
                     || fresh.priority() != sent.priority() || fresh.status() != sent.status()
                     || fresh.meState() != sent.meState() || fresh.self() != sent.self()
-                    || !ItemStack.matches(fresh.connected(), sent.connected())) {
+                    || !ItemStack.matches(fresh.connected(), sent.connected())
+                    || !ItemStack.matches(fresh.endpoint(), sent.endpoint())
+                    || !fresh.dimension().equals(sent.dimension())) {
                 return false;
             }
         }
