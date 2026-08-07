@@ -1401,15 +1401,47 @@ happens to be the air between it and every compatible connector in range.
   grid connection, as if a cable were laid between them. Channel routing then works out
   of the box: the pathfinder sees ordinary nodes and ordinary connections, and BFS
   channel assignment, saturation, and bottleneck behavior all inherit unchanged. No
-  transport code of ours in the hot path at all. Could work like magic — open question 1
-  is what stands between "could" and "does".
+  transport code of ours in the hot path at all. Could work like magic — and the draft's
+  one routing caveat is resolved by the next bullet.
+- **Last-resort exploration, by flag choice (resolved 2026-08-06).** The draft worried
+  that a wireless hop might be explored before a parallel dense trunk and claim subtrees
+  the trunk should own. The fix — give wireless a high path cost, so the entire wired
+  network is explored first and wireless is used only as a last resort — turns out to be
+  expressible in vanilla with **zero pathing code**. `PathingCalculation` (19.2,
+  source-read 2026-08-06) has no cost model, but it has something equivalent: three
+  *strict* BFS tiers drained fully in order, with `enqueue` classifying by node flag —
+  `DENSE_CAPACITY` → tier 0, `PREFERRED` → tier 1 (set by Tier-1 cables and Toggle
+  Buses; its javadoc: "make paths go through them rather than ordinary devices if
+  possible"), plain → tier 2. Two properties make tier 2 exactly the high path cost
+  wanted. (a) Classification is per-item and clamped upward
+  (`index = Math.max(possibleIndex, currentQueue)`): a plain node parks in tier 2 even
+  when discovered from a dense trunk, and it is not expanded until tiers 0 *and* 1 are
+  drained network-wide. (b) The same `max()` makes the downgrade sticky: everything past
+  the wireless hop — far-side `PREFERRED` cables included — stays tier 2, so multi-hop
+  wireless chains never jump the queue. The whole mechanism is therefore: **leave the
+  connector's nodes plain — no `DENSE_CAPACITY`, no `PREFERRED`.** Any island also
+  reachable by wire is claimed by the wired route first (visited-set) and the wireless
+  link carries nothing; wireless serves only what cable cannot reach, with no
+  competition against dense *or* normal cable, ever. Capacity is untouched — max
+  channels keys off `CANNOT_CARRY`/`DENSE_CAPACITY`, not `PREFERRED` (`GridNode.
+  getMaxChannels`), so plain nodes still pass 8. To the pathfinder the hop reads as a
+  path through an ordinary device rather than a cable, which is honestly what it is.
+  Residual tie: two wireless routes to the same island are both tier 2 and the
+  first-discovered claims it — standard first-branch-wins, acceptable when every
+  candidate is an 8-channel link. Gametests when built: wireless link parallel to a
+  dense trunk (trunk carries, link idle) and an island reachable only wirelessly (link
+  carries).
 - **Channel accounting: no channel of its own, up to 8 passing through** — smart-cable
-  semantics exactly (smart-cable-style channel display on the part face is the natural
-  polish). Power is passive like cable: channels crossing the link pay the normal
-  per-node traversal cost and nothing extra.
+  capacity, though deliberately *not* smart-cable exploration priority (previous
+  bullet: `PREFERRED` stays off). Smart-cable-style channel display on the part face is
+  the natural polish. Power is passive like cable: channels crossing the link pay the
+  normal per-node traversal cost and nothing extra.
 - **A dense (32-channel) tier is deliberately deferred.** Worrying on balance (a wireless
-  dense hop devalues dense trunk planning), and it may break the channel-routing magic
-  above. Revisit only after the 8-channel part proves out in play.
+  dense hop devalues dense trunk planning) — and the flag coupling makes it mechanically
+  awkward besides: 32-channel capacity and tier-0 exploration ride the same flag
+  (`DENSE_CAPACITY`), so a dense wireless hop would compete with real dense trunks by
+  construction. Vanilla offers no capacity-32-but-explore-last combination; that would
+  need an upstream split of capacity from priority. Deferred stays deferred.
 
 **Implementation sketch.** The machinery is proven in-house: MeshRegistry manages dynamic
 `GridHelper.createConnection` links today, and connection teardown splits grids
@@ -1419,22 +1451,19 @@ events. A full mesh within a color group is O(n²) connections in a tight cluste
 accept that first and measure; pruning to nearest-k would break the cables-in-air model
 and is a last resort.
 
-**Open questions.**
+**Open questions.** (A first item — verify the exploration-order behavior — was resolved
+2026-08-06 by the source read above; the session-20 note "GridConnections always ride
+the dense queue" was imprecise. Connections have no flags and take
+`max(0, currentQueue)`: they *inherit* the tier they are discovered from and never
+demote a path — only controller-adjacent ones actually start at tier 0.)
 
-1. **Verify the routing really is free.** Session-20 pathfinding reading: programmatic
-   `GridConnection`s ride the *dense* BFS queue in `PathingCalculation`. Capacity stays
-   honest (the part's nodes cap at 8), but a wireless hop may be *explored before* a
-   parallel cable path from the same frontier and claim subtrees a dense trunk should
-   own — refusing at channel 9 with an idle 32-channel path sitting next to it. Re-read
-   the queue behavior with this topology in mind and gametest a
-   wireless-link-parallel-to-dense-trunk scene before calling the routing story done.
-2. **Asymmetric range.** Boosters make range per-endpoint; if A reaches B but not vice
+1. **Asymmetric range.** Boosters make range per-endpoint; if A reaches B but not vice
    versa, do they link? Lean **mutual reach** (min of the two ranges) — the easiest rule
    to read in-world.
-3. **Recoloring.** Craft 17 item variants or recolor in place? Lean in-place (dye
+2. **Recoloring.** Craft 17 item variants or recolor in place? Lean in-place (dye
    right-click at minimum; Color Applicator support if its hook reaches parts — cables
    recolor through the host and parts have no native color, so this needs a look).
-4. **Chunk boundaries.** A partner in an unloading chunk drops its node and the
+3. **Chunk boundaries.** A partner in an unloading chunk drops its node and the
    connection with it — probably the correct semantics for free, but F11.5's open
    question 4 (wireless devices in unloaded chunks) applies here too and should get the
    same answer.
