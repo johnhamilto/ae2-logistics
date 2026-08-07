@@ -1356,6 +1356,9 @@ crash.
 > entity/player/chunk-load rows are balance decisions before they are code. The signal
 > tunnel row is now partially superseded: the mesh already carries signals across grids,
 > so a signal P2P tunnel adds AE2-native routing convenience, not new capability.
+>
+> **Status (2026-08-06):** F11.8 (colored wireless connectors) added below — unbuilt,
+> and now the live plan for short-range wireless.
 
 1. **F11.1 (linking overhaul)** — highest value, lowest risk, ships alone as a useful mod.
 2. **F11.2 (universal)** — moderate, gated on the channel-cost decision.
@@ -1366,6 +1369,142 @@ crash.
 6. **F11.3 (mesh)** — transport types first, then ME with pooling + collision shutdown once
    F11.1's terminal exists to make collisions diagnosable. Mesh-ME is meaningfully harder
    than everything above it and should not be attempted without the diagnostic UI in place.
+7. **F11.8 (colored wireless connectors)** — added 2026-08-06; independent of the rest of
+   F11 and ships alone as a useful feature.
+
+---
+
+### F11.8 — Colored wireless connectors (short-range wireless as cable)
+
+**Added 2026-08-06.** The successor plan for short-range wireless: **decouple it from the
+Wireless Access Point entirely** and ship it as our own wireless cable part. F11.5's
+bridge (shipped, 0.14.0) stays what it is — infrastructure wireless, coverage-gated,
+channel-accounted through the serving AP. The connector is the opposite end of the
+spectrum: ad-hoc, short-range, and a **cable replacement** rather than a network joiner.
+
+**The core idea.** A cable part that is, to the grid, a piece of smart cable whose run
+happens to be the air between it and every compatible connector in range.
+
+**Design.**
+
+- **Color is the linking mechanism — AE2's cable-color rule verbatim.** Default is
+  **fluix, which connects to anything**; dyed one of the 16 Minecraft colors, a connector
+  links only to in-range connectors of the same color (and fluix ones). Same-color
+  connectors in mutual range form a little network of their own, exactly the way touching
+  cables do — including the footgun (two neighbors running default fluix in range of each
+  other will fuse networks) and its established fix (color them apart). No linking UI, no
+  frequencies, no memory cards: **placement is the pairing and color is the
+  configuration.** That is the killer-feature bet.
+- **16-block range** by default, extended by **Wireless Boosters** in the part's card
+  slots. Same-dimension only — short-range wireless is spatial by definition.
+- **Treat them exactly like cables.** Every color-compatible pair in mutual range gets a
+  grid connection, as if a cable were laid between them. Channel routing then works out
+  of the box: the pathfinder sees ordinary nodes and ordinary connections, and BFS
+  channel assignment, saturation, and bottleneck behavior all inherit unchanged. No
+  transport code of ours in the hot path at all. Could work like magic — open question 1
+  is what stands between "could" and "does".
+- **Channel accounting: no channel of its own, up to 8 passing through** — smart-cable
+  semantics exactly (smart-cable-style channel display on the part face is the natural
+  polish). Power is passive like cable: channels crossing the link pay the normal
+  per-node traversal cost and nothing extra.
+- **A dense (32-channel) tier is deliberately deferred.** Worrying on balance (a wireless
+  dense hop devalues dense trunk planning), and it may break the channel-routing magic
+  above. Revisit only after the 8-channel part proves out in play.
+
+**Implementation sketch.** The machinery is proven in-house: MeshRegistry manages dynamic
+`GridHelper.createConnection` links today, and connection teardown splits grids
+synchronously (only repath is deferred), so link churn on place/break/recolor/
+range-change is safe. Neighbor discovery is a per-dimension spatial lookup on those
+events. A full mesh within a color group is O(n²) connections in a tight cluster —
+accept that first and measure; pruning to nearest-k would break the cables-in-air model
+and is a last resort.
+
+**Open questions.**
+
+1. **Verify the routing really is free.** Session-20 pathfinding reading: programmatic
+   `GridConnection`s ride the *dense* BFS queue in `PathingCalculation`. Capacity stays
+   honest (the part's nodes cap at 8), but a wireless hop may be *explored before* a
+   parallel cable path from the same frontier and claim subtrees a dense trunk should
+   own — refusing at channel 9 with an idle 32-channel path sitting next to it. Re-read
+   the queue behavior with this topology in mind and gametest a
+   wireless-link-parallel-to-dense-trunk scene before calling the routing story done.
+2. **Asymmetric range.** Boosters make range per-endpoint; if A reaches B but not vice
+   versa, do they link? Lean **mutual reach** (min of the two ranges) — the easiest rule
+   to read in-world.
+3. **Recoloring.** Craft 17 item variants or recolor in place? Lean in-place (dye
+   right-click at minimum; Color Applicator support if its hook reaches parts — cables
+   recolor through the host and parts have no native color, so this needs a look).
+4. **Chunk boundaries.** A partner in an unloading chunk drops its node and the
+   connection with it — probably the correct semantics for free, but F11.5's open
+   question 4 (wireless devices in unloaded chunks) applies here too and should get the
+   same answer.
+
+The incumbent survey in F11.5 applies unchanged, and the differentiator sharpens: every
+wireless-channels mod links by named frequency through a UI, and most are cost-free.
+This has no UI at all and stays channel-honest — a smart cable, priced like one, that
+you aim instead of lay.
+
+---
+
+## 4B. F12 — Storage bus input cards
+
+**Added 2026-08-06.** Two small upgrade cards that shape what a storage bus will
+*accept*. Both are purely local restrictions on the bus's own mount — a rejected insert
+falls through to the rest of the network's storage naturally, which is the desired
+behavior — so neither touches the network-wide refusal problem that has the Sticky Card
+blocked on upstream (TODO.md).
+
+### F12.1 — Existing-item filter card
+
+Working name; a better one is wanted (candidates: Conform Card, Top-Up Card, Restock
+Card).
+
+**Restricts input to keys the target inventory already contains.** Live contents, not a
+snapshot — which is exactly the difference from AE2's own "Partition Storage" button (a
+one-time copy of contents into the config slots). With the card there is no config at
+all: **you configure the bus by seeding the chest.** Drop one stack of each thing a
+barrel-wall lane should hold and the lane keeps that assortment forever.
+
+- An empty target accepts nothing — the card is inert until seeded. Deliberate, and the
+  same call as Sticky's empty-partition rule: silently accepting everything is worse.
+- Extract a type to zero and its door closes. By design: the card tracks contents, not
+  history.
+- Key-type agnostic like the other storage cards: items, fluids, companion-mod
+  chemicals.
+- **Composition.** Partition config slots narrow further (intersection). Fuzzy Card
+  widens the contains-check the way it widens partitions. **Inverter Card is the
+  sleeper:** inverted, the bus accepts only types *not* yet present — a
+  self-deduplicating collection chest (one insert of each new thing, ever). That falls
+  out of the semantics for free and should be kept, not rejected.
+- Cell variant (via Cell Workbench): a cell that accepts only what it already holds.
+  Plausible and cheap next to the bus version; decide when building. Novelty check
+  folds into the §7.3 publishing sweep.
+
+### F12.2 — Stack limiter card
+
+**Restricts input to a single item where the bus would otherwise move stacks.** Storage
+bus + card on a chest: only a single item goes in. The use case is automation that needs
+items split one by one — single-item feeding of machines and contraptions that misbehave
+when handed a stack, which today means hopper-timing rigs.
+
+The one design decision is what "single" scopes to: per insert operation, per slot, per
+key, or whole inventory. The chest example reads as **whole inventory** (one item sits
+in the chest until something takes it, then one more arrives), and that is the only
+scoping that yields strict one-at-a-time delivery downstream, so lean that. Per-slot
+(slot limit 1) is the trivial implementation, but 27 singles in a chest is not "a single
+item in". Items first; fluid semantics (one bucket?) undecided until a use case shows
+up.
+
+### The shared implementation question
+
+`appeng.api.upgrades.Upgrades.add` registers cards into upgrade slots as public API, but
+AE2's stock Storage Bus *applies* only the cards it knows — its config application is
+private and hardcoded (verified when Subnet Link replicated those ~15 lines, 0.21.0), so
+foreign cards would likely sit inert in a stock bus. The fallback is proven in-house: a
+storage-bus subclass via the `mountInventories` seam (the Subnet Link recipe) wraps the
+mount with card-aware gating, and Subnet Link itself, being a StorageBusPart, would
+carry both cards for free. Upstreaming a card-application hook is the alternative;
+decide whether stock-bus support is worth the PR before building the subclass.
 
 ---
 

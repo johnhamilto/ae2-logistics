@@ -68,4 +68,16 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   - The ME Storage Janitor (shipped 0.32.0) already covers the migration half:
     a run re-settles claimed keys into their partitioned homes. What sticky still
     needs from upstream is refusal/backpressure only.
+- **Colored Wireless Connectors** (DESIGN F11.8): short-range wireless as a colored
+  wireless cable part, decoupled from access points - fluix connects to anything, the
+  16 dye colors pair only with themselves, 16-block base range + Wireless Boosters.
+  In-range compatible connectors grid-connect exactly like cable, so channel routing
+  is native: no channel of their own, 8 passing through (smart-cable semantics).
+  Dense tier deferred (balance + routing-magic risk). Verify the dense-BFS-queue
+  pathing question before trusting "works like magic".
+- **Storage bus input cards** (DESIGN F12): existing-item filter card (accept only
+  types the target already holds - live, not a snapshot; inverter composes into a
+  self-deduplicating collection chest) + stack limiter card (single-item inserts for
+  one-by-one automation). Purely local restrictions, so no sticky-card upstream
+  blocker; open question is whether AE2's stock bus can apply foreign cards.
 - Pre-release modpack soak against the standard suite (see CLAUDE.md).
