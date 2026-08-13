@@ -212,7 +212,10 @@ Everything here was read from the AE2 v26.1.10-beta clone or the NeoForge
   colors, screens on the new chrome, Trace Panel + highlighter renderers, the
   signal face sprite (renderer agent flagged the items-vs-blocks atlas split),
   paletted_permutations atlas sources against AE2 26.1's texture paths.
-- `make data` (datagen) and `make guide` (GuideME 26.1) untested.
+- `make data` DONE 2026-08-13: run type `data()` -> `clientData()` (26.1 split
+  the type; AE2 does the same). Runs clean; zero providers registered, matching
+  main - all JSON is handwritten or gen_textures.py output.
+- `make guide` (GuideME 26.1) untested.
 - Deprecation-warning pass; compat suite still dormant pending 26.1 ports;
   AE2/GuideME are still betas - re-pin before any release.
 
