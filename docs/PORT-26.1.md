@@ -216,8 +216,19 @@ Everything here was read from the AE2 v26.1.10-beta clone or the NeoForge
   the type; AE2 does the same). Runs clean; zero providers registered, matching
   main - all JSON is handwritten or gen_textures.py output.
 - `make guide` (GuideME 26.1) untested.
-- Deprecation-warning pass; compat suite still dormant pending 26.1 ports;
-  AE2/GuideME are still betas - re-pin before any release.
+- Deprecation pass DONE 2026-08-13 (run with a temporary -Xlint:deprecation):
+  7 warnings total. Fixed 2: Item.builtInRegistryHolder() ->
+  BuiltInRegistries.ITEM.wrapAsHolder (AdaptivePattern), and
+  TextureAtlas.LOCATION_ITEMS -> AtlasIds.ITEMS in SignalRenderer (the png-path
+  constant vs atlas-id form - AE2 uses AtlasIds everywhere; also the flagged
+  items-vs-blocks split: face sprite is minecraft:item/redstone, so ITEMS is
+  the right atlas, verify on the visual pass). Kept 5 that match upstream
+  idiom: ValueOutput.store(MapCodec) in SignalKey.toTag is exactly how AE2's
+  own AEItemKey/AEFluidKey serialize (contractual until AE2 moves), and the
+  four appendHoverText overrides remain vanilla's and AE2's live tooltip
+  surface mid-migration (MemoryCardItem overrides it too).
+- Compat suite still dormant pending 26.1 ports; AE2/GuideME are still betas -
+  re-pin before any release.
 
 ## Open decisions
 

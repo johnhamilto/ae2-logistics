@@ -234,7 +234,7 @@ public class AdaptivePattern implements IPatternDetails {
         if (!(input.what() instanceof AEItemKey itemKey)) {
             return AdaptiveInputSpec.EXACT.withCatalyst(current.catalyst());
         }
-        var tags = itemKey.getItem().builtInRegistryHolder().tags()
+        var tags = BuiltInRegistries.ITEM.wrapAsHolder(itemKey.getItem()).tags()
                 .map(TagKey::location)
                 .sorted()
                 .limit(8)

@@ -12,8 +12,8 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.data.AtlasIds;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
@@ -55,7 +55,7 @@ public final class SignalRenderer implements AEKeyRenderer<SignalKey, SignalRend
     @Override
     public void extract(RenderState state, SignalKey what, @Nullable Level level, int seed) {
         state.sprite = Minecraft.getInstance().getAtlasManager()
-                .getAtlasOrThrow(TextureAtlas.LOCATION_ITEMS).getSprite(FACE_SPRITE);
+                .getAtlasOrThrow(AtlasIds.ITEMS).getSprite(FACE_SPRITE);
     }
 
     @Override
