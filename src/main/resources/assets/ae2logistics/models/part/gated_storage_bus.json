@@ -1,0 +1,7 @@
+{
+  "parent": "ae2:part/storage_bus_base",
+  "textures": {
+    "front": "ae2logistics:part/gated_storage_bus",
+    "particle": "ae2:part/storage_bus_back"
+  }
+}

@@ -158,6 +158,12 @@ public class AE2Logistics {
     public static final DeferredItem<SignalCardItem> SIGNAL_CARD = ITEMS.register("signal_card",
             () -> new SignalCardItem(new Item.Properties().stacksTo(1)));
 
+    // Storage bus input cards (DESIGN F12); associations registered in common setup.
+    public static final DeferredItem<Item> CONFORM_CARD = ITEMS.register("conform_card",
+            () -> appeng.api.upgrades.Upgrades.createUpgradeCardItem(new Item.Properties()));
+    public static final DeferredItem<Item> STACK_LIMITER_CARD = ITEMS.register("stack_limiter_card",
+            () -> appeng.api.upgrades.Upgrades.createUpgradeCardItem(new Item.Properties()));
+
     public static final Supplier<DataComponentType<EncodedAdaptivePattern>> ENCODED_ADAPTIVE_PATTERN = DATA_COMPONENTS
             .register("encoded_adaptive_pattern", () -> DataComponentType.<EncodedAdaptivePattern>builder()
                     .persistent(EncodedAdaptivePattern.CODEC)
@@ -391,12 +397,20 @@ public class AE2Logistics {
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.WirelessConnectorPart>> WIRELESS_CONNECTOR_PART = part(
             "wireless_connector", io.github.johnhamilto.ae2logistics.parts.WirelessConnectorPart.class,
             io.github.johnhamilto.ae2logistics.parts.WirelessConnectorPart::new);
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart>> GATED_STORAGE_BUS_PART = part(
+            "gated_storage_bus", io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart.class,
+            io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart::new);
     // AE2's storage bus menu under our own type, so the window titles as a Subnet Link.
     public static final Supplier<MenuType<appeng.menu.implementations.StorageBusMenu>> SUBNET_LINK_MENU =
             MENUS.register("subnet_link", () -> appeng.menu.implementations.MenuTypeBuilder
                     .create(appeng.menu.implementations.StorageBusMenu::new,
                             io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart.class)
                     .buildUnregistered(id("subnet_link")));
+    public static final Supplier<MenuType<appeng.menu.implementations.StorageBusMenu>> GATED_STORAGE_BUS_MENU =
+            MENUS.register("gated_storage_bus", () -> appeng.menu.implementations.MenuTypeBuilder
+                    .create(appeng.menu.implementations.StorageBusMenu::new,
+                            io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart.class)
+                    .buildUnregistered(id("gated_storage_bus")));
     public static final Supplier<MenuType<P2PFrequencyTerminalMenu>> P2P_TERMINAL_MENU = MENUS.register(
             "p2p_frequency_terminal", () -> IMenuTypeExtension.create(P2PFrequencyTerminalMenu::new));
 
@@ -449,6 +463,9 @@ public class AE2Logistics {
                         output.accept(MESH_ENDPOINT_PROVIDER_PART.get());
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(SUBNET_LINK_PART.get());
+                        output.accept(GATED_STORAGE_BUS_PART.get());
+                        output.accept(CONFORM_CARD.get());
+                        output.accept(STACK_LIMITER_CARD.get());
                         output.accept(REGULUS_CRYSTAL.get());
                     })
                     .build());
@@ -559,8 +576,21 @@ public class AE2Logistics {
         });
 
         modBus.addListener((net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent event) -> {
-            event.enqueueWork(() -> appeng.api.features.P2PTunnelAttunement
-                    .registerAttunementTag(PROVIDER_P2P_TUNNEL_PART.get()));
+            event.enqueueWork(() -> {
+                appeng.api.features.P2PTunnelAttunement
+                        .registerAttunementTag(PROVIDER_P2P_TUNNEL_PART.get());
+                // Upgrade-card associations: slot validation checks these, so without
+                // them a card physically cannot be inserted. Both our bus-family parts
+                // mirror the stock storage bus card set, plus the two input cards.
+                for (var bus : java.util.List.of(SUBNET_LINK_PART, GATED_STORAGE_BUS_PART)) {
+                    appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.FUZZY_CARD, bus, 1);
+                    appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.INVERTER_CARD, bus, 1);
+                    appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.CAPACITY_CARD, bus, 5);
+                    appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.VOID_CARD, bus, 1);
+                    appeng.api.upgrades.Upgrades.add(CONFORM_CARD, bus, 1);
+                    appeng.api.upgrades.Upgrades.add(STACK_LIMITER_CARD, bus, 1);
+                }
+            });
         });
 
         modBus.addListener((appeng.api.parts.RegisterPartCapabilitiesEvent event) -> {

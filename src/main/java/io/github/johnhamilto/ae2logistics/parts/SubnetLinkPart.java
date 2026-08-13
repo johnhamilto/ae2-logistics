@@ -88,7 +88,7 @@ public class SubnetLinkPart extends StorageBusPart {
     @Override
     public void mountInventories(IStorageMounts mounts) {
         configureSubnetHandler();
-        mounts.mount(subnetHandler, getPriority());
+        mounts.mount(new InputCardGate(subnetHandler, this), getPriority());
     }
 
     private void configureSubnetHandler() {

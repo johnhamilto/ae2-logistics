@@ -17,7 +17,10 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   universal is a generated rainbow swirl, and all ten p2p-chassis parts (8
   endpoints, provider tunnel, Subnet Link) wear the house light-gray chassis
   permutation (ME nub stays purple; non-tunnel members use the opaque generated
-  mesh_back2 because ae2's has frequency windows only real tunnels fill). Placeholder block art to replace: Storage
+  mesh_back2 because ae2's has frequency windows only real tunnels fill). The
+  Gated Storage Bus + input cards (0.37.0) ride the generated pipeline: amber
+  portcullis face on ae2's bus chassis, card frames with glyphs - fine until the
+  global sprite pass. Placeholder block art to replace: Storage
   Janitor (reuses the register bank cube), Trace Panel (generated front, bank
   sides). Both are dev-gated meanwhile (0.34.0): hidden from tab/JEI and recipes
   conditioned off in production; lift the DevOnlyCondition + tab gate when the art
@@ -70,9 +73,4 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   - The ME Storage Janitor (shipped 0.32.0) already covers the migration half:
     a run re-settles claimed keys into their partitioned homes. What sticky still
     needs from upstream is refusal/backpressure only.
-- **Storage bus input cards** (DESIGN F12): existing-item filter card (accept only
-  types the target already holds - live, not a snapshot; inverter composes into a
-  self-deduplicating collection chest) + stack limiter card (single-item inserts for
-  one-by-one automation). Purely local restrictions, so no sticky-card upstream
-  blocker; open question is whether AE2's stock bus can apply foreign cards.
 - Pre-release modpack soak against the standard suite (see CLAUDE.md).

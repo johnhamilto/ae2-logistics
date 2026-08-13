@@ -41,6 +41,9 @@
   "block.ae2logistics.wireless_bridge": "ME Wireless Bridge",
   "item.ae2logistics.wireless_connector": "ME Wireless Connector",
   "item.ae2logistics.subnet_link": "ME Subnet Link",
+  "item.ae2logistics.gated_storage_bus": "ME Gated Storage Bus",
+  "item.ae2logistics.conform_card": "Conform Card",
+  "item.ae2logistics.stack_limiter_card": "Stack Limiter Card",
   "block.ae2logistics.storage_janitor": "ME Storage Janitor",
   "block.ae2logistics.trace_panel": "Trace Panel"
 }
