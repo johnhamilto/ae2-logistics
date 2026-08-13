@@ -610,4 +610,78 @@ public class ProviderTunnelGameTests {
                     "4 chained sticks must return to networked storage, got " + crafted);
         });
     }
+
+    /**
+     * The buffered return path: machine inserts land in the nine-slot buffer without
+     * touching the network mid-insert, a flush moves everything onward, a refusing
+     * destination keeps returns buffered instead of lost, a full buffer refuses
+     * (backpressure lives at the buffer edge), and buffered returns survive NBT.
+     */
+    @GameTest(template = "empty5")
+    public void returnBufferHoldsFlushesAndBackpressures(GameTestHelper helper) {
+        var buffer = io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.buffer(() -> {
+        });
+        var items = buffer.itemHandler();
+        for (int slot = 0; slot < 9; slot++) {
+            helper.assertTrue(
+                    items.insertItem(slot, new ItemStack(Items.IRON_INGOT, 64), false).isEmpty(),
+                    "buffer slot " + slot + " must accept a stack");
+        }
+        helper.assertTrue(
+                items.insertItem(0, new ItemStack(Items.IRON_INGOT, 1), false).getCount() == 1,
+                "a full buffer must refuse the overflow");
+
+        var received = new java.util.concurrent.atomic.AtomicLong();
+        helper.assertTrue(buffer.flush(sink(received, true)), "flush must report movement");
+        helper.assertTrue(received.get() == 9L * 64,
+                "flush must deliver all 576, delivered " + received.get());
+        helper.assertTrue(buffer.isEmpty(), "buffer must drain fully");
+
+        items.insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
+        buffer.flush(sink(new java.util.concurrent.atomic.AtomicLong(), false));
+        helper.assertFalse(buffer.isEmpty(), "refused returns stay buffered, never lost");
+
+        var tag = new net.minecraft.nbt.CompoundTag();
+        buffer.writeToNBT(tag, "buf", helper.getLevel().registryAccess());
+        var fresh = io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.buffer(() -> {
+        });
+        fresh.readFromNBT(tag, "buf", helper.getLevel().registryAccess());
+        helper.assertFalse(fresh.isEmpty(), "buffered returns must survive NBT");
+        helper.succeed();
+    }
+
+    /** Counting sink; accepts everything or nothing. */
+    private static appeng.api.storage.MEStorage sink(
+            java.util.concurrent.atomic.AtomicLong received, boolean accept) {
+        return new appeng.api.storage.MEStorage() {
+            @Override
+            public long insert(appeng.api.stacks.AEKey what, long amount,
+                    appeng.api.config.Actionable mode,
+                    appeng.api.networking.security.IActionSource source) {
+                if (!accept) {
+                    return 0;
+                }
+                if (mode == appeng.api.config.Actionable.MODULATE) {
+                    received.addAndGet(amount);
+                }
+                return amount;
+            }
+
+            @Override
+            public long extract(appeng.api.stacks.AEKey what, long amount,
+                    appeng.api.config.Actionable mode,
+                    appeng.api.networking.security.IActionSource source) {
+                return 0;
+            }
+
+            @Override
+            public void getAvailableStacks(KeyCounter out) {
+            }
+
+            @Override
+            public net.minecraft.network.chat.Component getDescription() {
+                return net.minecraft.network.chat.Component.literal("sink");
+            }
+        };
+    }
 }

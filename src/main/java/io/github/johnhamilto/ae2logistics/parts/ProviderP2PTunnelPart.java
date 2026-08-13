@@ -60,11 +60,10 @@ public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
 
     private final VirtualProvider virtualProvider = new VirtualProvider();
     private final MEStorage returnPath = new ReturnPath();
-    private final GenericInternalInventory returnGenericInv = ReturnAdapters.genericInv(returnPath);
-    private final net.neoforged.neoforge.items.IItemHandler returnItemHandler =
-            ReturnAdapters.itemHandler(returnPath);
-    private final net.neoforged.neoforge.fluids.capability.IFluidHandler returnFluidHandler =
-            ReturnAdapters.fluidHandler(returnPath);
+    private final ReturnAdapters.ReturnBuffer returnBuffer = ReturnAdapters.buffer(() -> {
+        getHost().markForSave();
+        getMainNode().ifPresent((grid, node) -> grid.getTickManager().alertDevice(node));
+    });
 
     public ProviderP2PTunnelPart(IPartItem<?> partItem) {
         super(partItem);
@@ -91,18 +90,18 @@ public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
      */
     @Nullable
     public GenericInternalInventory exposedReturnGenericInv() {
-        return isOutput() ? returnGenericInv : null;
+        return isOutput() ? returnBuffer.genericInv() : null;
     }
 
     /** Machines return results via plain item capability on the output face. */
     @Nullable
     public net.neoforged.neoforge.items.IItemHandler exposedReturnItemHandler() {
-        return isOutput() ? returnItemHandler : null;
+        return isOutput() ? returnBuffer.itemHandler() : null;
     }
 
     @Nullable
     public net.neoforged.neoforge.fluids.capability.IFluidHandler exposedReturnFluidHandler() {
-        return isOutput() ? returnFluidHandler : null;
+        return isOutput() ? returnBuffer.fluidHandler() : null;
     }
 
     /** The push target behind this (output) tunnel's face. */
@@ -147,8 +146,34 @@ public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
     public TickRateModulation tickingRequest(IGridNode node, int ticksSinceLastCall) {
         if (isOutput()) {
             virtualProvider.maybeRequestUpdate();
+            // Tick-time flush: machines returned into the buffer during their own
+            // ticks; routing onward never runs inside their insert callstack.
+            if (returnBuffer.flush(returnPath)) {
+                return TickRateModulation.URGENT;
+            }
         }
         return TickRateModulation.SLOWER;
+    }
+
+    @Override
+    public void writeToNBT(net.minecraft.nbt.CompoundTag data,
+            net.minecraft.core.HolderLookup.Provider registries) {
+        super.writeToNBT(data, registries);
+        returnBuffer.writeToNBT(data, "returnBuffer", registries);
+    }
+
+    @Override
+    public void readFromNBT(net.minecraft.nbt.CompoundTag data,
+            net.minecraft.core.HolderLookup.Provider registries) {
+        super.readFromNBT(data, registries);
+        returnBuffer.readFromNBT(data, "returnBuffer", registries);
+    }
+
+    @Override
+    public void addAdditionalDrops(List<net.minecraft.world.item.ItemStack> drops, boolean wrenched) {
+        super.addAdditionalDrops(drops, wrenched);
+        var host = getBlockEntity();
+        returnBuffer.addDrops(drops, host.getLevel(), host.getBlockPos());
     }
 
     /**

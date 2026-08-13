@@ -107,12 +107,9 @@ public class MeshEndpointPart extends AEBasePart {
             new io.github.johnhamilto.ae2logistics.provider.ProviderBatchRouter<>(new MeshProviderTargets());
     private final java.util.Set<appeng.api.stacks.AEKey> lastBatch = new java.util.HashSet<>();
     private final appeng.api.storage.MEStorage providerReturnPath = new ProviderReturnPath();
-    private final appeng.api.behaviors.GenericInternalInventory returnGenericInv =
-            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.genericInv(providerReturnPath);
-    private final IItemHandler returnItemHandler =
-            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.itemHandler(providerReturnPath);
-    private final IFluidHandler returnFluidHandler =
-            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.fluidHandler(providerReturnPath);
+    private final io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.ReturnBuffer returnBuffer =
+            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.buffer(
+                    () -> getHost().markForSave());
 
     public MeshEndpointPart(IPartItem<?> partItem) {
         super(partItem);
@@ -443,7 +440,7 @@ public class MeshEndpointPart extends AEBasePart {
     /** Machines return any registered key type through the generic view (chemicals, flux, ...). */
     @Nullable
     public appeng.api.behaviors.GenericInternalInventory exposedReturnGenericInv() {
-        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnGenericInv : null;
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnBuffer.genericInv() : null;
     }
 
     /** The bare return path, for compat bridges wrapping their own capability around it. */
@@ -543,7 +540,7 @@ public class MeshEndpointPart extends AEBasePart {
         if (attuned(MeshRegistry.TYPE_ITEM) && role != ROLE_OUT) {
             return itemHandler;
         }
-        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnItemHandler : null;
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnBuffer.itemHandler() : null;
     }
 
     @Nullable
@@ -551,7 +548,7 @@ public class MeshEndpointPart extends AEBasePart {
         if (attuned(MeshRegistry.TYPE_FLUID) && role != ROLE_OUT) {
             return fluidHandler;
         }
-        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnFluidHandler : null;
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnBuffer.fluidHandler() : null;
     }
 
     @Nullable
@@ -725,6 +722,20 @@ public class MeshEndpointPart extends AEBasePart {
         return true;
     }
 
+    /** Tick-time flush (from MeshRegistry): routing never runs inside a machine's insert. */
+    public void flushReturns() {
+        if (attuned(MeshRegistry.TYPE_PROVIDER)) {
+            returnBuffer.flush(providerReturnPath);
+        }
+    }
+
+    @Override
+    public void addAdditionalDrops(java.util.List<ItemStack> drops, boolean wrenched) {
+        super.addAdditionalDrops(drops, wrenched);
+        var host = getHost().getBlockEntity();
+        returnBuffer.addDrops(drops, host.getLevel(), host.getBlockPos());
+    }
+
     @Override
     public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
         super.writeToNBT(data, registries);
@@ -732,6 +743,7 @@ public class MeshEndpointPart extends AEBasePart {
         data.putByte("role", role);
         data.putInt("priority", priority);
         data.putInt("capabilities", capabilities);
+        returnBuffer.writeToNBT(data, "returnBuffer", registries);
         if (carriedNode != null) {
             carriedNode.saveToNBT(data);
         }
@@ -744,6 +756,7 @@ public class MeshEndpointPart extends AEBasePart {
         role = data.getByte("role");
         priority = data.getInt("priority");
         capabilities = data.getInt("capabilities");
+        returnBuffer.readFromNBT(data, "returnBuffer", registries);
         var typed = typedVariant();
         if (typed != null) {
             capabilities = typed.mask();

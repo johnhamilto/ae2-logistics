@@ -22,6 +22,10 @@ import io.github.johnhamilto.ae2logistics.wireless.WirelessLinkRegistry;
 @GameTestHolder(AE2Logistics.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class WirelessConnectorGameTests {
+    // Every scene wears its own color and never runs fluix in-world: fluix pairs
+    // with ANYTHING, and gametest batches can place structures within the 16-block
+    // range of each other - fluix scenes then link ACROSS tests and fuse unrelated
+    // networks. The fluix rule itself is covered by the colorsCompatible asserts.
 
     private static void place(GameTestHelper helper, BlockPos pos, String blockId) {
         helper.setBlock(pos, BuiltInRegistries.BLOCK.get(ResourceLocation.parse(blockId)));
@@ -61,9 +65,11 @@ public class WirelessConnectorGameTests {
         var a = placeConnector(helper, new BlockPos(0, 1, 1));
         place(helper, new BlockPos(4, 1, 0), "ae2:creative_energy_cell");
         var b = placeConnector(helper, new BlockPos(4, 1, 1));
+        a.applyWirelessConfig(AEColor.GREEN, 0);
+        b.applyWirelessConfig(AEColor.GREEN, 0);
 
         helper.runAfterDelay(20, () -> {
-            helper.assertTrue(sameGrid(a, b), "fluix pair in range must fuse into one grid");
+            helper.assertTrue(sameGrid(a, b), "green pair in range must fuse into one grid");
             a.applyWirelessConfig(AEColor.RED, 0);
             b.applyWirelessConfig(AEColor.WHITE, 0);
         });
@@ -96,6 +102,8 @@ public class WirelessConnectorGameTests {
 
         var a = placeConnector(helper, new BlockPos(0, 1, 1));
         var b = placeConnector(helper, new BlockPos(9, 1, 1));
+        a.applyWirelessConfig(AEColor.LIME, 0);
+        b.applyWirelessConfig(AEColor.LIME, 0);
 
         helper.runAfterDelay(60, () -> {
             helper.assertTrue(sameGrid(a, b), "connectors share the controller grid");
@@ -124,6 +132,8 @@ public class WirelessConnectorGameTests {
         var a = placeConnector(helper, new BlockPos(0, 1, 1));
 
         var b = placeConnector(helper, new BlockPos(8, 1, 1));
+        a.applyWirelessConfig(AEColor.CYAN, 0);
+        b.applyWirelessConfig(AEColor.CYAN, 0);
         place(helper, new BlockPos(8, 1, 2), "ae2:interface");
         place(helper, new BlockPos(8, 1, 3), "ae2:interface");
 
@@ -155,15 +165,17 @@ public class WirelessConnectorGameTests {
         var a = placeConnector(helper, new BlockPos(0, 1, 1));
         place(helper, new BlockPos(18, 1, 0), "ae2:creative_energy_cell");
         var b = placeConnector(helper, new BlockPos(18, 1, 1));
+        a.applyWirelessConfig(AEColor.PURPLE, 0);
+        b.applyWirelessConfig(AEColor.PURPLE, 0);
 
         helper.runAfterDelay(20, () -> {
             helper.assertFalse(sameGrid(a, b), "18 blocks exceeds the 16 base range");
-            a.applyWirelessConfig(AEColor.TRANSPARENT, 2);
+            a.applyWirelessConfig(AEColor.PURPLE, 2);
         });
         helper.runAfterDelay(40, () -> {
             helper.assertFalse(sameGrid(a, b),
                     "one boosted side must not link: reach is min of the two ranges");
-            b.applyWirelessConfig(AEColor.TRANSPARENT, 2);
+            b.applyWirelessConfig(AEColor.PURPLE, 2);
         });
         helper.runAfterDelay(60, () -> {
             helper.assertTrue(sameGrid(a, b), "both sides boosted to ~18.8 must link at 18");

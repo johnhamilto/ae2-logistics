@@ -511,6 +511,7 @@ public final class MeshRegistry {
                 Map<ResourceLocation, Long> signals = null;
 
                 for (var part : carrierMembers) {
+                    part.flushReturns();
                     if (part.isSource(TYPE_REDSTONE)) {
                         redstone = Math.max(redstone, part.readFaceRedstone());
                     }
