@@ -13,6 +13,11 @@ ever used it but terminals. Wireless bridging promotes your access points into
 logistics infrastructure: machines can participate in the network without a cable
 path, **but only inside coverage**.
 
+For short point-to-point hops with no access point at all, the
+<ItemLink id="wireless_connector" /> is the other wireless: a colored
+cable-through-air part with a 16-block base reach. This page is the
+infrastructure tier; the connector has its own page.
+
 ## ME Wireless Bridge
 
 <BlockImage id="wireless_bridge" scale="4" />
@@ -63,3 +68,4 @@ point.
 ## Devices
 
 <ItemLink id="wireless_bridge" /> joins machines through coverage from AE2 WAPs or the <ItemLink id="dense_wireless_access_point" />.
+<ItemLink id="wireless_connector" /> lays cable through the air instead: short range, color-paired, channel-honest.

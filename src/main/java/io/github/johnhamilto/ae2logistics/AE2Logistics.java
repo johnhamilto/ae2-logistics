@@ -374,6 +374,9 @@ public class AE2Logistics {
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart>> SUBNET_LINK_PART = part(
             "subnet_link", io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart.class,
             io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart::new);
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.WirelessConnectorPart>> WIRELESS_CONNECTOR_PART = part(
+            "wireless_connector", io.github.johnhamilto.ae2logistics.parts.WirelessConnectorPart.class,
+            io.github.johnhamilto.ae2logistics.parts.WirelessConnectorPart::new);
     // AE2's storage bus menu under our own type, so the window titles as a Subnet Link.
     public static final Supplier<MenuType<appeng.menu.implementations.StorageBusMenu>> SUBNET_LINK_MENU =
             MENUS.register("subnet_link", () -> appeng.menu.implementations.MenuTypeBuilder
@@ -402,6 +405,7 @@ public class AE2Logistics {
                         output.accept(LOGIC_CORE_ITEM.get());
                         output.accept(DENSE_WAP_ITEM.get());
                         output.accept(WIRELESS_BRIDGE_ITEM.get());
+                        output.accept(WIRELESS_CONNECTOR_PART.get());
                         output.accept(SIGNAL_CARD.get());
                         output.accept(CONSTANT_PART.get());
                         output.accept(THRESHOLD_PART.get());
@@ -572,10 +576,14 @@ public class AE2Logistics {
             // compat suite has 26.1 ports.
         });
 
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) ->
-                MeshRegistry.tick(event.getServer().getTickCount()));
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerStoppedEvent event) ->
-                MeshRegistry.clear());
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) -> {
+            MeshRegistry.tick(event.getServer().getTickCount());
+            io.github.johnhamilto.ae2logistics.wireless.WirelessLinkRegistry.tick();
+        });
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerStoppedEvent event) -> {
+            MeshRegistry.clear();
+            io.github.johnhamilto.ae2logistics.wireless.WirelessLinkRegistry.clear();
+        });
 
         ContainerItemStrategy.register(SignalKeyType.TYPE, SignalKey.class, new SignalCardContainerStrategy());
 

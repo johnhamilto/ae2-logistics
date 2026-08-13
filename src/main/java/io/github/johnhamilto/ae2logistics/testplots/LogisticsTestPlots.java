@@ -223,6 +223,32 @@ public final class LogisticsTestPlots {
      * tunnels - drop a pattern into the Ex Pattern Provider and request. Builds a bare
      * sign pedestal instead when ExtendedAE is not in the dev runtime.
      */
+    /**
+     * Two powered towers, no cable between them. The front fluix pair fuses the
+     * networks (the terminal on either side proves it); the back red-vs-blue pair
+     * stays dark until recolored - dye or a fluix crystal relinks it live. Click
+     * Wireless Boosters onto a connector to stretch its range, empty hand pops one
+     * out.
+     */
+    @TestPlot("logistics_wireless_connectors")
+    public static void wirelessConnectors(PlotBuilder plot) {
+        plot.creativeEnergyCell("0 0 0");
+        plot.cable("0 1 0")
+                .part(Direction.UP, def(AE2Logistics.WIRELESS_CONNECTOR_PART))
+                .part(Direction.NORTH, AEParts.TERMINAL);
+        plot.creativeEnergyCell("8 0 0");
+        plot.cable("8 1 0")
+                .part(Direction.UP, def(AE2Logistics.WIRELESS_CONNECTOR_PART))
+                .part(Direction.NORTH, AEParts.TERMINAL);
+
+        plot.creativeEnergyCell("0 0 3");
+        plot.cable("0 1 3").part(Direction.UP, def(AE2Logistics.WIRELESS_CONNECTOR_PART),
+                part -> part.applyWirelessConfig(appeng.api.util.AEColor.RED, 0));
+        plot.creativeEnergyCell("8 0 3");
+        plot.cable("8 1 3").part(Direction.UP, def(AE2Logistics.WIRELESS_CONNECTOR_PART),
+                part -> part.applyWirelessConfig(appeng.api.util.AEColor.BLUE, 0));
+    }
+
     @TestPlot("logistics_compat_extendedae")
     public static void compatExtendedAe(PlotBuilder plot) {
         plot.creativeEnergyCell("0 0 0");

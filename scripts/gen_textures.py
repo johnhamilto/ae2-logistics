@@ -935,3 +935,57 @@ write_png(OUT / "block" / "guarded_pattern_provider.png", GUARDED_PROVIDER_SIDE,
 write_png(OUT / "item" / "signal_card.png", SIGNAL_CARD, CARD)
 write_png(OUT / "gui" / "signal.png", SIGNAL_ICON, GUI)
 write_png(OUT.parent.parent.parent / "logo.png", SIGNAL_ICON, GUI, scale=4)
+
+
+# Wireless connector lens: one glyph (signal arcs over a dot), 17 AE color palettes.
+# Hexes are AEColor's (dark, medium, bright) variants; fluix is TRANSPARENT's triple.
+AE_COLOR_VARIANTS = {
+    "white": (0xb4b4b4, 0xe0e0e0, 0xf9f9f9),
+    "light_gray": (0x7e7e7e, 0xa09fa0, 0xc4c4c4),
+    "gray": (0x4f4f4f, 0x6c6b6c, 0x949294),
+    "black": (0x131313, 0x272727, 0x3b3b3b),
+    "lime": (0x4ec04e, 0x70e259, 0xb3f86d),
+    "yellow": (0xffcf40, 0xffe359, 0xf4ff80),
+    "orange": (0xd9782f, 0xeca23c, 0xf2ba49),
+    "brown": (0x6e4a12, 0x7e5c16, 0x8e6e1a),
+    "red": (0xaa212b, 0xd73e42, 0xf07665),
+    "pink": (0xd86eaa, 0xff99bb, 0xfbcad5),
+    "magenta": (0xc15189, 0xd5719c, 0xe69ebf),
+    "purple": (0x6e5cb8, 0x915dcd, 0xb06fdd),
+    "blue": (0x337ff0, 0x3894ff, 0x40c1ff),
+    "light_blue": (0x69b9ff, 0x70d2ff, 0x80f7ff),
+    "cyan": (0x22b0ae, 0x2fccb7, 0x65e8c9),
+    "green": (0x079b6b, 0x17b86d, 0x32d850),
+    "fluix": (0x5a479e, 0x915dcd, 0xe2a3e3),
+}
+
+WIRELESS_CONNECTOR_LENS = """
+rrrrrrrrrrrrrrrr
+rmmmmmmmmmmmmmmr
+rmmbbbbbbbbbbmmr
+rmbmmmmmmmmmmbmr
+rmmmmmmmmmmmmmmr
+rmmmbbbbbbbbmmmr
+rmmbmmmmmmmmbmmr
+rmmmmmmmmmmmmmmr
+rmmmmbbbbbbmmmmr
+rmmmmmmmmmmmmmmr
+rmmmmmmbbmmmmmmr
+rmmmmmmbbmmmmmmr
+rmmmmmmmmmmmmmmr
+rmmmmmmmmmmmmmmr
+rmmmmmmmmmmmmmmr
+rrrrrrrrrrrrrrrr
+"""
+
+
+def _rgb(value):
+    return ((value >> 16) & 255, (value >> 8) & 255, value & 255, 255)
+
+
+for _name, (_dark, _medium, _bright) in AE_COLOR_VARIANTS.items():
+    write_png(OUT / "part" / f"wireless_connector_{_name}.png", WIRELESS_CONNECTOR_LENS, {
+        "r": _rgb(_dark),
+        "m": _rgb(_medium),
+        "b": _rgb(_bright),
+    })
