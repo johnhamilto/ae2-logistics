@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -51,7 +51,7 @@ public class JobMonitorPart extends AEBasePart implements ILogicNode {
     private int stallSeconds = 10;
 
     private final Map<Object, Tracker> trackers = new IdentityHashMap<>();
-    private Set<ResourceLocation> channels = Set.of();
+    private Set<Identifier> channels = Set.of();
     private long tick;
 
     private static final class Tracker {
@@ -96,8 +96,8 @@ public class JobMonitorPart extends AEBasePart implements ILogicNode {
         return out.length() > 24 ? out.substring(0, 24) : out.toString();
     }
 
-    private ResourceLocation channel(String path) {
-        return ResourceLocation.fromNamespaceAndPath(prefix, path);
+    private Identifier channel(String path) {
+        return Identifier.fromNamespaceAndPath(prefix, path);
     }
 
     /** Live value of one of this monitor's channels, for the menu readout. */
@@ -119,18 +119,18 @@ public class JobMonitorPart extends AEBasePart implements ILogicNode {
     // --- ILogicNode ---
 
     @Override
-    public Set<ResourceLocation> readChannels() {
+    public Set<Identifier> readChannels() {
         return Set.of();
     }
 
     @Nullable
     @Override
-    public ResourceLocation writtenChannel() {
+    public Identifier writtenChannel() {
         return null;
     }
 
     @Override
-    public Set<ResourceLocation> writtenChannels() {
+    public Set<Identifier> writtenChannels() {
         return channels;
     }
 
@@ -153,7 +153,7 @@ public class JobMonitorPart extends AEBasePart implements ILogicNode {
         long idle = 0;
         long stalled = 0;
         long pending = 0;
-        var next = new HashSet<ResourceLocation>();
+        var next = new HashSet<Identifier>();
         Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<>());
 
         for (var cpu : crafting.getCpus()) {

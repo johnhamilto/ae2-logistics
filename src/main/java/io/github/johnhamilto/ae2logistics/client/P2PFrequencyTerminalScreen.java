@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -284,7 +284,7 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
             guiGraphics.drawString(font, label, LIST_X, y,
                     isTarget ? Palette.WAIT : isSelected ? Palette.VALUE : Palette.ROW, false);
 
-            var item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(row.itemId()));
+            var item = BuiltInRegistries.ITEM.getValue(Identifier.parse(row.itemId()));
             var typeName = item.getDescription().getString().replace(" P2P Tunnel", "");
             if (typeName.length() > 8) {
                 typeName = typeName.substring(0, 8);

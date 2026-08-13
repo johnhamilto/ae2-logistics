@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -28,7 +28,7 @@ import io.github.johnhamilto.ae2logistics.signal.SignalService;
 public class MeshGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -42,14 +42,14 @@ public class MeshGameTests {
     }
 
     private static void placeDenseCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_smart_dense_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_smart_dense_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void redstoneMeshIsWiredOr(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -73,7 +73,7 @@ public class MeshGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void itemMeshKeepsBatchesTogether(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(3, 1, 1));
@@ -100,7 +100,7 @@ public class MeshGameTests {
             int chestsWithItems = 0;
             int total = 0;
             for (var chestPos : new BlockPos[] {new BlockPos(2, 2, 1), new BlockPos(3, 2, 1)}) {
-                if (helper.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
+                if (helper.getBlockEntity(chestPos, net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                     int count = 0;
                     for (int i = 0; i < chest.getContainerSize(); i++) {
                         count += chest.getItem(i).getCount();
@@ -128,22 +128,22 @@ public class MeshGameTests {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 2));
 
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity source) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity source) {
             source.setItem(0, new ItemStack(Items.BIRCH_PLANKS, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(level, helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST, null,
                 (IPartItem<?>) storageBus);
 
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         helper.setBlock(new BlockPos(2, 1, 3),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         // The provider's push face points at the mesh endpoint, which occupies that cable
         // face - so its grid connection comes from a separate cable path above.
         placeCable(helper, new BlockPos(2, 2, 2));
@@ -165,8 +165,8 @@ public class MeshGameTests {
                 java.util.List.of(new appeng.api.stacks.GenericStack(
                         appeng.api.stacks.AEItemKey.of(Items.CRAFTING_TABLE), 1)),
                 java.util.List.of(io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec
-                        .ofTag(ResourceLocation.parse("minecraft:planks"))));
-        if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+                        .ofTag(Identifier.parse("minecraft:planks"))));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
             providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
             providerBe.getLogic().getConfigManager().putSetting(
                     appeng.api.config.Settings.BLOCKING_MODE, appeng.api.config.YesNo.YES);
@@ -222,7 +222,7 @@ public class MeshGameTests {
 
     private static int countItems(GameTestHelper helper, BlockPos pos) {
         int count = 0;
-        if (helper.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             for (int i = 0; i < chest.getContainerSize(); i++) {
                 count += chest.getItem(i).getCount();
             }
@@ -234,7 +234,7 @@ public class MeshGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void meshDeliveryCannotEnterAnotherMesh(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -262,20 +262,20 @@ public class MeshGameTests {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 2));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity source) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity source) {
             source.setItem(0, new ItemStack(Items.BIRCH_PLANKS, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(level, helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST, null,
                 (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         helper.setBlock(new BlockPos(2, 1, 3),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         placeCable(helper, new BlockPos(2, 2, 2));
         placeCable(helper, new BlockPos(2, 2, 3));
 
@@ -292,8 +292,8 @@ public class MeshGameTests {
                 java.util.List.of(new appeng.api.stacks.GenericStack(
                         appeng.api.stacks.AEItemKey.of(Items.CRAFTING_TABLE), 1)),
                 java.util.List.of(io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec
-                        .ofTag(ResourceLocation.parse("minecraft:planks"))));
-        if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+                        .ofTag(Identifier.parse("minecraft:planks"))));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
             providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
             providerBe.getLogic().getConfigManager().putSetting(
                     appeng.api.config.Settings.BLOCKING_MODE, appeng.api.config.YesNo.YES);
@@ -339,16 +339,16 @@ public class MeshGameTests {
     public void meMeshSplitsWhenEndpointLeaves(GameTestHelper helper) {
         // One backbone network carries the frequency (frequencies never cross networks).
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(3, 1, 1));
         placeCable(helper, new BlockPos(4, 1, 1));
         // The networks FED into the endpoints' faces - these are what the mesh carries.
         helper.setBlock(new BlockPos(1, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(4, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
 
         var first = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "me-split",
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
@@ -382,16 +382,16 @@ public class MeshGameTests {
     public void meMeshCarriesFedNetworks(GameTestHelper helper) {
         // One backbone network carries the frequency (frequencies never cross networks).
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(3, 1, 1));
         placeCable(helper, new BlockPos(4, 1, 1));
         // Fed networks touching the endpoint faces (endpoints face UP).
         helper.setBlock(new BlockPos(1, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(4, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
 
         var first = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "me-link",
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME);
@@ -426,16 +426,16 @@ public class MeshGameTests {
     public void meshFrequenciesAreNetworkScoped(GameTestHelper helper) {
         // Two DISJOINT host networks (gap at x=2), each with a powered cable.
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         helper.setBlock(new BlockPos(3, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(4, 1, 1));
         // Fed networks on the faces.
         helper.setBlock(new BlockPos(1, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(4, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
 
         var first = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "net-scope",
                 MeshEndpointPart.ROLE_BOTH, MeshRegistry.TYPE_ME | MeshRegistry.TYPE_ITEM);
@@ -471,9 +471,9 @@ public class MeshGameTests {
      */
     @GameTest(template = "empty12", timeoutTicks = 400)
     public void meMeshBundlesChannelsAcrossLanes(GameTestHelper helper) {
-        var controllerBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:controller"));
-        var creativeCell = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell"));
-        var interfaceBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:interface"));
+        var controllerBlock = BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:controller"));
+        var creativeCell = BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell"));
+        var interfaceBlock = BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:interface"));
 
         // Controller column feeding the mesh: 32 channels per controller face.
         helper.setBlock(new BlockPos(1, 1, 4), controllerBlock);
@@ -529,7 +529,7 @@ public class MeshGameTests {
             }
             int online = 0;
             for (var pos : interfaces) {
-                if (helper.getBlockEntity(pos) instanceof appeng.blockentity.misc.InterfaceBlockEntity iface
+                if (helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.misc.InterfaceBlockEntity iface
                         && iface.getMainNode().isOnline()) {
                     online++;
                 }
@@ -549,7 +549,7 @@ public class MeshGameTests {
     public void signalMeshBridgesNetworks(GameTestHelper helper) {
         // Backbone network carrying both endpoints.
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(3, 1, 1));
@@ -557,16 +557,16 @@ public class MeshGameTests {
         // Subnet A above the input face: its cable holds the constant writing 77.
         placeCable(helper, new BlockPos(1, 2, 1));
         helper.setBlock(new BlockPos(1, 3, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         // Subnet B above the output face receives the bridged channel.
         placeCable(helper, new BlockPos(4, 2, 1));
         helper.setBlock(new BlockPos(4, 3, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
 
         var constant = (LogicPart) PartHelper.setPart(helper.getLevel(),
                 helper.absolutePos(new BlockPos(1, 2, 1)), Direction.NORTH, null,
                 AE2Logistics.CONSTANT_PART.get());
-        constant.applyConfig(ResourceLocation.parse("test:bridged"), null, null, 0, 77, 0, false);
+        constant.applyConfig(Identifier.parse("test:bridged"), null, null, 0, 77, 0, false);
 
         placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "sig-mesh",
                 MeshEndpointPart.ROLE_IN, MeshRegistry.TYPE_SIGNAL);
@@ -583,7 +583,7 @@ public class MeshGameTests {
             helper.assertTrue(subnetB != null, "output face must resolve subnet B's signal service");
             helper.assertTrue(subnetB != sourceNode.getGrid().getService(SignalService.class),
                     "subnet B must be separate from subnet A");
-            long value = subnetB.get(ResourceLocation.parse("test:bridged"));
+            long value = subnetB.get(Identifier.parse("test:bridged"));
             helper.assertTrue(value == 77, "bridged signal should be 77 on subnet B, got " + value);
             helper.succeed();
         });
@@ -593,7 +593,7 @@ public class MeshGameTests {
     @GameTest(template = "empty5", timeoutTicks = 100)
     public void typedEndpointLocksCapabilityMask(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -618,7 +618,7 @@ public class MeshGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void typedEndpointsFormTunnel(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -641,7 +641,7 @@ public class MeshGameTests {
 
         helper.runAfterDelay(40, () -> {
             int count = 0;
-            if (helper.getBlockEntity(new BlockPos(2, 2, 1)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(2, 2, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 for (int i = 0; i < chest.getContainerSize(); i++) {
                     count += chest.getItem(i).getCount();
                 }

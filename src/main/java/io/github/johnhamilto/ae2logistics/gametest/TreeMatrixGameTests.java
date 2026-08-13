@@ -7,7 +7,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.TestFunction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -30,9 +30,9 @@ import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 @GameTestHolder(AE2Logistics.MOD_ID)
 public class TreeMatrixGameTests {
 
-    private static final ResourceLocation PLANKS = ResourceLocation.parse("minecraft:planks");
-    private static final ResourceLocation LOGS = ResourceLocation.parse("minecraft:logs");
-    private static final ResourceLocation IRON_INGOTS = ResourceLocation.parse("c:ingots/iron");
+    private static final Identifier PLANKS = Identifier.parse("minecraft:planks");
+    private static final Identifier LOGS = Identifier.parse("minecraft:logs");
+    private static final Identifier IRON_INGOTS = Identifier.parse("c:ingots/iron");
 
     private record Case(String name, List<ItemStack> patterns, List<ItemStack> storage,
             AEItemKey request, long amount, boolean expect) {

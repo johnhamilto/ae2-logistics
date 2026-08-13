@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.GridHelper;
@@ -42,11 +42,11 @@ public class LogicCoreEntry implements ILogicNode {
     @Nullable
     private LogicPartType type;
     @Nullable
-    ResourceLocation outChannel;
+    Identifier outChannel;
     @Nullable
-    ResourceLocation inA;
+    Identifier inA;
     @Nullable
-    ResourceLocation inB;
+    Identifier inB;
     int op;
     long valueA;
     long valueB;
@@ -77,12 +77,12 @@ public class LogicCoreEntry implements ILogicNode {
     }
 
     @Nullable
-    public ResourceLocation inARaw() {
+    public Identifier inARaw() {
         return inA;
     }
 
     @Nullable
-    public ResourceLocation inBRaw() {
+    public Identifier inBRaw() {
         return inB;
     }
 
@@ -142,8 +142,8 @@ public class LogicCoreEntry implements ILogicNode {
      * virtual node (managed nodes are single-use), disabling destroys it, and a type
      * switch keeps the node but resets evaluation state.
      */
-    public void configure(@Nullable LogicPartType newType, @Nullable ResourceLocation out,
-            @Nullable ResourceLocation a, @Nullable ResourceLocation b, int op, long valueA,
+    public void configure(@Nullable LogicPartType newType, @Nullable Identifier out,
+            @Nullable Identifier a, @Nullable Identifier b, int op, long valueA,
             long valueB, boolean flag) {
         if (newType == LogicPartType.REDSTONE_IO) {
             newType = null; // world-facing; physical Redstone Signal Ports only
@@ -178,7 +178,7 @@ public class LogicCoreEntry implements ILogicNode {
     }
 
     void enable() {
-        if (node != null || core.getLevel() == null || core.getLevel().isClientSide) {
+        if (node != null || core.getLevel() == null || core.getLevel().isClientSide()) {
             return;
         }
         node = GridHelper.createManagedNode(this, NODE_LISTENER)
@@ -199,11 +199,11 @@ public class LogicCoreEntry implements ILogicNode {
     }
 
     @Override
-    public Set<ResourceLocation> readChannels() {
+    public Set<Identifier> readChannels() {
         if (type == null) {
             return Set.of();
         }
-        var channels = new HashSet<ResourceLocation>(2);
+        var channels = new HashSet<Identifier>(2);
         switch (type) {
             case THRESHOLD, ARITHMETIC, BOOLEAN -> {
                 if (inA != null) {
@@ -229,7 +229,7 @@ public class LogicCoreEntry implements ILogicNode {
 
     @Nullable
     @Override
-    public ResourceLocation writtenChannel() {
+    public Identifier writtenChannel() {
         return type == null ? null : outChannel;
     }
 
@@ -389,9 +389,9 @@ public class LogicCoreEntry implements ILogicNode {
         if (type == LogicPartType.REDSTONE_IO) {
             type = null;
         }
-        outChannel = tag.contains("out") ? ResourceLocation.tryParse(tag.getString("out")) : null;
-        inA = tag.contains("inA") ? ResourceLocation.tryParse(tag.getString("inA")) : null;
-        inB = tag.contains("inB") ? ResourceLocation.tryParse(tag.getString("inB")) : null;
+        outChannel = tag.contains("out") ? Identifier.tryParse(tag.getString("out")) : null;
+        inA = tag.contains("inA") ? Identifier.tryParse(tag.getString("inA")) : null;
+        inB = tag.contains("inB") ? Identifier.tryParse(tag.getString("inB")) : null;
         op = tag.getInt("op");
         valueA = tag.getLong("valueA");
         valueB = tag.getLong("valueB");

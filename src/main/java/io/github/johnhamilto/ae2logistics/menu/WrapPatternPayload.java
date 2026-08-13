@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import appeng.api.crafting.PatternDetailsHelper;
@@ -51,7 +51,7 @@ public record WrapPatternPayload(BlockPos pos, byte action, String channel, int 
         }
 
         if (payload.action == ACTION_WRAP) {
-            var channel = ResourceLocation.tryParse(payload.channel.trim());
+            var channel = Identifier.tryParse(payload.channel.trim());
             if (channel == null || stack.is(AE2Logistics.GUARDED_PATTERN.get())
                     || !PatternDetailsHelper.isEncodedPattern(stack)) {
                 return;

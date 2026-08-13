@@ -5,7 +5,7 @@ import java.util.function.ToLongFunction;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingService;
@@ -22,12 +22,12 @@ public final class QueryContext {
     @Nullable
     private final ICraftingService crafting;
     @Nullable
-    private final ToLongFunction<ResourceLocation> signals;
+    private final ToLongFunction<Identifier> signals;
     @Nullable
     private final Function<String, CompiledQuery> resolver;
 
     public QueryContext(@Nullable KeyCounter stacks, @Nullable ICraftingService crafting,
-            @Nullable ToLongFunction<ResourceLocation> signals,
+            @Nullable ToLongFunction<Identifier> signals,
             @Nullable Function<String, CompiledQuery> resolver) {
         this.stacks = stacks;
         this.crafting = crafting;
@@ -45,7 +45,7 @@ public final class QueryContext {
     }
 
     /** Same data, different signal lookup (e.g. the scheduler's same-tick reads). */
-    public QueryContext withSignals(ToLongFunction<ResourceLocation> signalLookup) {
+    public QueryContext withSignals(ToLongFunction<Identifier> signalLookup) {
         return new QueryContext(stacks, crafting, signalLookup, resolver);
     }
 
@@ -62,7 +62,7 @@ public final class QueryContext {
         return crafting != null && crafting.isCraftable(key);
     }
 
-    public long signal(ResourceLocation channel) {
+    public long signal(Identifier channel) {
         return signals == null ? 0 : signals.applyAsLong(channel);
     }
 

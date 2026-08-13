@@ -40,7 +40,7 @@ public class GuardedPatternProviderBlock extends Block implements EntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
-        if (level.isClientSide || type != AE2Logistics.GUARDED_PROVIDER_BE.get()) {
+        if (level.isClientSide() || type != AE2Logistics.GUARDED_PROVIDER_BE.get()) {
             return null;
         }
         return (tickLevel, pos, tickState, be) -> ((GuardedPatternProviderBlockEntity) be).serverTick();
@@ -49,7 +49,7 @@ public class GuardedPatternProviderBlock extends Block implements EntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hitResult) {
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer
+        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer
                 && level.getBlockEntity(pos) instanceof GuardedPatternProviderBlockEntity provider) {
             serverPlayer.openMenu(
                     new SimpleMenuProvider(
@@ -57,7 +57,7 @@ public class GuardedPatternProviderBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.guarded_pattern_provider")),
                     buffer -> GuardedProviderMenu.writeOpenData(buffer, provider));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(level.isClientSide());
     }
 
     @Override

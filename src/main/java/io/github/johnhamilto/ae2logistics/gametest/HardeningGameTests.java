@@ -6,7 +6,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -38,7 +38,7 @@ import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 public class HardeningGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -54,7 +54,7 @@ public class HardeningGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void fluidMeshFillsCauldron(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -84,7 +84,7 @@ public class HardeningGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void energyMeshPowersForeignAcceptor(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
 
         var input = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.NORTH, "energy-e2e",
@@ -94,10 +94,10 @@ public class HardeningGameTests {
         placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.EAST, "energy-e2e",
                 MeshEndpointPart.ROLE_OUT, MeshRegistry.TYPE_ENERGY);
         helper.setBlock(new BlockPos(2, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:energy_acceptor")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:energy_acceptor")));
         // Somewhere for the converted power to go on the foreign grid.
         helper.setBlock(new BlockPos(3, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:energy_cell")));
 
         helper.runAfterDelay(40, () -> {
             var acceptorNode = GridHelper.getExposedNode(helper.getLevel(),
@@ -127,20 +127,20 @@ public class HardeningGameTests {
     @GameTest(template = "empty5", timeoutTicks = 900)
     public void schedulerRuleCompletesAndGoesIdle(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 2));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.OAK_PLANKS, 32));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST,
                 null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         helper.setBlock(new BlockPos(2, 1, 3),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         helper.setBlock(new BlockPos(2, 1, 4), Blocks.BARREL);
         helper.setBlock(new BlockPos(1, 1, 2), AE2Logistics.JOB_SCHEDULER.get());
 
@@ -161,7 +161,7 @@ public class HardeningGameTests {
                     refs.provider.getLogic().getPatternInv().setItemDirect(0, pattern);
                     refs.provider.getLogic().updatePatterns();
 
-                    refs.scheduler = (JobSchedulerBlockEntity) helper.getBlockEntity(new BlockPos(1, 1, 2));
+                    refs.scheduler = (JobSchedulerBlockEntity) helper.getBlockEntity(new BlockPos(1, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
                     refs.scheduler.setRuleTarget(0,
                             new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1));
                     refs.scheduler.applyRuleConfig(0, 1, 1, JobSchedulerBlockEntity.CLASS_BULK, null);
@@ -203,24 +203,24 @@ public class HardeningGameTests {
     public void catalystExecutionCreditsToolBack(GameTestHelper helper) {
         var level = helper.getLevel();
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 2));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.OAK_PLANKS, 8));
             chest.setItem(1, new ItemStack(Items.IRON_PICKAXE));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(level, helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST, null,
                 (IPartItem<?>) storageBus);
         var constant = (LogicPart) PartHelper.setPart(level,
                 helper.absolutePos(new BlockPos(2, 1, 1)), Direction.DOWN, null,
                 AE2Logistics.CONSTANT_PART.get());
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         helper.setBlock(new BlockPos(2, 1, 3),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         helper.setBlock(new BlockPos(2, 1, 4), Blocks.BARREL);
 
         var refs = new Object() {
@@ -275,7 +275,7 @@ public class HardeningGameTests {
                 })
                 .thenExecuteAfter(60, () -> {
                     int pickaxes = 0;
-                    if (helper.getBlockEntity(new BlockPos(2, 1, 4)) instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity barrel) {
+                    if (helper.getBlockEntity(new BlockPos(2, 1, 4), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof net.minecraft.world.level.block.entity.BarrelBlockEntity barrel) {
                         for (int i = 0; i < barrel.getContainerSize(); i++) {
                             if (barrel.getItem(i).is(Items.IRON_PICKAXE)) {
                                 pickaxes += barrel.getItem(i).getCount();

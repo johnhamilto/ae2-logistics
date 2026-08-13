@@ -43,7 +43,7 @@ public final class TestWorldCommands {
 
         var ids = TestPlots.getPlotIds().stream()
                 .filter(id -> id.getPath().startsWith("logistics_"))
-                .sorted(Comparator.comparing(net.minecraft.resources.ResourceLocation::getPath))
+                .sorted(Comparator.comparing(net.minecraft.resources.Identifier::getPath))
                 .toList();
         if (ids.isEmpty()) {
             source.sendFailure(Component.literal("No logistics_* plots registered"));

@@ -67,7 +67,7 @@ public final class ConfigDeviceIndex {
 
         public String dimension() {
             var level = node.getLevel();
-            return level == null ? "?" : level.dimension().location().toString();
+            return level == null ? "?" : level.dimension().identifier().toString();
         }
 
         @Nullable

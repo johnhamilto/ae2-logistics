@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -26,7 +26,7 @@ public class TracePanelGameTests {
     }
 
     private static TracePanelBlockEntity panel(GameTestHelper helper, BlockPos pos) {
-        return (TracePanelBlockEntity) helper.getBlockEntity(pos);
+        return (TracePanelBlockEntity) helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class);
     }
 
     /**
@@ -74,15 +74,15 @@ public class TracePanelGameTests {
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void panelSamplesBoundChannel(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), null, null,
                 (IPartItem<?>) cable);
         helper.setBlock(new BlockPos(1, 1, 2), AE2Logistics.REGISTER_BANK.get());
         placePanel(helper, new BlockPos(2, 1, 1));
         placePanel(helper, new BlockPos(3, 1, 1));
 
-        var channel = ResourceLocation.parse("demo:panel");
+        var channel = Identifier.parse("demo:panel");
         helper.runAfterDelay(20, () -> {
             var bank = (io.github.johnhamilto.ae2logistics.block.RegisterBankBlockEntity) helper
                     .getBlockEntity(new BlockPos(1, 1, 2));

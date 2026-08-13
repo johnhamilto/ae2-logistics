@@ -4,7 +4,7 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import appeng.api.networking.IGridNodeService;
 
@@ -15,18 +15,18 @@ import appeng.api.networking.IGridNodeService;
 public interface ILogicNode extends IGridNodeService {
 
     /** Channels this node reads. Used to build dataflow edges; must match evaluate(). */
-    Set<ResourceLocation> readChannels();
+    Set<Identifier> readChannels();
 
     /** The single channel this node writes, or null for sink nodes (e.g. redstone out). */
     @Nullable
-    ResourceLocation writtenChannel();
+    Identifier writtenChannel();
 
     /**
      * Every channel this node may write this tick. Single-output nodes inherit the
      * default; multi-output nodes (e.g. the Job Monitor) override it and must
      * invalidate the graph when the set changes.
      */
-    default Set<ResourceLocation> writtenChannels() {
+    default Set<Identifier> writtenChannels() {
         var written = writtenChannel();
         return written == null ? Set.of() : Set.of(written);
     }
@@ -41,12 +41,12 @@ public interface ILogicNode extends IGridNodeService {
     long stableKey();
 
     interface LogicContext {
-        long read(ResourceLocation channel);
+        long read(Identifier channel);
 
         /** Writes to {@link #writtenChannel()}. Multiple writers of a channel sum, saturating. */
         void write(long value);
 
         /** Writes a specific channel; it should be one of {@link #writtenChannels()}. */
-        void write(ResourceLocation channel, long value);
+        void write(Identifier channel, long value);
     }
 }

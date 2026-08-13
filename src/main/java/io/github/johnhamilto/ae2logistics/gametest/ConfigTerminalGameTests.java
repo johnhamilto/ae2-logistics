@@ -7,7 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -23,12 +23,12 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 public class ConfigTerminalGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
     private static void placeAePart(GameTestHelper helper, BlockPos pos, Direction side, String id) {
-        var item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
+        var item = BuiltInRegistries.ITEM.getValue(Identifier.parse(id));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), side, null, (IPartItem<?>) item);
     }
 
@@ -47,7 +47,7 @@ public class ConfigTerminalGameTests {
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void configIndexEnumeratesAndEdits(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeAePart(helper, new BlockPos(1, 1, 1), Direction.UP, "ae2:export_bus");
         placeAePart(helper, new BlockPos(1, 1, 1), Direction.NORTH, "ae2:storage_bus");
@@ -92,7 +92,7 @@ public class ConfigTerminalGameTests {
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void configCopyPasteAllPropagates(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeAePart(helper, new BlockPos(1, 1, 1), Direction.UP, "ae2:export_bus");
         placeAePart(helper, new BlockPos(1, 1, 1), Direction.NORTH, "ae2:export_bus");

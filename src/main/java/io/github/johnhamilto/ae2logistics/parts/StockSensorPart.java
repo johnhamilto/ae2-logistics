@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
@@ -50,7 +50,7 @@ public class StockSensorPart extends LogicPart {
     }
 
     @Override
-    public Set<ResourceLocation> readChannels() {
+    public Set<Identifier> readChannels() {
         return Set.of();
     }
 

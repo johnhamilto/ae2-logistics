@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -31,11 +31,11 @@ import io.github.johnhamilto.ae2logistics.signal.SignalService;
 public abstract class LogicPart extends AEBasePart implements ILogicNode {
 
     @Nullable
-    protected ResourceLocation outChannel;
+    protected Identifier outChannel;
     @Nullable
-    protected ResourceLocation inA;
+    protected Identifier inA;
     @Nullable
-    protected ResourceLocation inB;
+    protected Identifier inB;
     protected int op;
     protected long valueA;
     protected long valueB;
@@ -62,8 +62,8 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
     }
 
     @Override
-    public Set<ResourceLocation> readChannels() {
-        var channels = new HashSet<ResourceLocation>(2);
+    public Set<Identifier> readChannels() {
+        var channels = new HashSet<Identifier>(2);
         if (inA != null) {
             channels.add(inA);
         }
@@ -75,7 +75,7 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
 
     @Nullable
     @Override
-    public ResourceLocation writtenChannel() {
+    public Identifier writtenChannel() {
         return outChannel;
     }
 
@@ -89,8 +89,8 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
         return flag && inB != null ? context.read(inB) : valueA;
     }
 
-    public void applyConfig(@Nullable ResourceLocation out, @Nullable ResourceLocation a,
-            @Nullable ResourceLocation b, int op, long valueA, long valueB, boolean flag) {
+    public void applyConfig(@Nullable Identifier out, @Nullable Identifier a,
+            @Nullable Identifier b, int op, long valueA, long valueB, boolean flag) {
         this.outChannel = out;
         this.inA = a;
         this.inB = b;
@@ -144,9 +144,9 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
         var tag = input.get(io.github.johnhamilto.ae2logistics.AE2Logistics.EXPORTED_LOGIC_SETTINGS.get());
         if (tag != null) {
             applyConfig(
-                    tag.contains("out") ? ResourceLocation.tryParse(tag.getString("out")) : null,
-                    tag.contains("inA") ? ResourceLocation.tryParse(tag.getString("inA")) : null,
-                    tag.contains("inB") ? ResourceLocation.tryParse(tag.getString("inB")) : null,
+                    tag.contains("out") ? Identifier.tryParse(tag.getString("out")) : null,
+                    tag.contains("inA") ? Identifier.tryParse(tag.getString("inA")) : null,
+                    tag.contains("inB") ? Identifier.tryParse(tag.getString("inB")) : null,
                     tag.getInt("op"),
                     tag.getLong("valueA"),
                     tag.getLong("valueB"),
@@ -177,9 +177,9 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
     @Override
     public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
         super.readFromNBT(data, registries);
-        outChannel = data.contains("out") ? ResourceLocation.tryParse(data.getString("out")) : null;
-        inA = data.contains("inA") ? ResourceLocation.tryParse(data.getString("inA")) : null;
-        inB = data.contains("inB") ? ResourceLocation.tryParse(data.getString("inB")) : null;
+        outChannel = data.contains("out") ? Identifier.tryParse(data.getString("out")) : null;
+        inA = data.contains("inA") ? Identifier.tryParse(data.getString("inA")) : null;
+        inB = data.contains("inB") ? Identifier.tryParse(data.getString("inB")) : null;
         op = data.getInt("op");
         valueA = data.getLong("valueA");
         valueB = data.getLong("valueB");
@@ -212,17 +212,17 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
     }
 
     @Nullable
-    public ResourceLocation writtenChannelRaw() {
+    public Identifier writtenChannelRaw() {
         return outChannel;
     }
 
     @Nullable
-    public ResourceLocation inARaw() {
+    public Identifier inARaw() {
         return inA;
     }
 
     @Nullable
-    public ResourceLocation inBRaw() {
+    public Identifier inBRaw() {
         return inB;
     }
 

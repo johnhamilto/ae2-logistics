@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -32,16 +32,16 @@ public class TracerTerminalMenu extends AEBaseMenu {
     public final Direction side;
 
     @Nullable
-    private ResourceLocation selected;
+    private Identifier selected;
     private long ticks;
 
     // Client-side state, fed by TracerDataPayload.
-    public record Entry(ResourceLocation channel, long value) {
+    public record Entry(Identifier channel, long value) {
     }
 
     public List<Entry> entries = new ArrayList<>();
     @Nullable
-    public ResourceLocation clientSelected;
+    public Identifier clientSelected;
     public long[] samples = new long[0];
 
     public TracerTerminalMenu(int containerId, Inventory inventory, TracerTerminalPart part) {
@@ -61,7 +61,7 @@ public class TracerTerminalMenu extends AEBaseMenu {
         this.side = Direction.values()[buffer.readByte()];
     }
 
-    public void setSelected(@Nullable ResourceLocation channel) {
+    public void setSelected(@Nullable Identifier channel) {
         this.selected = channel;
         this.ticks = 0;
     }

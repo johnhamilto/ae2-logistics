@@ -7,7 +7,7 @@ import java.util.Locale;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.material.Fluid;
@@ -42,7 +42,7 @@ public final class QueryParser {
     public record Mod(String namespace) implements Node {
     }
 
-    public record Tag(ResourceLocation id, TagKey<Item> itemTag, TagKey<Fluid> fluidTag) implements Node {
+    public record Tag(Identifier id, TagKey<Item> itemTag, TagKey<Fluid> fluidTag) implements Node {
     }
 
     public record Name(String substring) implements Node {
@@ -61,7 +61,7 @@ public final class QueryParser {
     public record Damage(int op, long value) implements Node {
     }
 
-    public record Signal(ResourceLocation channel, int op, long value) implements Node {
+    public record Signal(Identifier channel, int op, long value) implements Node {
     }
 
     public record Ref(String name) implements Node {
@@ -242,7 +242,7 @@ public final class QueryParser {
                 if (channelToken.kind() != Token.WORD) {
                     throw new IllegalArgumentException("signal needs a channel id");
                 }
-                var channel = ResourceLocation.tryParse(channelToken.text());
+                var channel = Identifier.tryParse(channelToken.text());
                 if (channel == null) {
                     throw new IllegalArgumentException("bad channel '" + channelToken.text() + "'");
                 }
@@ -266,7 +266,7 @@ public final class QueryParser {
                     return new Mod(rest.toLowerCase(Locale.ROOT));
                 }
                 case "tag" -> {
-                    var id = ResourceLocation.tryParse(rest);
+                    var id = Identifier.tryParse(rest);
                     if (id == null) {
                         throw new IllegalArgumentException("bad tag '" + rest + "'");
                     }

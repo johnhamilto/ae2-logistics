@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
@@ -44,11 +44,11 @@ public record ConfigureGuardPayload(BlockPos pos, String guardChannel, int guard
         var channelText = payload.guardChannel.trim();
         var priorityText = payload.priorityChannel.trim();
         provider.applyGuardConfig(
-                channelText.isEmpty() ? null : ResourceLocation.tryParse(channelText),
+                channelText.isEmpty() ? null : Identifier.tryParse(channelText),
                 payload.guardOp,
                 payload.guardValue,
                 payload.gateExecution,
-                priorityText.isEmpty() ? null : ResourceLocation.tryParse(priorityText),
+                priorityText.isEmpty() ? null : Identifier.tryParse(priorityText),
                 payload.basePriority);
     }
 }

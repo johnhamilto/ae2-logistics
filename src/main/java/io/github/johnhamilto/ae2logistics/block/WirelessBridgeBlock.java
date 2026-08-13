@@ -31,7 +31,7 @@ public class WirelessBridgeBlock extends Block implements EntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
-        if (level.isClientSide || type != AE2Logistics.WIRELESS_BRIDGE_BE.get()) {
+        if (level.isClientSide() || type != AE2Logistics.WIRELESS_BRIDGE_BE.get()) {
             return null;
         }
         return (tickLevel, pos, tickState, be) -> ((WirelessBridgeBlockEntity) be).serverTick();
@@ -42,7 +42,7 @@ public class WirelessBridgeBlock extends Block implements EntityBlock {
             @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
         var anchor = stack.get(AE2Logistics.BRIDGE_ANCHOR.get());
-        if (anchor != null && !level.isClientSide
+        if (anchor != null && !level.isClientSide()
                 && level.getBlockEntity(pos) instanceof WirelessBridgeBlockEntity bridge) {
             bridge.setAnchor(anchor);
         }

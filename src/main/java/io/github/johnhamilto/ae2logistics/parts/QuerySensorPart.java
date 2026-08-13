@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -38,9 +38,9 @@ public class QuerySensorPart extends AEBasePart implements ILogicNode {
     public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/query_sensor"));
 
     @Nullable
-    private ResourceLocation outChannel;
+    private Identifier outChannel;
     private String source = "";
-    private Set<ResourceLocation> signalReads = Set.of();
+    private Set<Identifier> signalReads = Set.of();
 
     public QuerySensorPart(IPartItem<?> partItem) {
         super(partItem);
@@ -51,7 +51,7 @@ public class QuerySensorPart extends AEBasePart implements ILogicNode {
     }
 
     @Nullable
-    public ResourceLocation outChannel() {
+    public Identifier outChannel() {
         return outChannel;
     }
 
@@ -59,7 +59,7 @@ public class QuerySensorPart extends AEBasePart implements ILogicNode {
         return source;
     }
 
-    public void applySensorConfig(@Nullable ResourceLocation channel, String newSource) {
+    public void applySensorConfig(@Nullable Identifier channel, String newSource) {
         this.outChannel = channel;
         this.source = newSource.trim();
         var compiled = io.github.johnhamilto.ae2logistics.query.CompiledQuery.compile(this.source);
@@ -87,13 +87,13 @@ public class QuerySensorPart extends AEBasePart implements ILogicNode {
     // --- ILogicNode ---
 
     @Override
-    public Set<ResourceLocation> readChannels() {
+    public Set<Identifier> readChannels() {
         return signalReads;
     }
 
     @Nullable
     @Override
-    public ResourceLocation writtenChannel() {
+    public Identifier writtenChannel() {
         return outChannel;
     }
 
@@ -159,7 +159,7 @@ public class QuerySensorPart extends AEBasePart implements ILogicNode {
     @Override
     public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
         super.readFromNBT(data, registries);
-        outChannel = data.contains("out") ? ResourceLocation.tryParse(data.getString("out")) : null;
+        outChannel = data.contains("out") ? Identifier.tryParse(data.getString("out")) : null;
         source = data.getString("query");
         var compiled = io.github.johnhamilto.ae2logistics.query.CompiledQuery.compile(source);
         signalReads = compiled != null ? Set.copyOf(compiled.referencedSignals()) : Set.of();

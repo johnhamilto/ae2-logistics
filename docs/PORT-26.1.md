@@ -78,6 +78,16 @@ Everything here was read from the AE2 v26.1.10-beta clone or the NeoForge
   `PlanePartModel`, `PartModelLoaderMixin`). Port each part family against the
   closest AE2 part model class; expect our `part(...)` registration helper to
   lose its `PartModels.registerModels` call entirely.
+- `Player.displayClientMessage(msg, false)` -> `sendSystemMessage(msg)`;
+  `displayClientMessage(msg, true)` -> `sendOverlayMessage(msg)` (Player.java:1399,1402).
+- `ResourceKey.location()` -> `identifier()` (ResourceKey.java:55).
+- `net.minecraft.world.inventory.ClickType` -> `...inventory.ContainerInput`
+  (AEBaseMenu.clicked signature).
+- `IdentifierArgument` exists (commands/arguments) - the blind rename was right.
+- Registry lookups: `BuiltInRegistries.X.get(id)` returns `Optional<Reference<T>>`
+  now; the direct-value form is `getValue(id)` (SwitchGuisPacket.java:35).
+- `GameTestAssertException(Component message, int tick)` - String ctor gone.
+  `GameTestHelper.assertTrue/assertFalse(boolean, String)` still exist.
 - Gametests: annotations (`@GameTest`, NeoForge `@GameTestHolder`,
   `@PrefixGameTestTemplate`) no longer exist. Vanilla now registers
   `GameTestInstance`s (with `TestData`, environments) in registries; NeoForge
@@ -123,6 +133,24 @@ Everything here was read from the AE2 v26.1.10-beta clone or the NeoForge
    behind a loaded-check.
 7. `make data` regen, guide pages sanity (GuideME 26.1), `make test` green,
    then re-enable compat suite entries as their ports appear.
+
+## Progress log
+
+- 2026-08-12 bootstrap: toolchain + deps resolve end to end; 3098 errors inventoried.
+- 2026-08-12 mechanical sweeps, 3098 -> 1756: Identifier rename everywhere
+  (incl. buf read/writeIdentifier and IdentifierArgument), registry `get()` ->
+  `getValue()`, `isClientSide()`, `appeng.util.Icon` import,
+  `Capabilities.Item/Fluid/Energy`, `FMLEnvironment.isProduction()`,
+  `new BlockEntityType<>(...)`, `sendSystemMessage`/`sendOverlayMessage`,
+  `dimension().identifier()`, `ContainerInput`, and gametest
+  `getBlockEntity(pos, BlockEntity.class)` type witnesses. The remaining 1756
+  are the structural clusters: gametest adapter (~450, incl. the
+  `GameTestAssertException(Component, int)` ctors), part models (~330),
+  ValueInput/ValueOutput serialization (~250), GUI/client (~150), transfer-API
+  handler types on the mesh, JEI, misc signatures.
+- Signature lookup of record while porting:
+  `build/moddev/artifacts/minecraft-patched-26.1.2.95-sources.jar` (the patched
+  vanilla sources MDG builds locally) - grep it before guessing any vanilla API.
 
 ## Open decisions
 

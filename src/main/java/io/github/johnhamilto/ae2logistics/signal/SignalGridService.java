@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
@@ -23,19 +23,19 @@ import appeng.api.storage.IStorageProvider;
 
 public class SignalGridService implements SignalService, IGridServiceProvider, IStorageProvider {
 
-    private final Map<ResourceLocation, Long> stored = new HashMap<>();
-    private final Map<ResourceLocation, Long> committed = new HashMap<>();
-    private final Map<ResourceLocation, Long> writtenThisTick = new HashMap<>();
-    private Set<ResourceLocation> lastPartDriven = new HashSet<>();
-    private final Map<Object, Map<ResourceLocation, Long>> externals = new IdentityHashMap<>();
-    private final Map<ResourceLocation, Long> mergedView = new HashMap<>();
+    private final Map<Identifier, Long> stored = new HashMap<>();
+    private final Map<Identifier, Long> committed = new HashMap<>();
+    private final Map<Identifier, Long> writtenThisTick = new HashMap<>();
+    private Set<Identifier> lastPartDriven = new HashSet<>();
+    private final Map<Object, Map<Identifier, Long>> externals = new IdentityHashMap<>();
+    private final Map<Identifier, Long> mergedView = new HashMap<>();
     private boolean viewDirty;
 
     private final Map<IGridNode, ILogicNode> logicNodes = new IdentityHashMap<>();
     @Nullable
     private List<ILogicNode> evalOrder;
 
-    private final Map<ResourceLocation, Ring> rings = new HashMap<>();
+    private final Map<Identifier, Ring> rings = new HashMap<>();
     private long tickCounter;
 
     private static class Ring {
@@ -71,12 +71,12 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     }
 
     @Override
-    public long get(ResourceLocation channel) {
+    public long get(Identifier channel) {
         return committed().getOrDefault(channel, 0L);
     }
 
     @Override
-    public void setStored(ResourceLocation channel, long value) {
+    public void setStored(Identifier channel, long value) {
         if (value <= 0) {
             stored.remove(channel);
             if (!lastPartDriven.contains(channel)) {
@@ -92,7 +92,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     }
 
     @Override
-    public Map<ResourceLocation, Long> committed() {
+    public Map<Identifier, Long> committed() {
         if (externals.isEmpty()) {
             return committed;
         }
@@ -115,7 +115,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     }
 
     @Override
-    public void setExternal(Object source, Map<ResourceLocation, Long> values) {
+    public void setExternal(Object source, Map<Identifier, Long> values) {
         if (values.isEmpty()) {
             if (externals.remove(source) != null) {
                 viewDirty = true;
@@ -127,7 +127,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     }
 
     @Override
-    public Map<ResourceLocation, Long> localCommitted() {
+    public Map<Identifier, Long> localCommitted() {
         return committed;
     }
 
@@ -148,7 +148,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
     }
 
     @Override
-    public long[] history(ResourceLocation channel) {
+    public long[] history(Identifier channel) {
         var ring = rings.get(channel);
         return ring != null ? ring.snapshot() : new long[0];
     }
@@ -187,7 +187,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
             ILogicNode current;
 
             @Override
-            public long read(ResourceLocation channel) {
+            public long read(Identifier channel) {
                 var written = writtenThisTick.get(channel);
                 return written != null ? written : committed.getOrDefault(channel, 0L);
             }
@@ -201,7 +201,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
             }
 
             @Override
-            public void write(ResourceLocation channel, long value) {
+            public void write(Identifier channel, long value) {
                 writtenThisTick.merge(channel, Math.max(0, value), SignalMath::add);
             }
         };
@@ -237,7 +237,7 @@ public class SignalGridService implements SignalService, IGridServiceProvider, I
      */
     private List<ILogicNode> buildEvalOrder() {
         var nodes = new ArrayList<>(logicNodes.values());
-        Map<ResourceLocation, List<ILogicNode>> writers = new HashMap<>();
+        Map<Identifier, List<ILogicNode>> writers = new HashMap<>();
         for (var node : nodes) {
             for (var written : node.writtenChannels()) {
                 writers.computeIfAbsent(written, k -> new ArrayList<>()).add(node);

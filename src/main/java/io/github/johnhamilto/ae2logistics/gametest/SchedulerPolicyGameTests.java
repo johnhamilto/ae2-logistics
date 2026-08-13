@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -33,7 +33,7 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 public class SchedulerPolicyGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -54,21 +54,21 @@ public class SchedulerPolicyGameTests {
     @GameTest(template = "empty5", timeoutTicks = 900)
     public void schedulerAdmissionClassPoolsAndGuard(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 2));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.OAK_PLANKS, 32));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST,
                 null, (IPartItem<?>) storageBus);
         var constant = (LogicPart) PartHelper.setPart(helper.getLevel(),
                 helper.absolutePos(new BlockPos(2, 1, 1)), Direction.DOWN, null,
                 AE2Logistics.CONSTANT_PART.get());
         helper.setBlock(new BlockPos(2, 1, 3),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         helper.setBlock(new BlockPos(2, 1, 4), Blocks.BARREL);
         helper.setBlock(new BlockPos(1, 1, 2), AE2Logistics.JOB_SCHEDULER.get());
 
@@ -78,14 +78,14 @@ public class SchedulerPolicyGameTests {
 
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
-                    if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity provider) {
+                    if (helper.getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity provider) {
                         provider.getLogic().getPatternInv().setItemDirect(0, tablePattern());
                         provider.getLogic().updatePatterns();
                     } else {
                         helper.fail("no provider");
                     }
-                    scheduler.be = (JobSchedulerBlockEntity) helper.getBlockEntity(new BlockPos(1, 1, 2));
-                    constant.applyConfig(ResourceLocation.parse("g:sched"), null, null, 0, 0, 0, false);
+                    scheduler.be = (JobSchedulerBlockEntity) helper.getBlockEntity(new BlockPos(1, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
+                    constant.applyConfig(Identifier.parse("g:sched"), null, null, 0, 0, 0, false);
 
                     var table = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
                     scheduler.be.setRuleTarget(0, table);
@@ -94,7 +94,7 @@ public class SchedulerPolicyGameTests {
                     scheduler.be.applyRuleConfig(1, 2, 1, JobSchedulerBlockEntity.CLASS_MAINT, null);
                     scheduler.be.setRuleTarget(2, table);
                     scheduler.be.applyRuleConfig(2, 2, 1, JobSchedulerBlockEntity.CLASS_BULK,
-                            ResourceLocation.parse("g:sched"));
+                            Identifier.parse("g:sched"));
                 })
                 .thenExecuteAfter(120, () -> {
                     helper.assertTrue(scheduler.be.ruleState(0) == JobSchedulerBlockEntity.STATE_NO_CPU,
@@ -108,7 +108,7 @@ public class SchedulerPolicyGameTests {
                         helper.assertTrue(!cpu.isBusy(), "nothing may be submitted without admission");
                     }
                     helper.setBlock(new BlockPos(2, 2, 1),
-                            BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                            BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
                 })
                 .thenWaitUntil(() -> {
                     if (scheduler.be.ruleState(0) != JobSchedulerBlockEntity.STATE_RUNNING) {
@@ -138,13 +138,13 @@ public class SchedulerPolicyGameTests {
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void blueprintRoundTripsRegionConfig(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeAePart(helper, new BlockPos(1, 1, 1), Direction.UP, "ae2:export_bus");
         helper.setBlock(new BlockPos(1, 1, 2), AE2Logistics.GUARDED_PROVIDER.get());
 
         helper.setBlock(new BlockPos(3, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(3, 1, 1));
         placeAePart(helper, new BlockPos(3, 1, 1), Direction.UP, "ae2:export_bus");
         helper.setBlock(new BlockPos(3, 1, 2), AE2Logistics.GUARDED_PROVIDER.get());
@@ -153,16 +153,16 @@ public class SchedulerPolicyGameTests {
             var level = helper.getLevel();
 
             // Diverge the source region from defaults.
-            var sourceHost = (appeng.api.parts.IPartHost) helper.getBlockEntity(new BlockPos(1, 1, 1));
+            var sourceHost = (appeng.api.parts.IPartHost) helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
             var sourceBus = (appeng.parts.AEBasePart) sourceHost.getPart(Direction.UP);
             var busConfigurable = (appeng.api.util.IConfigurableObject) sourceBus;
             for (var setting : busConfigurable.getConfigManager().getSettings()) {
                 setting.setFromString(busConfigurable.getConfigManager(),
                         nextValue(busConfigurable.getConfigManager(), setting));
             }
-            var sourceProvider = (GuardedPatternProviderBlockEntity) helper.getBlockEntity(new BlockPos(1, 1, 2));
-            sourceProvider.applyGuardConfig(ResourceLocation.parse("bp:guard"), 3, 77, false,
-                    ResourceLocation.parse("bp:prio"), 9);
+            var sourceProvider = (GuardedPatternProviderBlockEntity) helper.getBlockEntity(new BlockPos(1, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
+            sourceProvider.applyGuardConfig(Identifier.parse("bp:guard"), 3, 77, false,
+                    Identifier.parse("bp:prio"), 9);
 
             var entries = ConfigBlueprintItem.capture(level,
                     helper.absolutePos(new BlockPos(1, 1, 1)), helper.absolutePos(new BlockPos(1, 1, 2)));
@@ -173,19 +173,19 @@ public class SchedulerPolicyGameTests {
                     entries, null);
             helper.assertTrue(result[0] >= 2, "apply must configure both devices, applied " + result[0]);
 
-            var targetHost = (appeng.api.parts.IPartHost) helper.getBlockEntity(new BlockPos(3, 1, 1));
+            var targetHost = (appeng.api.parts.IPartHost) helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
             var targetBus = (appeng.api.util.IConfigurableObject) targetHost.getPart(Direction.UP);
             helper.assertTrue(busConfigurable.getConfigManager().exportSettings()
                     .equals(targetBus.getConfigManager().exportSettings()),
                     "export bus settings must round-trip through the blueprint");
 
-            var targetProvider = (GuardedPatternProviderBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 2));
-            helper.assertTrue(ResourceLocation.parse("bp:guard").equals(targetProvider.guardChannel()),
+            var targetProvider = (GuardedPatternProviderBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
+            helper.assertTrue(Identifier.parse("bp:guard").equals(targetProvider.guardChannel()),
                     "guard channel must round-trip, got " + targetProvider.guardChannel());
             helper.assertTrue(targetProvider.guardOp() == 3 && targetProvider.guardValue() == 77
                     && !targetProvider.gateExecution(),
                     "guard details must round-trip");
-            helper.assertTrue(ResourceLocation.parse("bp:prio").equals(targetProvider.priorityChannel()),
+            helper.assertTrue(Identifier.parse("bp:prio").equals(targetProvider.priorityChannel()),
                     "priority channel must round-trip");
             helper.succeed();
         });
@@ -206,7 +206,7 @@ public class SchedulerPolicyGameTests {
     }
 
     private static void placeAePart(GameTestHelper helper, BlockPos pos, Direction side, String id) {
-        var item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
+        var item = BuiltInRegistries.ITEM.getValue(Identifier.parse(id));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), side, null, (IPartItem<?>) item);
     }
 
@@ -214,7 +214,7 @@ public class SchedulerPolicyGameTests {
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void snapshotDiffFlagsChanges(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeAePart(helper, new BlockPos(1, 1, 1), Direction.UP, "ae2:export_bus");
         placeAePart(helper, new BlockPos(1, 1, 1), Direction.NORTH, "ae2:storage_bus");

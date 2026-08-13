@@ -6,7 +6,7 @@ import java.util.Objects;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
@@ -33,7 +33,7 @@ public class GuardedPattern implements IPatternDetails {
 
     private final AEItemKey definition;
     private final IPatternDetails inner;
-    private final ResourceLocation channel;
+    private final Identifier channel;
     private final int op;
     private final long value;
 
@@ -53,7 +53,7 @@ public class GuardedPattern implements IPatternDetails {
     }
 
     /** Builds the wrapper item around an already-encoded pattern. */
-    public static ItemStack wrap(ItemStack innerPattern, ResourceLocation channel, int op, long value) {
+    public static ItemStack wrap(ItemStack innerPattern, Identifier channel, int op, long value) {
         var stack = new ItemStack(AE2Logistics.GUARDED_PATTERN.get());
         stack.set(AE2Logistics.GUARDED_PATTERN_DATA.get(),
                 new GuardedPatternData(innerPattern.copyWithCount(1), channel,
@@ -77,7 +77,7 @@ public class GuardedPattern implements IPatternDetails {
         };
     }
 
-    public ResourceLocation guardChannel() {
+    public Identifier guardChannel() {
         return channel;
     }
 

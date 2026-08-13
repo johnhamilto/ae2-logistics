@@ -8,7 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -60,12 +60,12 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
     private final GuardedProviderLogic logic = new GuardedProviderLogic(mainNode, this);
 
     @Nullable
-    private ResourceLocation guardChannel;
+    private Identifier guardChannel;
     private int guardOp = 4;
     private long guardValue;
     private boolean gateExecution = true;
     @Nullable
-    private ResourceLocation priorityChannel;
+    private Identifier priorityChannel;
 
     private int tickCounter;
     private long guardFingerprint;
@@ -110,7 +110,7 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
     }
 
     @Nullable
-    public ResourceLocation guardChannel() {
+    public Identifier guardChannel() {
         return guardChannel;
     }
 
@@ -123,12 +123,12 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
     }
 
     @Nullable
-    public ResourceLocation priorityChannel() {
+    public Identifier priorityChannel() {
         return priorityChannel;
     }
 
-    public void applyGuardConfig(@Nullable ResourceLocation channel, int op, long value,
-            boolean gateExec, @Nullable ResourceLocation newPriorityChannel, int basePriority) {
+    public void applyGuardConfig(@Nullable Identifier channel, int op, long value,
+            boolean gateExec, @Nullable Identifier newPriorityChannel, int basePriority) {
         this.guardChannel = channel;
         this.guardOp = Math.floorMod(op, GuardedPattern.OPS.length);
         this.guardValue = value;
@@ -142,7 +142,7 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
 
     /** Called every server tick by the block; re-indexes patterns when guard state flips. */
     public void serverTick() {
-        if (++tickCounter % 10 != 0 || level == null || level.isClientSide) {
+        if (++tickCounter % 10 != 0 || level == null || level.isClientSide()) {
             return;
         }
         long fingerprint = computeFingerprint();
@@ -172,7 +172,7 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             GridHelper.onFirstTick(this, be -> {
                 be.mainNode.create(be.level, be.getBlockPos());
                 be.logic.updatePatterns();
@@ -215,13 +215,13 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
         mainNode.loadFromNBT(tag);
         logic.readFromNBT(tag, registries);
         guardChannel = tag.contains("guardChannel")
-                ? ResourceLocation.tryParse(tag.getString("guardChannel"))
+                ? Identifier.tryParse(tag.getString("guardChannel"))
                 : null;
         guardOp = tag.getInt("guardOp");
         guardValue = tag.getLong("guardValue");
         gateExecution = !tag.contains("gateExecution") || tag.getBoolean("gateExecution");
         priorityChannel = tag.contains("priorityChannel")
-                ? ResourceLocation.tryParse(tag.getString("priorityChannel"))
+                ? Identifier.tryParse(tag.getString("priorityChannel"))
                 : null;
     }
 
@@ -252,13 +252,13 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
         if (tag != null) {
             applyGuardConfig(
                     tag.contains("guardChannel")
-                            ? ResourceLocation.tryParse(tag.getString("guardChannel"))
+                            ? Identifier.tryParse(tag.getString("guardChannel"))
                             : null,
                     tag.getInt("guardOp"),
                     tag.getLong("guardValue"),
                     !tag.contains("gateExecution") || tag.getBoolean("gateExecution"),
                     tag.contains("priorityChannel")
-                            ? ResourceLocation.tryParse(tag.getString("priorityChannel"))
+                            ? Identifier.tryParse(tag.getString("priorityChannel"))
                             : null,
                     logic.getPriority());
         }

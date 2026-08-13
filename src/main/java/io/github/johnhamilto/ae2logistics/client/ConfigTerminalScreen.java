@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -184,7 +184,7 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
             }
             g.drawString(font, info, 30, y + 8, Palette.HINT, false);
 
-            var item = BuiltInRegistries.ITEM.getOptional(ResourceLocation.tryParse(row.itemId()))
+            var item = BuiltInRegistries.ITEM.getOptional(Identifier.tryParse(row.itemId()))
                     .orElse(null);
             if (item != null) {
                 g.renderItem(new ItemStack(item), 10, y - 1);

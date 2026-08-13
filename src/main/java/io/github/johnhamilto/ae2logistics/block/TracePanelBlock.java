@@ -61,7 +61,7 @@ public class TracePanelBlock extends Block implements EntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
-        if (level.isClientSide || type != AE2Logistics.TRACE_PANEL_BE.get()) {
+        if (level.isClientSide() || type != AE2Logistics.TRACE_PANEL_BE.get()) {
             return null;
         }
         return (tickLevel, pos, tickState, be) -> ((TracePanelBlockEntity) be).serverTick();
@@ -86,7 +86,7 @@ public class TracePanelBlock extends Block implements EntityBlock {
     }
 
     private static void reformNeighborhood(Level level, BlockPos center) {
-        if (level.isClientSide) {
+        if (level.isClientSide()) {
             return;
         }
         int reach = TracePanelBlockEntity.MAX_EDGE;
@@ -105,30 +105,30 @@ public class TracePanelBlock extends Block implements EntityBlock {
         if (channel == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof TracePanelBlockEntity panel) {
+        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof TracePanelBlockEntity panel) {
             boolean remove = player.isShiftKeyDown();
             boolean applied = panel.bind(channel, remove);
-            player.displayClientMessage(Component.literal(applied
+            player.sendOverlayMessage(Component.literal(applied
                     ? (remove ? "Trace removed: " : "Trace added: ") + channel
-                    : (remove ? "Not bound: " : "Panel full or already bound: ") + channel), true);
+                    : (remove ? "Not bound: " : "Panel full or already bound: ") + channel));
         }
-        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        return ItemInteractionResult.sidedSuccess(level.isClientSide());
     }
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
             Player player, BlockHitResult hitResult) {
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof TracePanelBlockEntity panel) {
+        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof TracePanelBlockEntity panel) {
             if (player.isShiftKeyDown()) {
                 panel.clearBindings();
-                player.displayClientMessage(Component.literal("Panel cleared"), true);
+                player.sendOverlayMessage(Component.literal("Panel cleared"));
             } else {
                 var bound = panel.boundChannels();
-                player.displayClientMessage(Component.literal(bound.isEmpty()
+                player.sendOverlayMessage(Component.literal(bound.isEmpty()
                         ? "No traces bound - click with a bound Signal Card"
-                        : "Traces: " + bound), true);
+                        : "Traces: " + bound));
             }
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(level.isClientSide());
     }
 }

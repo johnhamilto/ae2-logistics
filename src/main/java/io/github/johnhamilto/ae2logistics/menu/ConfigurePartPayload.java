@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import appeng.api.parts.IPartHost;
@@ -64,7 +64,7 @@ public record ConfigurePartPayload(BlockPos pos, Direction side, String outChann
                 payload.flag);
     }
 
-    private static ResourceLocation parse(String text) {
-        return text.isBlank() ? null : ResourceLocation.tryParse(text.trim());
+    private static Identifier parse(String text) {
+        return text.isBlank() ? null : Identifier.tryParse(text.trim());
     }
 }

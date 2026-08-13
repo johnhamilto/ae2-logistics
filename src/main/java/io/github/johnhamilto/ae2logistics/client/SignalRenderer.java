@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -23,8 +23,8 @@ import io.github.johnhamilto.ae2logistics.signal.SignalKeyType;
 
 public final class SignalRenderer implements AEKeyRenderHandler<SignalKey> {
 
-    private static final ResourceLocation ICON = AE2Logistics.id("textures/gui/signal.png");
-    private static final ResourceLocation FACE_SPRITE = ResourceLocation.withDefaultNamespace("item/redstone");
+    private static final Identifier ICON = AE2Logistics.id("textures/gui/signal.png");
+    private static final Identifier FACE_SPRITE = Identifier.withDefaultNamespace("item/redstone");
 
     public static void initialize(IEventBus modBus) {
         modBus.addListener((FMLClientSetupEvent event) -> event.enqueueWork(

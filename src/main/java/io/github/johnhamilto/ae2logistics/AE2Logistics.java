@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -123,8 +123,7 @@ public class AE2Logistics {
             () -> new RegisterBankBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
     public static final DeferredItem<BlockItem> REGISTER_BANK_ITEM = ITEMS.registerSimpleBlockItem(REGISTER_BANK);
     public static final Supplier<BlockEntityType<RegisterBankBlockEntity>> REGISTER_BANK_BE = BLOCK_ENTITIES
-            .register("register_bank", () -> BlockEntityType.Builder
-                    .of(RegisterBankBlockEntity::new, REGISTER_BANK.get()).build(null));
+            .register("register_bank", () -> new BlockEntityType<>(RegisterBankBlockEntity::new, REGISTER_BANK.get()));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.StorageJanitorBlock> STORAGE_JANITOR =
             BLOCKS.register("storage_janitor",
@@ -132,9 +131,8 @@ public class AE2Logistics {
                             BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
     public static final DeferredItem<BlockItem> STORAGE_JANITOR_ITEM = ITEMS.registerSimpleBlockItem(STORAGE_JANITOR);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity>> STORAGE_JANITOR_BE =
-            BLOCK_ENTITIES.register("storage_janitor", () -> BlockEntityType.Builder
-                    .of(io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity::new,
-                            STORAGE_JANITOR.get()).build(null));
+            BLOCK_ENTITIES.register("storage_janitor", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity::new,
+                            STORAGE_JANITOR.get()));
     public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.StorageJanitorMenu>> STORAGE_JANITOR_MENU =
             MENUS.register("storage_janitor", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.StorageJanitorMenu::new));
@@ -145,14 +143,13 @@ public class AE2Logistics {
                             BlockBehaviour.Properties.of().strength(1.5f).sound(SoundType.METAL).noOcclusion()));
     public static final DeferredItem<BlockItem> TRACE_PANEL_ITEM = ITEMS.registerSimpleBlockItem(TRACE_PANEL);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity>> TRACE_PANEL_BE =
-            BLOCK_ENTITIES.register("trace_panel", () -> BlockEntityType.Builder
-                    .of(io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity::new,
-                            TRACE_PANEL.get()).build(null));
+            BLOCK_ENTITIES.register("trace_panel", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity::new,
+                            TRACE_PANEL.get()));
 
-    public static final Supplier<DataComponentType<ResourceLocation>> SIGNAL_CHANNEL = DATA_COMPONENTS
-            .register("signal_channel", () -> DataComponentType.<ResourceLocation>builder()
-                    .persistent(ResourceLocation.CODEC)
-                    .networkSynchronized(ResourceLocation.STREAM_CODEC)
+    public static final Supplier<DataComponentType<Identifier>> SIGNAL_CHANNEL = DATA_COMPONENTS
+            .register("signal_channel", () -> DataComponentType.<Identifier>builder()
+                    .persistent(Identifier.CODEC)
+                    .networkSynchronized(Identifier.STREAM_CODEC)
                     .build());
 
     public static final DeferredItem<SignalCardItem> SIGNAL_CARD = ITEMS.register("signal_card",
@@ -220,8 +217,7 @@ public class AE2Logistics {
     public static final DeferredItem<BlockItem> PATTERN_WORKBENCH_ITEM = ITEMS
             .registerSimpleBlockItem(PATTERN_WORKBENCH);
     public static final Supplier<BlockEntityType<PatternWorkbenchBlockEntity>> PATTERN_WORKBENCH_BE = BLOCK_ENTITIES
-            .register("pattern_workbench", () -> BlockEntityType.Builder
-                    .of(PatternWorkbenchBlockEntity::new, PATTERN_WORKBENCH.get()).build(null));
+            .register("pattern_workbench", () -> new BlockEntityType<>(PatternWorkbenchBlockEntity::new, PATTERN_WORKBENCH.get()));
 
     public static final Supplier<MenuType<PatternWorkbenchMenu>> PATTERN_WORKBENCH_MENU = MENUS.register(
             "pattern_workbench", () -> IMenuTypeExtension.create(PatternWorkbenchMenu::new));
@@ -233,10 +229,8 @@ public class AE2Logistics {
     public static final DeferredItem<BlockItem> JOB_SCHEDULER_ITEM = ITEMS
             .registerSimpleBlockItem(JOB_SCHEDULER);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity>> JOB_SCHEDULER_BE =
-            BLOCK_ENTITIES.register("job_scheduler", () -> BlockEntityType.Builder
-                    .of(io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity::new,
-                            JOB_SCHEDULER.get())
-                    .build(null));
+            BLOCK_ENTITIES.register("job_scheduler", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity::new,
+                            JOB_SCHEDULER.get()));
     public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.JobSchedulerMenu>> JOB_SCHEDULER_MENU =
             MENUS.register("job_scheduler", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.JobSchedulerMenu::new));
@@ -248,10 +242,8 @@ public class AE2Logistics {
     public static final DeferredItem<BlockItem> LOGIC_CORE_ITEM = ITEMS
             .registerSimpleBlockItem(LOGIC_CORE);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.LogicCoreBlockEntity>> LOGIC_CORE_BE =
-            BLOCK_ENTITIES.register("logic_core", () -> BlockEntityType.Builder
-                    .of(io.github.johnhamilto.ae2logistics.block.LogicCoreBlockEntity::new,
-                            LOGIC_CORE.get())
-                    .build(null));
+            BLOCK_ENTITIES.register("logic_core", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.LogicCoreBlockEntity::new,
+                            LOGIC_CORE.get()));
     public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.LogicCoreMenu>> LOGIC_CORE_MENU =
             MENUS.register("logic_core", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.LogicCoreMenu::new));
@@ -269,10 +261,8 @@ public class AE2Logistics {
     public static final DeferredItem<BlockItem> DENSE_WAP_ITEM = ITEMS
             .registerSimpleBlockItem(DENSE_WAP);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.DenseWapBlockEntity>> DENSE_WAP_BE =
-            BLOCK_ENTITIES.register("dense_wireless_access_point", () -> BlockEntityType.Builder
-                    .of(io.github.johnhamilto.ae2logistics.block.DenseWapBlockEntity::new,
-                            DENSE_WAP.get())
-                    .build(null));
+            BLOCK_ENTITIES.register("dense_wireless_access_point", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.DenseWapBlockEntity::new,
+                            DENSE_WAP.get()));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlock> WIRELESS_BRIDGE =
             BLOCKS.register("wireless_bridge",
@@ -283,10 +273,8 @@ public class AE2Logistics {
                     () -> new io.github.johnhamilto.ae2logistics.item.WirelessBridgeItem(
                             WIRELESS_BRIDGE.get(), new Item.Properties()));
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlockEntity>> WIRELESS_BRIDGE_BE =
-            BLOCK_ENTITIES.register("wireless_bridge", () -> BlockEntityType.Builder
-                    .of(io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlockEntity::new,
-                            WIRELESS_BRIDGE.get())
-                    .build(null));
+            BLOCK_ENTITIES.register("wireless_bridge", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlockEntity::new,
+                            WIRELESS_BRIDGE.get()));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock> GUARDED_PROVIDER =
             BLOCKS.register("guarded_pattern_provider",
@@ -295,10 +283,8 @@ public class AE2Logistics {
     public static final DeferredItem<BlockItem> GUARDED_PROVIDER_ITEM = ITEMS
             .registerSimpleBlockItem(GUARDED_PROVIDER);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlockEntity>> GUARDED_PROVIDER_BE =
-            BLOCK_ENTITIES.register("guarded_pattern_provider", () -> BlockEntityType.Builder
-                    .of(io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlockEntity::new,
-                            GUARDED_PROVIDER.get())
-                    .build(null));
+            BLOCK_ENTITIES.register("guarded_pattern_provider", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlockEntity::new,
+                            GUARDED_PROVIDER.get()));
     public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.GuardedProviderMenu>> GUARDED_PROVIDER_MENU =
             MENUS.register("guarded_pattern_provider", () -> IMenuTypeExtension
                     .create(io.github.johnhamilto.ae2logistics.menu.GuardedProviderMenu::new));
@@ -406,7 +392,7 @@ public class AE2Logistics {
                     .icon(() -> REGISTER_BANK_ITEM.get().getDefaultInstance())
                     .displayItems((params, output) -> {
                         output.accept(REGISTER_BANK_ITEM.get());
-                        if (!FMLEnvironment.production) {
+                        if (!FMLEnvironment.isProduction()) {
                             output.accept(STORAGE_JANITOR_ITEM.get());
                             output.accept(TRACE_PANEL_ITEM.get());
                         }
@@ -455,8 +441,8 @@ public class AE2Logistics {
         return ITEMS.register(id, () -> new PartItem<>(new Item.Properties(), partClass, factory));
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
     public AE2Logistics(IEventBus modBus, net.neoforged.fml.ModContainer modContainer) {
@@ -566,21 +552,21 @@ public class AE2Logistics {
             event.register(AECapabilities.GENERIC_INTERNAL_INV,
                     (part, context) -> part.exposedReturnGenericInv(),
                     io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
-            event.register(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
                     (part, context) -> part.exposedReturnItemHandler(),
                     io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
-            event.register(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.Fluid.BLOCK,
                     (part, context) -> part.exposedReturnFluidHandler(),
                     io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class);
             event.register(AECapabilities.ME_STORAGE,
                     (part, context) -> part.exposedMeStorage(), MeshEndpointPart.class);
             event.register(AECapabilities.GENERIC_INTERNAL_INV,
                     (part, context) -> part.exposedReturnGenericInv(), MeshEndpointPart.class);
-            event.register(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
                     (part, context) -> part.exposedItemHandler(), MeshEndpointPart.class);
-            event.register(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.Fluid.BLOCK,
                     (part, context) -> part.exposedFluidHandler(), MeshEndpointPart.class);
-            event.register(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
+            event.register(net.neoforged.neoforge.capabilities.Capabilities.Energy.BLOCK,
                     (part, context) -> part.exposedEnergyHandler(), MeshEndpointPart.class);
             // AppMekReturns (guarded chemical bridge) lives on main only until the
             // compat suite has 26.1 ports.

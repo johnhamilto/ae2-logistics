@@ -6,7 +6,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
+import appeng.util.Icon;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
@@ -192,19 +192,19 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         }
         var name = info.endpoint().getHoverName().getString();
         var at = coords(info);
-        var here = player.level().dimension().location().toString();
+        var here = player.level().dimension().identifier().toString();
         if (!info.dimension().isEmpty() && !info.dimension().equals(here)) {
-            player.displayClientMessage(Component.literal(name + " at " + at + " is in "
+            player.sendSystemMessage(Component.literal(name + " at " + at + " is in "
                     + dimensionLabel(info.dimension()))
-                    .withStyle(net.minecraft.ChatFormatting.GRAY), false);
+                    .withStyle(net.minecraft.ChatFormatting.GRAY));
             return;
         }
         EndpointHighlighter.highlight(info.pos());
         int distance = (int) Math.round(Math.sqrt(
                 player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(info.pos()))));
-        player.displayClientMessage(Component.literal(name + " at " + at + " highlighted in world, "
+        player.sendSystemMessage(Component.literal(name + " at " + at + " highlighted in world, "
                 + (distance == 1 ? "1 block" : distance + " blocks") + " away")
-                .withStyle(net.minecraft.ChatFormatting.GRAY), false);
+                .withStyle(net.minecraft.ChatFormatting.GRAY));
         onClose();
     }
 

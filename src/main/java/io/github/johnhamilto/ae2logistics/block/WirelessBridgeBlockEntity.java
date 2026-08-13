@@ -66,7 +66,7 @@ public class WirelessBridgeBlockEntity extends BlockEntity implements IInWorldGr
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             GridHelper.onFirstTick(this, be -> be.mainNode.create(be.level, be.getBlockPos()));
         }
     }

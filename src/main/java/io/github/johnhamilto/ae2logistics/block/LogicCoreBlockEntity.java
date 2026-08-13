@@ -9,7 +9,7 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -62,7 +62,7 @@ public class LogicCoreBlockEntity extends BlockEntity implements IInWorldGridNod
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             GridHelper.onFirstTick(this, be -> {
                 be.mainNode.create(be.level, be.getBlockPos());
                 for (var entry : be.entries) {
@@ -129,8 +129,8 @@ public class LogicCoreBlockEntity extends BlockEntity implements IInWorldGridNod
     }
 
     @Nullable
-    private static ResourceLocation parseChannel(String text) {
-        return text == null || text.isBlank() ? null : ResourceLocation.tryParse(text.trim());
+    private static Identifier parseChannel(String text) {
+        return text == null || text.isBlank() ? null : Identifier.tryParse(text.trim());
     }
 
     public long entryValue(int slot) {
@@ -202,7 +202,7 @@ public class LogicCoreBlockEntity extends BlockEntity implements IInWorldGridNod
 
     @Override
     public void importTransferSettings(DataComponentMap settings, @Nullable Player player) {
-        if (level == null || level.isClientSide) {
+        if (level == null || level.isClientSide()) {
             return;
         }
         var tag = settings.get(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get());

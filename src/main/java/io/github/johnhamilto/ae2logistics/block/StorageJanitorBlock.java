@@ -36,7 +36,7 @@ public class StorageJanitorBlock extends Block implements EntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
-        if (level.isClientSide || type != AE2Logistics.STORAGE_JANITOR_BE.get()) {
+        if (level.isClientSide() || type != AE2Logistics.STORAGE_JANITOR_BE.get()) {
             return null;
         }
         return (tickLevel, pos, tickState, be) -> ((StorageJanitorBlockEntity) be).serverTick();
@@ -45,7 +45,7 @@ public class StorageJanitorBlock extends Block implements EntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hitResult) {
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer
+        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer
                 && level.getBlockEntity(pos) instanceof StorageJanitorBlockEntity janitor) {
             serverPlayer.openMenu(
                     new SimpleMenuProvider(
@@ -53,6 +53,6 @@ public class StorageJanitorBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.storage_janitor")),
                     buffer -> StorageJanitorMenu.writeOpenData(buffer, janitor));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(level.isClientSide());
     }
 }

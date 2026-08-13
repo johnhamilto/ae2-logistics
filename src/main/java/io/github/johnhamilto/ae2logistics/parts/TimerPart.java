@@ -2,7 +2,7 @@ package io.github.johnhamilto.ae2logistics.parts;
 
 import java.util.Set;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
@@ -33,7 +33,7 @@ public class TimerPart extends LogicPart {
     }
 
     @Override
-    public Set<ResourceLocation> readChannels() {
+    public Set<Identifier> readChannels() {
         return Set.of();
     }
 

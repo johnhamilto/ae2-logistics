@@ -7,7 +7,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -113,7 +113,7 @@ public class LogicCoreMenu extends AEBaseMenu implements GhostSlotPayload.GhostS
         }
     }
 
-    private static String channelText(@Nullable net.minecraft.resources.ResourceLocation id) {
+    private static String channelText(@Nullable net.minecraft.resources.Identifier id) {
         return id == null ? "" : id.toString();
     }
 
@@ -252,7 +252,7 @@ public class LogicCoreMenu extends AEBaseMenu implements GhostSlotPayload.GhostS
     }
 
     @Override
-    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+    public void clicked(int slotId, int button, ContainerInput clickType, Player player) {
         if (slotId == ghostSlotIndex) {
             if (core != null && types[selected] == LogicPartType.STOCK_SENSOR.ordinal()) {
                 var key = keyFromCarried(getCarried());

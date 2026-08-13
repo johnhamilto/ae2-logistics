@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
@@ -47,13 +47,13 @@ public class RedstoneIOPart extends LogicPart {
     }
 
     @Override
-    public Set<ResourceLocation> readChannels() {
+    public Set<Identifier> readChannels() {
         return isOutputMode() && inA != null ? Set.of(inA) : Set.of();
     }
 
     @Nullable
     @Override
-    public ResourceLocation writtenChannel() {
+    public Identifier writtenChannel() {
         return isOutputMode() ? null : outChannel;
     }
 

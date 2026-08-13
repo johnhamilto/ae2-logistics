@@ -12,7 +12,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -41,7 +41,7 @@ public class RegisterBankBlockEntity extends BlockEntity implements IInWorldGrid
     };
 
     /** Channels manually written through this bank; re-published whenever it joins a grid. */
-    private final Map<ResourceLocation, Long> persisted = new LinkedHashMap<>();
+    private final Map<Identifier, Long> persisted = new LinkedHashMap<>();
 
     private final IManagedGridNode mainNode = GridHelper.createManagedNode(this, NODE_LISTENER)
             .setInWorldNode(true)
@@ -55,7 +55,7 @@ public class RegisterBankBlockEntity extends BlockEntity implements IInWorldGrid
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             GridHelper.onFirstTick(this, be -> {
                 be.mainNode.create(be.level, be.getBlockPos());
                 be.pushToService();
@@ -96,7 +96,7 @@ public class RegisterBankBlockEntity extends BlockEntity implements IInWorldGrid
         persisted.clear();
         for (Tag element : tag.getList("signals", Tag.TAG_COMPOUND)) {
             if (element instanceof CompoundTag signal) {
-                var channel = ResourceLocation.tryParse(signal.getString("channel"));
+                var channel = Identifier.tryParse(signal.getString("channel"));
                 if (channel != null) {
                     persisted.put(channel, signal.getLong("value"));
                 }
@@ -134,17 +134,17 @@ public class RegisterBankBlockEntity extends BlockEntity implements IInWorldGrid
     }
 
     /** Grid-wide committed view when on a grid; this bank's own values otherwise. */
-    public Map<ResourceLocation, Long> signals() {
+    public Map<Identifier, Long> signals() {
         var service = service();
         return service != null ? service.committed() : Collections.unmodifiableMap(persisted);
     }
 
-    public long getSignal(ResourceLocation channel) {
+    public long getSignal(Identifier channel) {
         var service = service();
         return service != null ? service.get(channel) : persisted.getOrDefault(channel, 0L);
     }
 
-    public void setSignal(ResourceLocation channel, long value) {
+    public void setSignal(Identifier channel, long value) {
         if (value <= 0) {
             persisted.remove(channel);
         } else {

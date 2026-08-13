@@ -31,15 +31,15 @@ public class WirelessBridgeItem extends BlockItem {
         var level = context.getLevel();
         var pos = context.getClickedPos();
         if (level.getBlockEntity(pos) instanceof IWirelessAccessPoint) {
-            if (!level.isClientSide) {
+            if (!level.isClientSide()) {
                 context.getItemInHand().set(AE2Logistics.BRIDGE_ANCHOR.get(),
                         GlobalPos.of(level.dimension(), pos));
                 if (context.getPlayer() != null) {
-                    context.getPlayer().displayClientMessage(Component.literal(
-                            "Bridge anchored to access point at " + pos.toShortString()), true);
+                    context.getPlayer().sendOverlayMessage(Component.literal(
+                            "Bridge anchored to access point at " + pos.toShortString()));
                 }
             }
-            return InteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.sidedSuccess(level.isClientSide());
         }
         return super.useOn(context);
     }

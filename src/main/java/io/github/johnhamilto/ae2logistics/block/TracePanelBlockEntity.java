@@ -14,7 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -63,7 +63,7 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
     private int groupHeight = 1;
 
     /** Master-only state: bound channels and their ring buffers. */
-    private final Map<ResourceLocation, long[]> traces = new LinkedHashMap<>();
+    private final Map<Identifier, long[]> traces = new LinkedHashMap<>();
     private int sampleCursor;
     private boolean buffersFull;
     private int tickCounter;
@@ -77,7 +77,7 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             GridHelper.onFirstTick(this, be -> {
                 be.mainNode.create(be.level, be.getBlockPos());
                 be.reformGroup();
@@ -129,7 +129,7 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
      * answer independently, so no formation messages are needed.
      */
     public void reformGroup() {
-        if (level == null || level.isClientSide) {
+        if (level == null || level.isClientSide()) {
             return;
         }
         var facing = facing();
@@ -229,7 +229,7 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
     }
 
     /** Adds (or with {@code remove}) a channel binding on this panel's MASTER. */
-    public boolean bind(ResourceLocation channel, boolean remove) {
+    public boolean bind(Identifier channel, boolean remove) {
         if (level == null) {
             return false;
         }
@@ -269,7 +269,7 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
         syncNow();
     }
 
-    public List<ResourceLocation> boundChannels() {
+    public List<Identifier> boundChannels() {
         if (level != null && !isMaster()
                 && level.getBlockEntity(groupOrigin) instanceof TracePanelBlockEntity master) {
             return master.boundChannels();
@@ -279,7 +279,7 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
 
 
     /** Renderer access: the ring buffer unrolled oldest-first, empty until sampled. */
-    public long[] samples(ResourceLocation channel) {
+    public long[] samples(Identifier channel) {
         var buffer = traces.get(channel);
         if (buffer == null) {
             return new long[0];
@@ -323,7 +323,7 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
     }
 
     private void syncNow() {
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
     }
@@ -368,7 +368,7 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
         traces.clear();
         for (Tag element : tag.getList("traces", Tag.TAG_COMPOUND)) {
             if (element instanceof CompoundTag trace) {
-                var channel = ResourceLocation.tryParse(trace.getString("channel"));
+                var channel = Identifier.tryParse(trace.getString("channel"));
                 if (channel != null) {
                     var samples = trace.getLongArray("samples");
                     traces.put(channel, java.util.Arrays.copyOf(samples, SAMPLES));

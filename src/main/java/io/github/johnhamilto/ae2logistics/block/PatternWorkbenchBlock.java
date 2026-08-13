@@ -33,7 +33,7 @@ public class PatternWorkbenchBlock extends Block implements EntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hitResult) {
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer
+        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer
                 && level.getBlockEntity(pos) instanceof PatternWorkbenchBlockEntity workbench) {
             serverPlayer.openMenu(
                     new SimpleMenuProvider(
@@ -41,7 +41,7 @@ public class PatternWorkbenchBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.pattern_workbench")),
                     buffer -> buffer.writeBlockPos(pos));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(level.isClientSide());
     }
 
     @Override

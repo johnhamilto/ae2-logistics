@@ -11,7 +11,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
@@ -44,7 +44,7 @@ public class PatternGameTests {
         var input = new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4);
         var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
         AdaptivePattern.encode(stack, List.of(input), List.of(output),
-                List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
+                List.of(AdaptiveInputSpec.ofTag(Identifier.parse("minecraft:planks"))));
 
         helper.assertTrue(PatternDetailsHelper.isEncodedPattern(stack), "stack must count as encoded pattern");
 
@@ -74,26 +74,26 @@ public class PatternGameTests {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(level, busPos, null, null, (IPartItem<?>) cable);
 
         helper.setBlock(new BlockPos(3, 1, 1), net.minecraft.world.level.block.Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(3, 1, 1)) instanceof ChestBlockEntity source) {
+        if (helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity source) {
             source.setItem(0, new ItemStack(Items.BIRCH_PLANKS, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(level, busPos, Direction.EAST, null, (IPartItem<?>) storageBus);
 
         var gridHandle = (LogicPart) PartHelper.setPart(level, busPos, Direction.NORTH, null,
                 AE2Logistics.CONSTANT_PART.get());
 
-        var craftingStorage = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage"));
+        var craftingStorage = BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage"));
         helper.setBlock(new BlockPos(2, 2, 1), craftingStorage);
         helper.assertTrue(!helper.getBlockState(new BlockPos(2, 2, 1)).isAir(), "crafting storage missing");
 
-        var provider = BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider"));
+        var provider = BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider"));
         helper.setBlock(new BlockPos(2, 1, 2), provider);
         helper.assertTrue(!helper.getBlockState(new BlockPos(2, 1, 2)).isAir(), "pattern provider missing");
         helper.setBlock(new BlockPos(2, 1, 3), net.minecraft.world.level.block.Blocks.CHEST);
@@ -102,9 +102,9 @@ public class PatternGameTests {
         AdaptivePattern.encode(pattern,
                 List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
                 List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
-                List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
+                List.of(AdaptiveInputSpec.ofTag(Identifier.parse("minecraft:planks"))));
 
-        if (!(helper.getBlockEntity(new BlockPos(2, 1, 2)) instanceof PatternProviderBlockEntity providerBe)) {
+        if (!(helper.getBlockEntity(new BlockPos(2, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof PatternProviderBlockEntity providerBe)) {
             helper.fail("no pattern provider block entity");
             return;
         }
@@ -161,7 +161,7 @@ public class PatternGameTests {
                     }
                 })
                 .thenExecuteAfter(60, () -> {
-                    if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof ChestBlockEntity target) {
+                    if (helper.getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity target) {
                         int birch = 0;
                         for (int i = 0; i < target.getContainerSize(); i++) {
                             var stack = target.getItem(i);
@@ -265,7 +265,7 @@ public class PatternGameTests {
                 List.of(new GenericStack(AEItemKey.of(Items.IRON_PICKAXE), 1),
                         new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
                 List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
-                List.of(AdaptiveInputSpec.fuzzy(), AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
+                List.of(AdaptiveInputSpec.fuzzy(), AdaptiveInputSpec.ofTag(Identifier.parse("minecraft:planks"))));
 
         planPlot(helper, List.of(pattern),
                 List.of(damaged, new ItemStack(Items.BIRCH_PLANKS, 8)),
@@ -284,13 +284,13 @@ public class PatternGameTests {
         AdaptivePattern.encode(tablePattern,
                 List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
                 List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
-                List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
+                List.of(AdaptiveInputSpec.ofTag(Identifier.parse("minecraft:planks"))));
 
         var planksPattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
         AdaptivePattern.encode(planksPattern,
                 List.of(new GenericStack(AEItemKey.of(Items.OAK_LOG), 1)),
                 List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
-                List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:logs"))));
+                List.of(AdaptiveInputSpec.ofTag(Identifier.parse("minecraft:logs"))));
 
         planPlot(helper, List.of(tablePattern, planksPattern),
                 List.of(new ItemStack(Items.SPRUCE_LOG, 4)),
@@ -303,25 +303,25 @@ public class PatternGameTests {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(level, busPos, null, null, (IPartItem<?>) cable);
 
         helper.setBlock(new BlockPos(3, 1, 1), net.minecraft.world.level.block.Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(3, 1, 1)) instanceof ChestBlockEntity source) {
+        if (helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity source) {
             for (int i = 0; i < chestItems.size(); i++) {
                 source.setItem(i, chestItems.get(i));
             }
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(level, busPos, Direction.EAST, null, (IPartItem<?>) storageBus);
         var gridHandle = (LogicPart) PartHelper.setPart(level, busPos, Direction.NORTH, null,
                 AE2Logistics.CONSTANT_PART.get());
 
         helper.setBlock(new BlockPos(2, 1, 2),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
-        if (helper.getBlockEntity(new BlockPos(2, 1, 2)) instanceof PatternProviderBlockEntity providerBe) {
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof PatternProviderBlockEntity providerBe) {
             for (int i = 0; i < patterns.size(); i++) {
                 providerBe.getLogic().getPatternInv().setItemDirect(i, patterns.get(i));
             }
@@ -377,31 +377,31 @@ public class PatternGameTests {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(level, busPos, null, null, (IPartItem<?>) cable);
 
         helper.setBlock(new BlockPos(3, 1, 1), net.minecraft.world.level.block.Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(3, 1, 1)) instanceof ChestBlockEntity source) {
+        if (helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity source) {
             source.setItem(0, new ItemStack(Items.IRON_PICKAXE));
             source.setItem(1, new ItemStack(Items.BIRCH_PLANKS, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(level, busPos, Direction.EAST, null, (IPartItem<?>) storageBus);
         var gridHandle = (LogicPart) PartHelper.setPart(level, busPos, Direction.NORTH, null,
                 AE2Logistics.CONSTANT_PART.get());
 
         helper.setBlock(new BlockPos(2, 1, 2),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
 
         var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
         AdaptivePattern.encode(pattern,
                 List.of(new GenericStack(AEItemKey.of(Items.IRON_PICKAXE), 1),
                         new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
                 List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
-                List.of(pickaxeSpec, AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
-        if (helper.getBlockEntity(new BlockPos(2, 1, 2)) instanceof PatternProviderBlockEntity providerBe) {
+                List.of(pickaxeSpec, AdaptiveInputSpec.ofTag(Identifier.parse("minecraft:planks"))));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof PatternProviderBlockEntity providerBe) {
             providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
         }
 

@@ -9,7 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -64,7 +64,7 @@ public class JobSchedulerBlockEntity extends BlockEntity
         public long batch = 16;
         public byte jobClass = CLASS_BULK;
         @Nullable
-        public ResourceLocation guard;
+        public Identifier guard;
         /** Max runtime in seconds once submitted; 0 disables the watchdog. */
         public long deadlineSeconds;
         /** May cancel the youngest same-class job of a lower-priority (higher-index) rule. */
@@ -117,13 +117,13 @@ public class JobSchedulerBlockEntity extends BlockEntity
     }
 
     public void applyRuleConfig(int index, long floor, long batch, byte jobClass,
-            @Nullable ResourceLocation guard) {
+            @Nullable Identifier guard) {
         var rule = rules[index];
         applyRuleConfig(index, floor, batch, jobClass, guard, rule.deadlineSeconds, rule.preempt);
     }
 
     public void applyRuleConfig(int index, long floor, long batch, byte jobClass,
-            @Nullable ResourceLocation guard, long deadlineSeconds, boolean preempt) {
+            @Nullable Identifier guard, long deadlineSeconds, boolean preempt) {
         var rule = rules[index];
         rule.floor = Math.max(0, floor);
         rule.batch = Math.max(1, batch);
@@ -140,7 +140,7 @@ public class JobSchedulerBlockEntity extends BlockEntity
     }
 
     public void serverTick() {
-        if (++tickCounter % 20 != 0 || level == null || level.isClientSide) {
+        if (++tickCounter % 20 != 0 || level == null || level.isClientSide()) {
             return;
         }
         var node = mainNode.getNode();
@@ -324,7 +324,7 @@ public class JobSchedulerBlockEntity extends BlockEntity
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null && !level.isClientSide) {
+        if (level != null && !level.isClientSide()) {
             GridHelper.onFirstTick(this, be -> be.mainNode.create(be.level, be.getBlockPos()));
         }
     }
@@ -389,7 +389,7 @@ public class JobSchedulerBlockEntity extends BlockEntity
             rule.batch = Math.max(1, ruleTag.getLong("batch"));
             rule.jobClass = ruleTag.getByte("class");
             rule.guard = ruleTag.contains("guard")
-                    ? ResourceLocation.tryParse(ruleTag.getString("guard"))
+                    ? Identifier.tryParse(ruleTag.getString("guard"))
                     : null;
             rule.deadlineSeconds = Math.max(0, ruleTag.getLong("deadline"));
             rule.preempt = ruleTag.getBoolean("preempt");
@@ -412,7 +412,7 @@ public class JobSchedulerBlockEntity extends BlockEntity
     @Override
     public void importTransferSettings(net.minecraft.core.component.DataComponentMap settings,
             @Nullable net.minecraft.world.entity.player.Player player) {
-        if (level == null || level.isClientSide) {
+        if (level == null || level.isClientSide()) {
             return;
         }
         var tag = settings.get(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get());

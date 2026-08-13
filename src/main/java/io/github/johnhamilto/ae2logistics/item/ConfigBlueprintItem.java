@@ -65,7 +65,7 @@ public class ConfigBlueprintItem extends Item {
         var level = context.getLevel();
         if (!(level instanceof ServerLevel serverLevel)
                 || !(context.getPlayer() instanceof ServerPlayer player)) {
-            return InteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.sidedSuccess(level.isClientSide());
         }
         var stack = context.getItemInHand();
         var clicked = context.getClickedPos();
@@ -73,44 +73,43 @@ public class ConfigBlueprintItem extends Item {
         if (player.isShiftKeyDown()) {
             var entries = stack.get(AE2Logistics.BLUEPRINT_DATA.get());
             if (entries == null || entries.isEmpty()) {
-                player.displayClientMessage(Component.literal("Blueprint is empty"), true);
+                player.sendOverlayMessage(Component.literal("Blueprint is empty"));
                 return InteractionResult.SUCCESS;
             }
             if (!ConfigDeviceIndex.mayEdit(player, clicked)) {
-                player.displayClientMessage(Component.literal("No permission here"), true);
+                player.sendOverlayMessage(Component.literal("No permission here"));
                 return InteractionResult.SUCCESS;
             }
             var result = apply(serverLevel, clicked, entries, player);
-            player.displayClientMessage(Component.literal(
-                    "Applied " + result[0] + "/" + result[1] + " device configs"), true);
+            player.sendOverlayMessage(Component.literal(
+                    "Applied " + result[0] + "/" + result[1] + " device configs"));
             return InteractionResult.SUCCESS;
         }
 
         var corner = stack.get(AE2Logistics.BLUEPRINT_CORNER.get());
         if (corner == null) {
             stack.set(AE2Logistics.BLUEPRINT_CORNER.get(), clicked);
-            player.displayClientMessage(Component.literal(
-                    "Corner set - click the opposite corner"), true);
+            player.sendOverlayMessage(Component.literal(
+                    "Corner set - click the opposite corner"));
             return InteractionResult.SUCCESS;
         }
         var entries = capture(serverLevel, corner, clicked);
         stack.remove(AE2Logistics.BLUEPRINT_CORNER.get());
         stack.set(AE2Logistics.BLUEPRINT_DATA.get(), entries);
-        player.displayClientMessage(Component.literal(
-                "Captured " + entries.size() + " device configs; sneak-click the min corner to apply"),
-                true);
+        player.sendOverlayMessage(Component.literal(
+                "Captured " + entries.size() + " device configs; sneak-click the min corner to apply"));
         return InteractionResult.SUCCESS;
     }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         var stack = player.getItemInHand(hand);
-        if (player.isShiftKeyDown() && !level.isClientSide) {
+        if (player.isShiftKeyDown() && !level.isClientSide()) {
             stack.remove(AE2Logistics.BLUEPRINT_CORNER.get());
             stack.remove(AE2Logistics.BLUEPRINT_DATA.get());
-            player.displayClientMessage(Component.literal("Blueprint cleared"), true);
+            player.sendOverlayMessage(Component.literal("Blueprint cleared"));
         }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 
     /** Captures all AE2-based devices in the box; positions relative to the min corner. */

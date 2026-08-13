@@ -8,7 +8,7 @@ import net.neoforged.neoforge.common.conditions.ICondition;
 /**
  * Recipe condition that only passes in a development environment. Gates devices whose
  * art or GUI is not release-ready (the creative tab applies the same
- * {@code FMLEnvironment.production} check): they stay registered everywhere so worlds
+ * {@code FMLEnvironment.isProduction()} check): they stay registered everywhere so worlds
  * and structure templates keep loading, but production players cannot craft or find them.
  */
 public record DevOnlyCondition() implements ICondition {
@@ -18,7 +18,7 @@ public record DevOnlyCondition() implements ICondition {
 
     @Override
     public boolean test(IContext context) {
-        return !FMLEnvironment.production;
+        return !FMLEnvironment.isProduction();
     }
 
     @Override

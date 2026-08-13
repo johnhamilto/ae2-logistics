@@ -11,7 +11,7 @@ import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
@@ -226,7 +226,7 @@ public final class MeshRegistry {
             var level = host.getLevel();
             if (host.getBlockPos().equals(pos)
                     && part.getSide() != null && part.getSide().ordinal() == side
-                    && level != null && level.dimension().location().toString().equals(dimension)
+                    && level != null && level.dimension().identifier().toString().equals(dimension)
                     && hostGrid(part) == carrier) {
                 part.applyMeshConfig(target, part.role(), part.priority(), part.capabilityMask());
                 return true;
@@ -508,7 +508,7 @@ public final class MeshRegistry {
 
             for (var carrierMembers : carriers.values()) {
                 int redstone = 0;
-                Map<ResourceLocation, Long> signals = null;
+                Map<Identifier, Long> signals = null;
 
                 for (var part : carrierMembers) {
                     if (part.isSource(TYPE_REDSTONE)) {

@@ -17,13 +17,13 @@ public class DevGateGameTests {
     /**
      * The gametest server is a dev environment, so this can only cover the dev half of
      * the gate: the dev_only condition passes and the gated devices' recipes are loaded.
-     * The production half is the same single {@code FMLEnvironment.production} read
+     * The production half is the same single {@code FMLEnvironment.isProduction()} read
      * inverted, unreachable from any test environment; a wiring regression (condition
      * codec unregistered, recipe JSON malformed) fails here as missing recipes.
      */
     @GameTest(template = "empty5")
     public void devGatedDevicesAvailableInDev(GameTestHelper helper) {
-        helper.assertFalse(FMLEnvironment.production, "gametests must run in a dev environment");
+        helper.assertFalse(FMLEnvironment.isProduction(), "gametests must run in a dev environment");
         helper.assertTrue(DevOnlyCondition.INSTANCE.test(ICondition.IContext.EMPTY),
                 "dev_only condition must pass in dev");
         var recipes = helper.getLevel().getServer().getRecipeManager();

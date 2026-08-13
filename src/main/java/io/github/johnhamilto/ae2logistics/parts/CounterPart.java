@@ -5,7 +5,7 @@ import java.util.Set;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
@@ -37,8 +37,8 @@ public class CounterPart extends LogicPart {
     }
 
     @Override
-    public Set<ResourceLocation> readChannels() {
-        var channels = new HashSet<ResourceLocation>(2);
+    public Set<Identifier> readChannels() {
+        var channels = new HashSet<Identifier>(2);
         if (inA != null) {
             channels.add(inA);
         }

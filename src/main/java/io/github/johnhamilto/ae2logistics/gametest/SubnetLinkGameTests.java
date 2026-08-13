@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -26,7 +26,7 @@ import io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart;
 public class SubnetLinkGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -38,7 +38,7 @@ public class SubnetLinkGameTests {
     }
 
     private static int chestCount(GameTestHelper helper, BlockPos pos, net.minecraft.world.item.Item item) {
-        var be = helper.getBlockEntity(pos);
+        var be = helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class);
         helper.assertTrue(be instanceof ChestBlockEntity, "no chest at " + pos);
         int total = 0;
         var chest = (ChestBlockEntity) be;
@@ -54,18 +54,18 @@ public class SubnetLinkGameTests {
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void subnetLinkCarriesRealSubnet(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         var link = placeLink(helper, new BlockPos(1, 1, 1), Direction.UP);
         placeCable(helper, new BlockPos(1, 2, 1));
         helper.setBlock(new BlockPos(1, 3, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:interface")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:interface")));
 
         helper.runAfterDelay(40, () -> {
             helper.assertTrue(link.subnetGrid() != null, "subnet grid missing");
             helper.assertTrue(link.subnetGrid() != link.mainGrid(),
                     "subnet must be a separate grid");
-            var iface = helper.getBlockEntity(new BlockPos(1, 3, 1));
+            var iface = helper.getBlockEntity(new BlockPos(1, 3, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
             helper.assertTrue(iface instanceof appeng.blockentity.misc.InterfaceBlockEntity i
                     && i.getMainNode().isOnline(),
                     "subnet interface must be powered THROUGH the link");
@@ -77,16 +77,16 @@ public class SubnetLinkGameTests {
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void subnetLinkMountsSubnetOnMain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         var link = placeLink(helper, new BlockPos(1, 1, 1), Direction.UP);
         placeCable(helper, new BlockPos(1, 2, 1));
         // Subnet-side storage: a REAL storage bus onto a chest.
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 2, 1)),
                 Direction.NORTH, null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(1, 2, 0), Blocks.CHEST);
-        ((ChestBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0)))
+        ((ChestBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 0), net.minecraft.world.level.block.entity.BlockEntity.class))
                 .setItem(0, new ItemStack(Items.GOLD_INGOT, 7));
 
         helper.runAfterDelay(60, () -> {

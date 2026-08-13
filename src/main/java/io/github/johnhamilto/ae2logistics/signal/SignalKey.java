@@ -15,7 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
@@ -25,20 +25,20 @@ import appeng.api.stacks.AEKeyType;
 public final class SignalKey extends AEKey {
 
     public static final MapCodec<SignalKey> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            ResourceLocation.CODEC.fieldOf("channel").forGetter(SignalKey::channel))
+            Identifier.CODEC.fieldOf("channel").forGetter(SignalKey::channel))
             .apply(instance, SignalKey::of));
 
-    private final ResourceLocation channel;
+    private final Identifier channel;
 
-    private SignalKey(ResourceLocation channel) {
+    private SignalKey(Identifier channel) {
         this.channel = channel;
     }
 
-    public static SignalKey of(ResourceLocation channel) {
+    public static SignalKey of(Identifier channel) {
         return new SignalKey(Objects.requireNonNull(channel));
     }
 
-    public ResourceLocation channel() {
+    public Identifier channel() {
         return channel;
     }
 
@@ -64,7 +64,7 @@ public final class SignalKey extends AEKey {
     }
 
     @Override
-    public ResourceLocation getId() {
+    public Identifier getId() {
         return channel;
     }
 
@@ -89,11 +89,11 @@ public final class SignalKey extends AEKey {
 
     @Override
     public void writeToPacket(RegistryFriendlyByteBuf data) {
-        data.writeResourceLocation(channel);
+        data.writeIdentifier(channel);
     }
 
     public static SignalKey fromPacket(RegistryFriendlyByteBuf data) {
-        return new SignalKey(data.readResourceLocation());
+        return new SignalKey(data.readIdentifier());
     }
 
     @Override

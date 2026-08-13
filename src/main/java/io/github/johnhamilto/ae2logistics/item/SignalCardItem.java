@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -20,11 +20,11 @@ public class SignalCardItem extends Item {
     }
 
     @Nullable
-    public static ResourceLocation getChannel(ItemStack stack) {
+    public static Identifier getChannel(ItemStack stack) {
         return stack.get(AE2Logistics.SIGNAL_CHANNEL.get());
     }
 
-    public static ItemStack bound(ResourceLocation channel) {
+    public static ItemStack bound(Identifier channel) {
         var stack = new ItemStack(AE2Logistics.SIGNAL_CARD.get());
         stack.set(AE2Logistics.SIGNAL_CHANNEL.get(), channel);
         return stack;

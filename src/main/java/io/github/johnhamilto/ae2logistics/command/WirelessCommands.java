@@ -38,7 +38,7 @@ public final class WirelessCommands {
         var anchor = bridge.anchor();
         context.getSource().sendSuccess(() -> Component.literal(
                 "anchor: " + (anchor == null ? "none - place after clicking an access point"
-                        : anchor.pos().toShortString() + " in " + anchor.dimension().location())),
+                        : anchor.pos().toShortString() + " in " + anchor.dimension().identifier())),
                 false);
         var linked = bridge.linkedApPos();
         context.getSource().sendSuccess(() -> Component.literal(

@@ -102,7 +102,7 @@ public class P2PFrequencyTerminalMenu extends AEBaseMenu {
                     net.minecraft.core.registries.BuiltInRegistries.ITEM
                             .getKey(tunnel.getPartItem().asItem()).toString(),
                     names.getOrDefault(tunnel.getFrequency(), ""),
-                    host.getLevel() != null ? host.getLevel().dimension().location().toString() : "?"));
+                    host.getLevel() != null ? host.getLevel().dimension().identifier().toString() : "?"));
         }
         collected.sort(Comparator.comparingInt((Row row) -> row.frequency() & 0xFFFF)
                 .thenComparing(Row::output));
@@ -130,7 +130,7 @@ public class P2PFrequencyTerminalMenu extends AEBaseMenu {
                         true,
                         io.github.johnhamilto.ae2logistics.mesh.MeshRegistry.statusOf(endpoint),
                         host.getBlockPos(),
-                        host.getLevel() != null ? host.getLevel().dimension().location().toString() : "?"));
+                        host.getLevel() != null ? host.getLevel().dimension().identifier().toString() : "?"));
             }
         }
         PacketDistributor.sendToPlayer(serverPlayer, new P2PDataPayload(containerId, collected, mesh));

@@ -5,11 +5,11 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -169,7 +169,7 @@ public class LogicPartMenu extends AEBaseMenu implements GhostSlotPayload.GhostS
     }
 
     @Override
-    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+    public void clicked(int slotId, int button, ContainerInput clickType, Player player) {
         if (ghostSlotIndex >= 0 && slotId == ghostSlotIndex) {
             var key = keyFromCarried(getCarried());
             if (part != null) {
@@ -218,7 +218,7 @@ public class LogicPartMenu extends AEBaseMenu implements GhostSlotPayload.GhostS
         }
     }
 
-    private static String toStringOrEmpty(@Nullable ResourceLocation id) {
+    private static String toStringOrEmpty(@Nullable Identifier id) {
         return id == null ? "" : id.toString();
     }
 

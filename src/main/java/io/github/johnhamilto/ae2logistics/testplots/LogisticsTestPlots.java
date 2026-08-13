@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -44,8 +44,8 @@ import io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart;
 @TestPlotClass
 public final class LogisticsTestPlots {
 
-    private static final ResourceLocation LEVEL = ResourceLocation.parse("demo:level");
-    private static final ResourceLocation ALARM = ResourceLocation.parse("demo:alarm");
+    private static final Identifier LEVEL = Identifier.parse("demo:level");
+    private static final Identifier ALARM = Identifier.parse("demo:alarm");
 
     private LogisticsTestPlots() {
     }
@@ -236,7 +236,7 @@ public final class LogisticsTestPlots {
         // The provider's grid connection loops past the cell; its push face is the tunnel.
         plot.cable("0 0 -1");
         plot.block("1 0 -1",
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("extendedae:ex_pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("extendedae:ex_pattern_provider")));
         plot.addPostInitAction((level, player, origin) -> linkTunnels(level,
                 origin.offset(1, 0, 0), Direction.NORTH, origin.offset(2, 0, 0), Direction.UP));
     }
@@ -273,7 +273,7 @@ public final class LogisticsTestPlots {
         AdaptivePattern.encode(pattern,
                 List.of(new GenericStack(AEItemKey.of(Items.OAK_LOG), 1)),
                 List.of(new GenericStack(AEItemKey.of(Items.CHARCOAL), 1)),
-                List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:logs"))));
+                List.of(AdaptiveInputSpec.ofTag(Identifier.parse("minecraft:logs"))));
         return pattern;
     }
 }

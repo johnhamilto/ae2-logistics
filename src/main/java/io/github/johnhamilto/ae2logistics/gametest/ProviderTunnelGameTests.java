@@ -6,7 +6,7 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -37,7 +37,7 @@ import io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart;
 public class ProviderTunnelGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -74,7 +74,7 @@ public class ProviderTunnelGameTests {
 
     private static int chestTotal(GameTestHelper helper, BlockPos pos) {
         int total = 0;
-        if (helper.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             for (int i = 0; i < chest.getContainerSize(); i++) {
                 total += chest.getItem(i).getCount();
             }
@@ -91,20 +91,20 @@ public class ProviderTunnelGameTests {
     private static ProviderP2PTunnelPart[] buildJobScene(GameTestHelper helper,
             appeng.api.config.YesNo blockingMode) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 2));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity source) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity source) {
             source.setItem(0, new ItemStack(Items.BIRCH_PLANKS, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
                 Direction.WEST, null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         helper.setBlock(new BlockPos(2, 1, 3),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         // The provider's push face points at the input tunnel; its grid connection
         // comes from the cable path above - same grid, as the replicas require.
         placeCable(helper, new BlockPos(2, 2, 2));
@@ -120,8 +120,8 @@ public class ProviderTunnelGameTests {
         AdaptivePattern.encode(pattern,
                 java.util.List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
                 java.util.List.of(new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1)),
-                java.util.List.of(AdaptiveInputSpec.ofTag(ResourceLocation.parse("minecraft:planks"))));
-        if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+                java.util.List.of(AdaptiveInputSpec.ofTag(Identifier.parse("minecraft:planks"))));
+        if (helper.getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
             providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
             providerBe.getLogic().getConfigManager().putSetting(
                     appeng.api.config.Settings.BLOCKING_MODE, blockingMode);
@@ -217,13 +217,13 @@ public class ProviderTunnelGameTests {
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void providerTunnelMirrorsPatternsAndPushesFluids(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
         // The provider's grid connection loops through a cable next to the cell.
         placeCable(helper, new BlockPos(0, 1, 0));
         helper.setBlock(new BlockPos(1, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
 
         var input = placeTunnel(helper, new BlockPos(1, 1, 1), Direction.NORTH);
         var output = placeTunnel(helper, new BlockPos(2, 1, 1), Direction.UP);
@@ -235,7 +235,7 @@ public class ProviderTunnelGameTests {
                         net.minecraft.world.level.material.Fluids.WATER), 1000)),
                 java.util.List.of(new GenericStack(AEItemKey.of(Items.OBSIDIAN), 1)),
                 java.util.List.of(AdaptiveInputSpec.EXACT));
-        if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
             providerBe.getLogic().getPatternInv().setItemDirect(0, pattern);
         } else {
             helper.fail("no pattern provider");
@@ -270,7 +270,7 @@ public class ProviderTunnelGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void providerMeshEndpointRoutesAnyKey(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -312,7 +312,7 @@ public class ProviderTunnelGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void providerTunnelReturnsResultsThroughOutputFace(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -326,7 +326,7 @@ public class ProviderTunnelGameTests {
 
         helper.runAfterDelay(40, () -> {
             var handler = helper.getLevel().getCapability(
-                    net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
                     helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
             helper.assertTrue(handler != null, "output tunnel must expose a return item handler");
             var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
@@ -335,7 +335,7 @@ public class ProviderTunnelGameTests {
 
         helper.runAfterDelay(50, () -> {
             int returned = 0;
-            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 returned = count(chest, Items.CRAFTING_TABLE);
             }
             helper.assertTrue(returned == 5,
@@ -352,7 +352,7 @@ public class ProviderTunnelGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void providerTunnelGenericReturnSurface(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -374,7 +374,7 @@ public class ProviderTunnelGameTests {
 
         helper.runAfterDelay(50, () -> {
             int returned = 0;
-            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 returned = count(chest, Items.CRAFTING_TABLE);
             }
             helper.assertTrue(returned == 5,
@@ -387,7 +387,7 @@ public class ProviderTunnelGameTests {
     private static io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart[] meshReturnScene(
             GameTestHelper helper, String frequency) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
 
@@ -419,7 +419,7 @@ public class ProviderTunnelGameTests {
             helper.assertTrue(inputGeneric == null,
                     "input endpoint faces must not expose the generic return inventory");
             var handler = helper.getLevel().getCapability(
-                    net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
                     helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
             helper.assertTrue(handler != null, "output endpoint must expose a return item handler");
             var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
@@ -428,7 +428,7 @@ public class ProviderTunnelGameTests {
 
         helper.runAfterDelay(50, () -> {
             int returned = 0;
-            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 returned = count(chest, Items.CRAFTING_TABLE);
             }
             helper.assertTrue(returned == 5,
@@ -452,7 +452,7 @@ public class ProviderTunnelGameTests {
 
         helper.runAfterDelay(50, () -> {
             int returned = 0;
-            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 returned = count(chest, Items.CRAFTING_TABLE);
             }
             helper.assertTrue(returned == 5,
@@ -478,7 +478,7 @@ public class ProviderTunnelGameTests {
 
         helper.runAfterDelay(30, () -> {
             var handler = helper.getLevel().getCapability(
-                    net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                    net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
                     helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
             helper.assertTrue(handler != null, "output endpoint must expose a return item handler");
             var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
@@ -488,10 +488,10 @@ public class ProviderTunnelGameTests {
         helper.runAfterDelay(50, () -> {
             int high = 0;
             int low = 0;
-            if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 high = count(chest, Items.CRAFTING_TABLE);
             }
-            if (helper.getBlockEntity(new BlockPos(3, 1, 0)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(3, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 low = count(chest, Items.CRAFTING_TABLE);
             }
             helper.assertTrue(high == 5 && low == 0,
@@ -505,7 +505,7 @@ public class ProviderTunnelGameTests {
     private static ItemStack craftingPattern(GameTestHelper helper, String recipeId,
             ItemStack[] grid, ItemStack out) {
         var holder = helper.getLevel().getRecipeManager()
-                .byKey(ResourceLocation.parse(recipeId)).orElseThrow();
+                .byKey(Identifier.parse(recipeId)).orElseThrow();
         return appeng.api.crafting.PatternDetailsHelper.encodeCraftingPattern(
                 (net.minecraft.world.item.crafting.RecipeHolder<net.minecraft.world.item.crafting.CraftingRecipe>) holder,
                 grid, out, false, false);
@@ -527,30 +527,30 @@ public class ProviderTunnelGameTests {
     private static ProviderP2PTunnelPart[] buildAssemblerScene(GameTestHelper helper,
             ItemStack... patterns) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 2));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity source) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity source) {
             source.setItem(0, new ItemStack(Items.OAK_LOG, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
                 Direction.WEST, null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         helper.setBlock(new BlockPos(2, 1, 3),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         placeCable(helper, new BlockPos(2, 2, 2));
         placeCable(helper, new BlockPos(2, 2, 3));
 
         var input = placeTunnel(helper, new BlockPos(2, 1, 2), Direction.SOUTH);
         var output = placeTunnel(helper, new BlockPos(2, 1, 2), Direction.EAST);
         helper.setBlock(new BlockPos(3, 1, 2),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:molecular_assembler")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:molecular_assembler")));
         placeCable(helper, new BlockPos(3, 2, 2));
 
-        if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
+        if (helper.getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity providerBe) {
             for (int i = 0; i < patterns.length; i++) {
                 providerBe.getLogic().getPatternInv().setItemDirect(i, patterns[i]);
             }
@@ -576,7 +576,7 @@ public class ProviderTunnelGameTests {
 
         submitJob(helper, tunnels[0], AEItemKey.of(Items.OAK_PLANKS), 4, 120, () -> {
             int crafted = 0;
-            if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 crafted = count(chest, Items.OAK_PLANKS);
             }
             helper.assertTrue(crafted >= 4,
@@ -603,7 +603,7 @@ public class ProviderTunnelGameTests {
 
         submitJob(helper, tunnels[0], AEItemKey.of(Items.STICK), 4, 240, () -> {
             int crafted = 0;
-            if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+            if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                 crafted = count(chest, Items.STICK);
             }
             helper.assertTrue(crafted >= 4,

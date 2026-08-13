@@ -1,7 +1,7 @@
 package io.github.johnhamilto.ae2logistics.testplots;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
@@ -28,7 +28,7 @@ public final class PlotStructures {
      * "x y z"). Loads the template eagerly so the plot's bounds cover it; plots only
      * ever build on a running server, so the server lookup is safe here.
      */
-    public static void structure(PlotBuilder plot, String origin, ResourceLocation id) {
+    public static void structure(PlotBuilder plot, String origin, Identifier id) {
         var server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
             throw new IllegalStateException("test plots build server-side only");

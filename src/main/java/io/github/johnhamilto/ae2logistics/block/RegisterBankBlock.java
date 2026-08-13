@@ -37,27 +37,27 @@ public class RegisterBankBlock extends Block implements EntityBlock {
         if (channel == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof RegisterBankBlockEntity bank) {
+        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof RegisterBankBlockEntity bank) {
             var value = bank.getSignal(channel);
-            player.displayClientMessage(Component.literal(channel + " = " + value), true);
+            player.sendOverlayMessage(Component.literal(channel + " = " + value));
         }
-        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        return ItemInteractionResult.sidedSuccess(level.isClientSide());
     }
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hitResult) {
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof RegisterBankBlockEntity bank) {
+        if (!level.isClientSide() && level.getBlockEntity(pos) instanceof RegisterBankBlockEntity bank) {
             var signals = bank.signals();
             if (signals.isEmpty()) {
-                player.displayClientMessage(Component.literal("No signals on this network"), false);
+                player.sendSystemMessage(Component.literal("No signals on this network"));
             } else {
                 for (var entry : signals.entrySet()) {
-                    player.displayClientMessage(
-                            Component.literal(entry.getKey() + " = " + entry.getValue()), false);
+                    player.sendSystemMessage(
+                            Component.literal(entry.getKey() + " = " + entry.getValue()));
                 }
             }
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(level.isClientSide());
     }
 }

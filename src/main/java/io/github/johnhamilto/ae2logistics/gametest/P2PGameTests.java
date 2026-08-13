@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -24,12 +24,12 @@ public class P2PGameTests {
     @GameTest(template = "empty5")
     public void retuneAppliesAndGuardsInputCollision(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), busPos, null, null, (IPartItem<?>) cable);
 
-        var tunnelItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:me_p2p_tunnel"));
+        var tunnelItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:me_p2p_tunnel"));
         helper.assertTrue(tunnelItem instanceof IPartItem<?>, "me p2p tunnel must be a part item");
         var tunnelA = (P2PTunnelPart<?>) PartHelper.setPart(helper.getLevel(), busPos, Direction.UP, null,
                 (IPartItem<?>) tunnelItem);

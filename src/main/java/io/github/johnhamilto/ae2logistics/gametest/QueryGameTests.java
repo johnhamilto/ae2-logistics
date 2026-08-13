@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -34,7 +34,7 @@ import io.github.johnhamilto.ae2logistics.query.QueryService;
 public class QueryGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -62,7 +62,7 @@ public class QueryGameTests {
         stacks.add(damagedPick, 1);
 
         var context = new QueryContext(stacks, null,
-                channel -> channel.equals(ResourceLocation.parse("t:x")) ? 7 : 0,
+                channel -> channel.equals(Identifier.parse("t:x")) ? 7 : 0,
                 name -> name.equals("ores") ? CompiledQuery.compile("tag:c:ores") : null);
 
         helper.assertTrue(matches("mod:minecraft", iron, context, helper), "mod: should match");
@@ -98,15 +98,15 @@ public class QueryGameTests {
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void librariesReplicateAndSensorsResolve(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
         helper.setBlock(new BlockPos(1, 1, 0), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.IRON_INGOT, 10));
             chest.setItem(1, new ItemStack(Items.GOLD_INGOT, 5));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), Direction.NORTH,
                 null, (IPartItem<?>) storageBus);
 
@@ -122,7 +122,7 @@ public class QueryGameTests {
 
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
-                    sensor.applySensorConfig(ResourceLocation.parse("q:metal"), "@metals");
+                    sensor.applySensorConfig(Identifier.parse("q:metal"), "@metals");
                     helper.assertTrue(sensor.currentValue() == 0,
                             "unresolved @ref must count nothing");
                     var node = firstTerminal.getMainNode().getNode();
@@ -153,14 +153,14 @@ public class QueryGameTests {
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void queryExportBusMovesMatchingItems(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         helper.setBlock(new BlockPos(1, 1, 0), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.IRON_INGOT, 8));
             chest.setItem(1, new ItemStack(Items.GOLD_INGOT, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), Direction.NORTH,
                 null, (IPartItem<?>) storageBus);
         var bus = (QueryExportBusPart) PartHelper.setPart(helper.getLevel(),
@@ -172,7 +172,7 @@ public class QueryGameTests {
         helper.runAfterDelay(260, () -> {
             int barrel = 0;
             int barrelGold = 0;
-            if (helper.getBlockEntity(new BlockPos(2, 1, 1)) instanceof BaseContainerBlockEntity container) {
+            if (helper.getBlockEntity(new BlockPos(2, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof BaseContainerBlockEntity container) {
                 for (int i = 0; i < container.getContainerSize(); i++) {
                     var stack = container.getItem(i);
                     if (stack.is(Items.IRON_INGOT)) {
@@ -193,13 +193,13 @@ public class QueryGameTests {
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void signalTermGatesSensor(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         helper.setBlock(new BlockPos(1, 1, 0), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.IRON_INGOT, 10));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), Direction.NORTH,
                 null, (IPartItem<?>) storageBus);
         var constant = (LogicPart) PartHelper.setPart(helper.getLevel(),
@@ -211,14 +211,14 @@ public class QueryGameTests {
 
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
-                    constant.applyConfig(ResourceLocation.parse("g:mode"), null, null, 0, 0, 0, false);
-                    sensor.applySensorConfig(ResourceLocation.parse("q:gated"),
+                    constant.applyConfig(Identifier.parse("g:mode"), null, null, 0, 0, 0, false);
+                    sensor.applySensorConfig(Identifier.parse("q:gated"),
                             "stored AND signal(g:mode) > 0");
                 })
                 .thenExecuteAfter(20, () -> {
                     helper.assertTrue(sensor.currentValue() == 0,
                             "gated query must count nothing while the signal is 0");
-                    constant.applyConfig(ResourceLocation.parse("g:mode"), null, null, 0, 1, 0, false);
+                    constant.applyConfig(Identifier.parse("g:mode"), null, null, 0, 1, 0, false);
                 })
                 .thenExecuteAfter(20, () -> {
                     long value = sensor.currentValue();

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -249,7 +249,7 @@ public class AdaptivePattern implements IPatternDetails {
             sequence.add(AdaptiveInputSpec.fuzzy(FuzzyMode.PERCENT_50));
             sequence.add(AdaptiveInputSpec.fuzzy(FuzzyMode.PERCENT_25));
         }
-        for (ResourceLocation tag : tags) {
+        for (Identifier tag : tags) {
             sequence.add(AdaptiveInputSpec.ofTag(tag));
         }
 

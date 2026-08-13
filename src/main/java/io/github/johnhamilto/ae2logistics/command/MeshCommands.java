@@ -70,7 +70,7 @@ public final class MeshCommands {
             var host = endpoint.getHost().getBlockEntity();
             var pos = host.getBlockPos();
             var dimension = host.getLevel() != null
-                    ? host.getLevel().dimension().location().toString()
+                    ? host.getLevel().dimension().identifier().toString()
                     : "?";
             var line = pos.getX() + "," + pos.getY() + "," + pos.getZ() + " (" + dimension + ") "
                     + "net " + networkTag(endpoint) + " "

@@ -6,7 +6,7 @@ import java.util.Optional;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.StringRepresentable;
 
 import appeng.api.config.FuzzyMode;
@@ -18,7 +18,7 @@ import appeng.api.stacks.GenericStack;
  * of alternatives. Independently, an input can be flagged as a catalyst: required and
  * pushed, but credited back rather than net-consumed (AE2's container-item mechanism).
  */
-public record AdaptiveInputSpec(Mode mode, Optional<ResourceLocation> tag, Optional<FuzzyMode> fuzzyMode,
+public record AdaptiveInputSpec(Mode mode, Optional<Identifier> tag, Optional<FuzzyMode> fuzzyMode,
         List<GenericStack> alternatives, boolean catalyst) {
 
     public static final AdaptiveInputSpec EXACT = new AdaptiveInputSpec(
@@ -26,7 +26,7 @@ public record AdaptiveInputSpec(Mode mode, Optional<ResourceLocation> tag, Optio
 
     public static final Codec<AdaptiveInputSpec> CODEC = RecordCodecBuilder.create(builder -> builder.group(
             Mode.CODEC.fieldOf("mode").forGetter(AdaptiveInputSpec::mode),
-            ResourceLocation.CODEC.optionalFieldOf("tag").forGetter(AdaptiveInputSpec::tag),
+            Identifier.CODEC.optionalFieldOf("tag").forGetter(AdaptiveInputSpec::tag),
             FuzzyMode.CODEC.optionalFieldOf("fuzzyMode").forGetter(AdaptiveInputSpec::fuzzyMode),
             GenericStack.FAULT_TOLERANT_LIST_CODEC.optionalFieldOf("alternatives", List.of())
                     .forGetter(AdaptiveInputSpec::alternatives),
@@ -43,7 +43,7 @@ public record AdaptiveInputSpec(Mode mode, Optional<ResourceLocation> tag, Optio
         return new AdaptiveInputSpec(Mode.FUZZY, Optional.empty(), Optional.of(band), List.of(), false);
     }
 
-    public static AdaptiveInputSpec ofTag(ResourceLocation tag) {
+    public static AdaptiveInputSpec ofTag(Identifier tag) {
         return new AdaptiveInputSpec(Mode.TAG, Optional.of(tag), Optional.empty(), List.of(), false);
     }
 

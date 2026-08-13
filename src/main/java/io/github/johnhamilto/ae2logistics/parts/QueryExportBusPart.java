@@ -80,7 +80,7 @@ public class QueryExportBusPart extends AEBasePart implements IGridTickable {
         if (host.getLevel() == null) {
             return null;
         }
-        return host.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,
+        return host.getLevel().getCapability(Capabilities.Item.BLOCK,
                 host.getBlockPos().relative(getSide()), getSide().getOpposite());
     }
 

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -65,7 +65,7 @@ public class MeshEndpointPart extends AEBasePart {
     }
 
     /** Part items whose capability mask is fixed; anything else is the universal part. */
-    private static final Map<ResourceLocation, TypedVariant> TYPED = Map.of(
+    private static final Map<Identifier, TypedVariant> TYPED = Map.of(
             AE2Logistics.id("mesh_endpoint_redstone"), new TypedVariant(MeshRegistry.TYPE_REDSTONE, MODEL_REDSTONE),
             AE2Logistics.id("mesh_endpoint_item"), new TypedVariant(MeshRegistry.TYPE_ITEM, MODEL_ITEM),
             AE2Logistics.id("mesh_endpoint_fluid"), new TypedVariant(MeshRegistry.TYPE_FLUID, MODEL_FLUID),
@@ -312,7 +312,7 @@ public class MeshEndpointPart extends AEBasePart {
         if (host.getLevel() == null) {
             return null;
         }
-        return host.getLevel().getCapability(Capabilities.ItemHandler.BLOCK,
+        return host.getLevel().getCapability(Capabilities.Item.BLOCK,
                 host.getBlockPos().relative(getSide()), getSide().getOpposite());
     }
 
@@ -322,7 +322,7 @@ public class MeshEndpointPart extends AEBasePart {
         if (host.getLevel() == null) {
             return null;
         }
-        return host.getLevel().getCapability(Capabilities.FluidHandler.BLOCK,
+        return host.getLevel().getCapability(Capabilities.Fluid.BLOCK,
                 host.getBlockPos().relative(getSide()), getSide().getOpposite());
     }
 
@@ -332,7 +332,7 @@ public class MeshEndpointPart extends AEBasePart {
         if (host.getLevel() == null) {
             return null;
         }
-        return host.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK,
+        return host.getLevel().getCapability(Capabilities.Energy.BLOCK,
                 host.getBlockPos().relative(getSide()), getSide().getOpposite());
     }
 
@@ -377,7 +377,7 @@ public class MeshEndpointPart extends AEBasePart {
         return node.getGrid().getService(SignalService.class);
     }
 
-    public void publishSignals(Map<ResourceLocation, Long> signals) {
+    public void publishSignals(Map<Identifier, Long> signals) {
         var service = signalService();
         if (service != publishedTo && publishedTo != null) {
             publishedTo.setExternal(this, Map.of());

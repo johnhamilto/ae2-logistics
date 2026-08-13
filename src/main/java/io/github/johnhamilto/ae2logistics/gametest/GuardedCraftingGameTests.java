@@ -12,7 +12,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -41,7 +41,7 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 public class GuardedCraftingGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -56,7 +56,7 @@ public class GuardedCraftingGameTests {
 
     private static int countItems(GameTestHelper helper, BlockPos pos) {
         int count = 0;
-        if (helper.getBlockEntity(pos) instanceof BaseContainerBlockEntity container) {
+        if (helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class) instanceof BaseContainerBlockEntity container) {
             for (int i = 0; i < container.getContainerSize(); i++) {
                 count += container.getItem(i).getCount();
             }
@@ -68,7 +68,7 @@ public class GuardedCraftingGameTests {
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void regulusFormsInWater(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 2), Blocks.WATER);
-        var charged = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:charged_certus_quartz_crystal"));
+        var charged = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:charged_certus_quartz_crystal"));
         helper.spawnItem(charged, 2.5f, 1.5f, 2.5f);
         helper.spawnItem(Items.REDSTONE, 2.5f, 1.5f, 2.5f);
         helper.spawnItem(Items.GLOWSTONE_DUST, 2.5f, 1.5f, 2.5f);
@@ -87,17 +87,17 @@ public class GuardedCraftingGameTests {
 
     private Plot buildPlot(GameTestHelper helper, ItemStack sourceItems) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, sourceItems);
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST,
                 null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
 
         var constant = (LogicPart) PartHelper.setPart(helper.getLevel(),
                 helper.absolutePos(new BlockPos(2, 1, 1)), Direction.DOWN, null,
@@ -105,7 +105,7 @@ public class GuardedCraftingGameTests {
 
         helper.setBlock(new BlockPos(2, 1, 2), AE2Logistics.GUARDED_PROVIDER.get());
         helper.setBlock(new BlockPos(2, 1, 3), Blocks.BARREL);
-        var be = helper.getBlockEntity(new BlockPos(2, 1, 2));
+        var be = helper.getBlockEntity(new BlockPos(2, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
         helper.assertTrue(be instanceof GuardedPatternProviderBlockEntity, "guarded provider BE missing");
         return new Plot((GuardedPatternProviderBlockEntity) be, constant);
     }
@@ -131,10 +131,10 @@ public class GuardedCraftingGameTests {
 
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
-                    plot.constant().applyConfig(ResourceLocation.parse("g:enable"), null, null, 0, 0, 0, false);
+                    plot.constant().applyConfig(Identifier.parse("g:enable"), null, null, 0, 0, 0, false);
                     plot.provider().getLogic().getPatternInv().setItemDirect(0,
                             plainPattern(new ItemStack(Items.OAK_PLANKS), 4, new ItemStack(Items.CRAFTING_TABLE)));
-                    plot.provider().applyGuardConfig(ResourceLocation.parse("g:enable"),
+                    plot.provider().applyGuardConfig(Identifier.parse("g:enable"),
                             4, 0, true, null, 0);
                 })
                 .thenExecuteAfter(40, () -> {
@@ -154,7 +154,7 @@ public class GuardedCraftingGameTests {
                         }
                         state.firstChecked = true;
                         // Open the guard and re-plan.
-                        plot.constant().applyConfig(ResourceLocation.parse("g:enable"), null, null, 0, 1, 0,
+                        plot.constant().applyConfig(Identifier.parse("g:enable"), null, null, 0, 1, 0,
                                 false);
                         var grid = plot.constant().getMainNode().getGrid();
                         state.future = null;
@@ -184,10 +184,10 @@ public class GuardedCraftingGameTests {
 
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
-                    plot.constant().applyConfig(ResourceLocation.parse("g:go"), null, null, 0, 1, 0, false);
+                    plot.constant().applyConfig(Identifier.parse("g:go"), null, null, 0, 1, 0, false);
                     plot.provider().getLogic().getPatternInv().setItemDirect(0,
                             plainPattern(new ItemStack(Items.OAK_PLANKS), 4, new ItemStack(Items.CRAFTING_TABLE)));
-                    plot.provider().applyGuardConfig(ResourceLocation.parse("g:go"), 4, 0, true, null, 0);
+                    plot.provider().applyGuardConfig(Identifier.parse("g:go"), 4, 0, true, null, 0);
                 })
                 .thenExecuteAfter(40, () -> {
                     var grid = plot.constant().getMainNode().getGrid();
@@ -203,7 +203,7 @@ public class GuardedCraftingGameTests {
                     if (!state.submitted) {
                         // Close the guard BEFORE submitting: the plan already carries the
                         // pattern, so only the push gate can stop execution now.
-                        plot.constant().applyConfig(ResourceLocation.parse("g:go"), null, null, 0, 0, 0,
+                        plot.constant().applyConfig(Identifier.parse("g:go"), null, null, 0, 0, 0,
                                 false);
                         state.submitted = true;
                         var grid = plot.constant().getMainNode().getGrid();
@@ -218,7 +218,7 @@ public class GuardedCraftingGameTests {
                 .thenExecuteAfter(90, () -> {
                     helper.assertTrue(countItems(helper, new BlockPos(2, 1, 3)) == 0,
                             "no push may happen while the guard is closed");
-                    plot.constant().applyConfig(ResourceLocation.parse("g:go"), null, null, 0, 1, 0, false);
+                    plot.constant().applyConfig(Identifier.parse("g:go"), null, null, 0, 1, 0, false);
                 })
                 .thenExecuteAfter(80, () -> {
                     int pushed = countItems(helper, new BlockPos(2, 1, 3));
@@ -240,7 +240,7 @@ public class GuardedCraftingGameTests {
 
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
-                    plot.constant().applyConfig(ResourceLocation.parse("g:alt"), null, null, 0, 0, 0, false);
+                    plot.constant().applyConfig(Identifier.parse("g:alt"), null, null, 0, 0, 0, false);
                     // Pattern A needs planks (absent). Pattern B crafts from iron but is
                     // guarded behind g:alt > 0.
                     plot.provider().getLogic().getPatternInv().setItemDirect(0,
@@ -249,7 +249,7 @@ public class GuardedCraftingGameTests {
                             GuardedPattern.wrap(
                                     plainPattern(new ItemStack(Items.IRON_INGOT), 2,
                                             new ItemStack(Items.CRAFTING_TABLE)),
-                                    ResourceLocation.parse("g:alt"), 4, 0));
+                                    Identifier.parse("g:alt"), 4, 0));
                 })
                 .thenExecuteAfter(40, () -> {
                     var grid = plot.constant().getMainNode().getGrid();
@@ -267,7 +267,7 @@ public class GuardedCraftingGameTests {
                             helper.fail("with the per-pattern guard closed, planning must fail");
                         }
                         state.firstChecked = true;
-                        plot.constant().applyConfig(ResourceLocation.parse("g:alt"), null, null, 0, 1, 0,
+                        plot.constant().applyConfig(Identifier.parse("g:alt"), null, null, 0, 1, 0,
                                 false);
                         var grid = plot.constant().getMainNode().getGrid();
                         state.future = null;
@@ -290,17 +290,17 @@ public class GuardedCraftingGameTests {
     @GameTest(template = "empty5", timeoutTicks = 600)
     public void priorityChannelSteersPushes(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.OAK_PLANKS, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST,
                 null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         var constant = (LogicPart) PartHelper.setPart(helper.getLevel(),
                 helper.absolutePos(new BlockPos(2, 1, 1)), Direction.DOWN, null,
                 AE2Logistics.CONSTANT_PART.get());
@@ -323,18 +323,18 @@ public class GuardedCraftingGameTests {
 
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
-                    state.first = (GuardedPatternProviderBlockEntity) helper.getBlockEntity(new BlockPos(2, 1, 2));
-                    state.second = (GuardedPatternProviderBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1));
-                    if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+                    state.first = (GuardedPatternProviderBlockEntity) helper.getBlockEntity(new BlockPos(2, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
+                    state.second = (GuardedPatternProviderBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
+                    if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
                         chest.setItem(1, new ItemStack(Items.IRON_INGOT, 8));
                     }
-                    constant.applyConfig(ResourceLocation.parse("p:favor"), null, null, 0, 10, 0, false);
+                    constant.applyConfig(Identifier.parse("p:favor"), null, null, 0, 10, 0, false);
                     state.first.getLogic().getPatternInv().setItemDirect(0,
                             plainPattern(new ItemStack(Items.OAK_PLANKS), 4, new ItemStack(Items.CRAFTING_TABLE)));
                     state.second.getLogic().getPatternInv().setItemDirect(0,
                             plainPattern(new ItemStack(Items.IRON_INGOT), 2, new ItemStack(Items.CRAFTING_TABLE)));
                     // First provider follows the signal, second sits at a fixed 5.
-                    state.first.applyGuardConfig(null, 4, 0, true, ResourceLocation.parse("p:favor"), 0);
+                    state.first.applyGuardConfig(null, 4, 0, true, Identifier.parse("p:favor"), 0);
                     state.second.applyGuardConfig(null, 4, 0, true, null, 5);
                 })
                 .thenExecuteAfter(40, () -> {
@@ -368,7 +368,7 @@ public class GuardedCraftingGameTests {
                     for (var cpu : grid.getCraftingService().getCpus()) {
                         cpu.cancelJob();
                     }
-                    constant.applyConfig(ResourceLocation.parse("p:favor"), null, null, 0, 1, 0, false);
+                    constant.applyConfig(Identifier.parse("p:favor"), null, null, 0, 1, 0, false);
                     state.submitted = false;
                     state.secondPhase = true;
                 })
@@ -406,27 +406,27 @@ public class GuardedCraftingGameTests {
     @GameTest(template = "empty5", timeoutTicks = 600)
     public void wrapperIsInertInVanillaProvider(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.OAK_PLANKS, 8));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)), Direction.WEST,
                 null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         var constant = (LogicPart) PartHelper.setPart(helper.getLevel(),
                 helper.absolutePos(new BlockPos(2, 1, 1)), Direction.DOWN, null,
                 AE2Logistics.CONSTANT_PART.get());
         helper.setBlock(new BlockPos(2, 1, 2),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         helper.setBlock(new BlockPos(2, 1, 3), Blocks.BARREL);
 
         var wrapped = GuardedPattern.wrap(
                 plainPattern(new ItemStack(Items.OAK_PLANKS), 4, new ItemStack(Items.CRAFTING_TABLE)),
-                ResourceLocation.parse("g:never"), 4, 0);
+                Identifier.parse("g:never"), 4, 0);
 
         var state = new Object() {
             Future<ICraftingPlan> future;
@@ -435,7 +435,7 @@ public class GuardedCraftingGameTests {
 
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
-                    if (helper.getBlockEntity(new BlockPos(2, 1, 2)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity vanilla) {
+                    if (helper.getBlockEntity(new BlockPos(2, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity vanilla) {
                         vanilla.getLogic().getPatternInv().setItemDirect(0, wrapped);
                     } else {
                         helper.fail("no vanilla provider");

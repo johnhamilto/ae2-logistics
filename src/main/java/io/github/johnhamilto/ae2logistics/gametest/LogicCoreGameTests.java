@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -29,7 +29,7 @@ public class LogicCoreGameTests {
     private static final String EMPTY = "empty5";
 
     private static LogicCoreBlockEntity core(GameTestHelper helper, BlockPos pos) {
-        var be = helper.getBlockEntity(pos);
+        var be = helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class);
         helper.assertTrue(be instanceof LogicCoreBlockEntity, "no logic core at " + pos);
         return (LogicCoreBlockEntity) be;
     }
@@ -38,7 +38,7 @@ public class LogicCoreGameTests {
     @GameTest(template = EMPTY, timeoutTicks = 400)
     public void logicCoreEvaluatesChain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(1, 2, 1), AE2Logistics.LOGIC_CORE.get());
 
         helper.startSequence()
@@ -70,15 +70,15 @@ public class LogicCoreGameTests {
     @GameTest(template = EMPTY, timeoutTicks = 400)
     public void logicCoreSensorReadsStorage(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), busPos, null, null, (IPartItem<?>) cable);
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.IRON_INGOT, 10));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), busPos, Direction.WEST, null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1), AE2Logistics.LOGIC_CORE.get());
 
@@ -105,10 +105,10 @@ public class LogicCoreGameTests {
     @GameTest(template = EMPTY, timeoutTicks = 400)
     public void logicCoreEntriesConsumeChannels(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:controller")));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:controller")));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), null, null,
                 (IPartItem<?>) cable);
         helper.setBlock(new BlockPos(2, 1, 1), AE2Logistics.LOGIC_CORE.get());
@@ -140,7 +140,7 @@ public class LogicCoreGameTests {
     @GameTest(template = EMPTY, timeoutTicks = 400)
     public void logicCoreTransfersEntries(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(1, 2, 1), AE2Logistics.LOGIC_CORE.get());
         helper.setBlock(new BlockPos(1, 1, 2), AE2Logistics.LOGIC_CORE.get());
 

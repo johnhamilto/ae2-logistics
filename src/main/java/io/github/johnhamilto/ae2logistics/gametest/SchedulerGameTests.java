@@ -7,7 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -25,17 +25,17 @@ public class SchedulerGameTests {
 
     private static final String EMPTY = "empty5";
 
-    private static final ResourceLocation SRC = ResourceLocation.parse("test:src");
-    private static final ResourceLocation FLAG = ResourceLocation.parse("test:flag");
-    private static final ResourceLocation X = ResourceLocation.parse("test:x");
-    private static final ResourceLocation Y = ResourceLocation.parse("test:y");
+    private static final Identifier SRC = Identifier.parse("test:src");
+    private static final Identifier FLAG = Identifier.parse("test:flag");
+    private static final Identifier X = Identifier.parse("test:x");
+    private static final Identifier Y = Identifier.parse("test:y");
 
     /** Places an energy cell at (1,1,1) and a cable bus with a center cable at (2,1,1). */
     private static BlockPos setupNetwork(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         helper.assertTrue(cable instanceof IPartItem<?>, "fluix glass cable must be a part item");
         PartHelper.setPart(helper.getLevel(), busPos, null, null, (IPartItem<?>) cable);
         return busPos;
@@ -132,13 +132,13 @@ public class SchedulerGameTests {
         var busPos = setupNetwork(helper);
 
         helper.setBlock(new BlockPos(3, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(3, 1, 1)) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
             chest.setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT, 34));
         } else {
             helper.fail("no chest block entity");
         }
 
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         helper.assertTrue(storageBus instanceof IPartItem<?>, "storage bus must be a part item");
         PartHelper.setPart(helper.getLevel(), busPos, Direction.EAST, null, (IPartItem<?>) storageBus);
 

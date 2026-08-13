@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -28,7 +28,7 @@ import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 public class SchedulerStretchGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -47,31 +47,31 @@ public class SchedulerStretchGameTests {
      */
     private static void buildStallPlot(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 2));
         helper.setBlock(new BlockPos(1, 1, 1), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 1)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.OAK_PLANKS, 32));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(2, 1, 1)),
                 Direction.WEST, null, (IPartItem<?>) storageBus);
         helper.setBlock(new BlockPos(2, 2, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:1k_crafting_storage")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:1k_crafting_storage")));
         helper.setBlock(new BlockPos(2, 1, 3),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:pattern_provider")));
         helper.setBlock(new BlockPos(1, 1, 2), AE2Logistics.JOB_SCHEDULER.get());
     }
 
     private static JobSchedulerBlockEntity scheduler(GameTestHelper helper) {
-        var be = helper.getBlockEntity(new BlockPos(1, 1, 2));
+        var be = helper.getBlockEntity(new BlockPos(1, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
         helper.assertTrue(be instanceof JobSchedulerBlockEntity, "no scheduler");
         return (JobSchedulerBlockEntity) be;
     }
 
     private static void armProvider(GameTestHelper helper) {
-        if (helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity provider) {
+        if (helper.getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof appeng.blockentity.crafting.PatternProviderBlockEntity provider) {
             provider.getLogic().getPatternInv().setItemDirect(0, tablePattern());
             provider.getLogic().updatePatterns();
         } else {
@@ -147,17 +147,17 @@ public class SchedulerStretchGameTests {
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void schedulerRulesTransferViaSettings(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(1, 2, 1), AE2Logistics.JOB_SCHEDULER.get());
         helper.setBlock(new BlockPos(1, 1, 2), AE2Logistics.JOB_SCHEDULER.get());
 
         helper.startSequence()
                 .thenExecuteAfter(20, () -> {
-                    var source = (JobSchedulerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 1));
-                    var target = (JobSchedulerBlockEntity) helper.getBlockEntity(new BlockPos(1, 1, 2));
+                    var source = (JobSchedulerBlockEntity) helper.getBlockEntity(new BlockPos(1, 2, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
+                    var target = (JobSchedulerBlockEntity) helper.getBlockEntity(new BlockPos(1, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
                     source.setRuleTarget(0, new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1));
                     source.applyRuleConfig(0, 5, 2, JobSchedulerBlockEntity.CLASS_MAINT,
-                            ResourceLocation.parse("g:x"), 30, true);
+                            Identifier.parse("g:x"), 30, true);
                     target.importTransferSettings(source.exportTransferSettings(null), null);
 
                     var rule = target.rule(0);
@@ -167,7 +167,7 @@ public class SchedulerStretchGameTests {
                     helper.assertTrue(rule.floor == 5 && rule.batch == 2, "floor/batch must transfer");
                     helper.assertTrue(rule.jobClass == JobSchedulerBlockEntity.CLASS_MAINT,
                             "class must transfer");
-                    helper.assertTrue(ResourceLocation.parse("g:x").equals(rule.guard),
+                    helper.assertTrue(Identifier.parse("g:x").equals(rule.guard),
                             "guard must transfer");
                     helper.assertTrue(rule.deadlineSeconds == 30 && rule.preempt,
                             "deadline and preempt must transfer");

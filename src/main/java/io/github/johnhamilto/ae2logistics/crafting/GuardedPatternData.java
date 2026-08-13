@@ -6,7 +6,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -14,11 +14,11 @@ import net.minecraft.world.item.ItemStack;
  * condition (signal channel OP constant). The guard is enforced by the Guarded Pattern
  * Provider; in any other provider the pattern behaves exactly like its inner pattern.
  */
-public record GuardedPatternData(ItemStack inner, ResourceLocation channel, int op, long value) {
+public record GuardedPatternData(ItemStack inner, Identifier channel, int op, long value) {
 
     public static final Codec<GuardedPatternData> CODEC = RecordCodecBuilder.create(builder -> builder.group(
             ItemStack.CODEC.fieldOf("inner").forGetter(GuardedPatternData::inner),
-            ResourceLocation.CODEC.fieldOf("channel").forGetter(GuardedPatternData::channel),
+            Identifier.CODEC.fieldOf("channel").forGetter(GuardedPatternData::channel),
             Codec.INT.fieldOf("op").forGetter(GuardedPatternData::op),
             Codec.LONG.fieldOf("value").forGetter(GuardedPatternData::value))
             .apply(builder, GuardedPatternData::new));
@@ -26,7 +26,7 @@ public record GuardedPatternData(ItemStack inner, ResourceLocation channel, int 
     public static final StreamCodec<RegistryFriendlyByteBuf, GuardedPatternData> STREAM_CODEC =
             StreamCodec.composite(
                     ItemStack.STREAM_CODEC, GuardedPatternData::inner,
-                    ResourceLocation.STREAM_CODEC, GuardedPatternData::channel,
+                    Identifier.STREAM_CODEC, GuardedPatternData::channel,
                     ByteBufCodecs.VAR_INT, GuardedPatternData::op,
                     ByteBufCodecs.VAR_LONG, GuardedPatternData::value,
                     GuardedPatternData::new);

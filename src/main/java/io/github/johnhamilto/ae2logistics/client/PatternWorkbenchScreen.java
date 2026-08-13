@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -17,7 +17,7 @@ import appeng.api.ids.AEComponents;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
+import appeng.util.Icon;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -254,7 +254,7 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
                     .map(m -> "Match: same item, damage band " + m.getSerializedName())
                     .orElse("Match: any variant (ignores damage/components)"))
                     .withStyle(net.minecraft.ChatFormatting.AQUA);
-            case TAG -> Component.literal("Match: tag #" + spec.tag().map(ResourceLocation::toString).orElse("?"))
+            case TAG -> Component.literal("Match: tag #" + spec.tag().map(Identifier::toString).orElse("?"))
                     .withStyle(net.minecraft.ChatFormatting.GOLD);
             case ANY_OF -> Component.literal("Match: any of " + (spec.alternatives().size() + 1) + " items")
                     .withStyle(net.minecraft.ChatFormatting.LIGHT_PURPLE);

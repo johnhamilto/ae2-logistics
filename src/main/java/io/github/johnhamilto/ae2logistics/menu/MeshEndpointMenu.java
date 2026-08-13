@@ -145,7 +145,7 @@ public class MeshEndpointMenu extends AEBaseMenu {
                     endpoint.priority(), MeshRegistry.statusOf(endpoint), endpoint.meLinkState(),
                     endpoint == part, connectedDisplay(endpointHost, endpoint),
                     new ItemStack(endpoint.getPartItem().asItem()),
-                    level == null ? "" : level.dimension().location().toString()));
+                    level == null ? "" : level.dimension().identifier().toString()));
         }
         return new Roster(List.copyOf(rows), linked.size());
     }

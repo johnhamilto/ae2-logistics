@@ -7,7 +7,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
@@ -29,16 +29,16 @@ public final class SignalCommands {
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("signal")
                         .then(Commands.literal("set")
-                                .then(Commands.argument("channel", ResourceLocationArgument.id())
+                                .then(Commands.argument("channel", IdentifierArgument.id())
                                         .then(Commands.argument("value", LongArgumentType.longArg(0))
                                                 .executes(SignalCommands::setSignal))))
                         .then(Commands.literal("get")
-                                .then(Commands.argument("channel", ResourceLocationArgument.id())
+                                .then(Commands.argument("channel", IdentifierArgument.id())
                                         .executes(SignalCommands::getSignal)))
                         .then(Commands.literal("list")
                                 .executes(SignalCommands::listSignals))
                         .then(Commands.literal("card")
-                                .then(Commands.argument("channel", ResourceLocationArgument.id())
+                                .then(Commands.argument("channel", IdentifierArgument.id())
                                         .executes(SignalCommands::giveCard)))));
     }
 
@@ -58,7 +58,7 @@ public final class SignalCommands {
 
     private static int giveCard(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         var player = context.getSource().getPlayerOrException();
-        var channel = ResourceLocationArgument.getId(context, "channel");
+        var channel = IdentifierArgument.getId(context, "channel");
         player.getInventory().placeItemBackInInventory(SignalCardItem.bound(channel));
         context.getSource().sendSuccess(() -> Component.literal("Signal Card bound to " + channel), false);
         return 1;
@@ -66,7 +66,7 @@ public final class SignalCommands {
 
     private static int setSignal(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         var bank = targetedBank(context.getSource());
-        var channel = ResourceLocationArgument.getId(context, "channel");
+        var channel = IdentifierArgument.getId(context, "channel");
         var value = LongArgumentType.getLong(context, "value");
         bank.setSignal(channel, value);
         context.getSource().sendSuccess(
@@ -76,7 +76,7 @@ public final class SignalCommands {
 
     private static int getSignal(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         var bank = targetedBank(context.getSource());
-        var channel = ResourceLocationArgument.getId(context, "channel");
+        var channel = IdentifierArgument.getId(context, "channel");
         var value = bank.getSignal(channel);
         context.getSource().sendSuccess(
                 () -> Component.literal(channel + " = " + value), false);

@@ -82,14 +82,14 @@ public record CompiledQuery(String source, QueryParser.Node root) {
     }
 
     /** Signal channels this query's own AST references (not through @refs). */
-    public java.util.Set<net.minecraft.resources.ResourceLocation> referencedSignals() {
-        var channels = new java.util.HashSet<net.minecraft.resources.ResourceLocation>();
+    public java.util.Set<net.minecraft.resources.Identifier> referencedSignals() {
+        var channels = new java.util.HashSet<net.minecraft.resources.Identifier>();
         collectSignals(root, channels);
         return channels;
     }
 
     private static void collectSignals(QueryParser.Node node,
-            java.util.Set<net.minecraft.resources.ResourceLocation> out) {
+            java.util.Set<net.minecraft.resources.Identifier> out) {
         switch (node) {
             case QueryParser.And and -> {
                 collectSignals(and.left(), out);

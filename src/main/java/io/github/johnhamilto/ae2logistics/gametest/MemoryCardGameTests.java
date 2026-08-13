@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -28,7 +28,7 @@ import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 public class MemoryCardGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -36,7 +36,7 @@ public class MemoryCardGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void memoryCardRoundTripsLogicConfig(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 1, 1));
@@ -51,16 +51,16 @@ public class MemoryCardGameTests {
                 AE2Logistics.STOCK_SENSOR_PART.get());
 
         helper.runAfterDelay(10, () -> {
-            sourceConstant.applyConfig(ResourceLocation.parse("test:card"), null, null, 3, 42, 7, true);
+            sourceConstant.applyConfig(Identifier.parse("test:card"), null, null, 3, 42, 7, true);
             var constantSettings = sourceConstant.exportSettings(SettingsFrom.MEMORY_CARD);
             targetConstant.importSettings(SettingsFrom.MEMORY_CARD, constantSettings, null);
-            helper.assertTrue(ResourceLocation.parse("test:card").equals(targetConstant.writtenChannelRaw()),
+            helper.assertTrue(Identifier.parse("test:card").equals(targetConstant.writtenChannelRaw()),
                     "output channel must round-trip");
             helper.assertTrue(targetConstant.valueARaw() == 42 && targetConstant.valueBRaw() == 7
                     && targetConstant.opRaw() == 3 && targetConstant.flagRaw(),
                     "op, values, and flag must round-trip");
 
-            sourceSensor.applyConfig(ResourceLocation.parse("test:stock"), null, null, 0, 0, 0, false);
+            sourceSensor.applyConfig(Identifier.parse("test:stock"), null, null, 0, 0, 0, false);
             sourceSensor.setWatchedKey(new GenericStack(AEItemKey.of(Items.IRON_INGOT), 1));
             var sensorSettings = sourceSensor.exportSettings(SettingsFrom.MEMORY_CARD);
             targetSensor.importSettings(SettingsFrom.MEMORY_CARD, sensorSettings, null);
@@ -75,7 +75,7 @@ public class MemoryCardGameTests {
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void memoryCardRoundTripsMeshConfig(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(2, 1, 1));

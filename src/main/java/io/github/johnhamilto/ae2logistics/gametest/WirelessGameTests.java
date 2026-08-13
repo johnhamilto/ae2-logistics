@@ -6,7 +6,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -30,13 +30,13 @@ public class WirelessGameTests {
     private static final String EMPTY = "empty5";
 
     private static WirelessBridgeBlockEntity bridge(GameTestHelper helper, BlockPos pos) {
-        var be = helper.getBlockEntity(pos);
+        var be = helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class);
         helper.assertTrue(be instanceof WirelessBridgeBlockEntity, "no bridge at " + pos);
         return (WirelessBridgeBlockEntity) be;
     }
 
     private static DenseWapBlockEntity wap(GameTestHelper helper, BlockPos pos) {
-        var be = helper.getBlockEntity(pos);
+        var be = helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class);
         helper.assertTrue(be instanceof DenseWapBlockEntity, "no dense WAP at " + pos);
         return (DenseWapBlockEntity) be;
     }
@@ -54,18 +54,18 @@ public class WirelessGameTests {
     @GameTest(template = EMPTY, timeoutTicks = 400)
     public void bridgeCarriesStorageThroughCoverage(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(0, 1, 1), AE2Logistics.DENSE_WAP.get());
 
         helper.setBlock(new BlockPos(3, 1, 3), AE2Logistics.WIRELESS_BRIDGE.get());
         var cablePos = helper.absolutePos(new BlockPos(2, 1, 3));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), cablePos, null, null, (IPartItem<?>) cable);
         helper.setBlock(new BlockPos(1, 1, 3), Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 3)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.IRON_INGOT, 10));
         }
-        var storageBus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var storageBus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         PartHelper.setPart(helper.getLevel(), cablePos, Direction.WEST, null, (IPartItem<?>) storageBus);
 
         helper.startSequence()
@@ -88,7 +88,7 @@ public class WirelessGameTests {
     @GameTest(template = EMPTY, timeoutTicks = 400)
     public void bridgeRespectsRangeBinary(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(0, 1, 1), AE2Logistics.DENSE_WAP.get());
         helper.setBlock(new BlockPos(4, 1, 4), AE2Logistics.WIRELESS_BRIDGE.get());
 
@@ -122,10 +122,10 @@ public class WirelessGameTests {
     @GameTest(template = EMPTY, timeoutTicks = 400)
     public void bridgeHandsOverBetweenAccessPoints(GameTestHelper helper) {
         var cablePos = helper.absolutePos(new BlockPos(0, 1, 2));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), cablePos, null, null, (IPartItem<?>) cable);
         helper.setBlock(new BlockPos(1, 1, 2),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(0, 1, 1), AE2Logistics.DENSE_WAP.get());
         helper.setBlock(new BlockPos(0, 1, 3), AE2Logistics.DENSE_WAP.get());
         helper.setBlock(new BlockPos(2, 1, 1), AE2Logistics.WIRELESS_BRIDGE.get());
@@ -157,17 +157,17 @@ public class WirelessGameTests {
         // always touches a grid; the bridge follows whichever grid it joined.
         var wapPos = new BlockPos(1, 2, 1);
         helper.setBlock(wapPos,
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:wireless_access_point")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:wireless_access_point")));
         for (var dir : Direction.values()) {
             helper.setBlock(wapPos.relative(dir),
-                    BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                    BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         }
         helper.setBlock(new BlockPos(3, 1, 3), AE2Logistics.WIRELESS_BRIDGE.get());
 
         helper.startSequence()
                 .thenExecuteAfter(20, () -> anchor(helper, new BlockPos(3, 1, 3), wapPos))
                 .thenExecuteAfter(80, () -> {
-                    var be = helper.getBlockEntity(wapPos);
+                    var be = helper.getBlockEntity(wapPos, net.minecraft.world.level.block.entity.BlockEntity.class);
                     helper.assertTrue(be instanceof IWirelessAccessPoint, "no AE2 WAP");
                     var wap = (IWirelessAccessPoint) be;
                     helper.assertTrue(wap.isActive(), "AE2 WAP must be active");

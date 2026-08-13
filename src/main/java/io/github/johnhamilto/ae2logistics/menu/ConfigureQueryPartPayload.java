@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import appeng.api.parts.IPartHost;
@@ -47,7 +47,7 @@ public record ConfigureQueryPartPayload(BlockPos pos, byte side, String channel,
         if (part instanceof QuerySensorPart sensor) {
             var channelText = payload.channel.trim();
             sensor.applySensorConfig(
-                    channelText.isEmpty() ? null : ResourceLocation.tryParse(channelText),
+                    channelText.isEmpty() ? null : Identifier.tryParse(channelText),
                     payload.source);
         } else if (part instanceof QueryExportBusPart bus) {
             bus.applyBusConfig(payload.source);

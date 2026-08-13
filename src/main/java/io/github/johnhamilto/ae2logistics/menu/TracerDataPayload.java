@@ -8,13 +8,13 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 
 public record TracerDataPayload(int containerId, List<TracerTerminalMenu.Entry> entries,
-        @Nullable ResourceLocation selected, long[] samples) implements CustomPacketPayload {
+        @Nullable Identifier selected, long[] samples) implements CustomPacketPayload {
 
     public static final Type<TracerDataPayload> TYPE = new Type<>(AE2Logistics.id("tracer_data"));
 
@@ -23,12 +23,12 @@ public record TracerDataPayload(int containerId, List<TracerTerminalMenu.Entry> 
                 buffer.writeVarInt(payload.containerId);
                 buffer.writeVarInt(payload.entries.size());
                 for (var entry : payload.entries) {
-                    buffer.writeResourceLocation(entry.channel());
+                    buffer.writeIdentifier(entry.channel());
                     buffer.writeVarLong(entry.value());
                 }
                 buffer.writeBoolean(payload.selected != null);
                 if (payload.selected != null) {
-                    buffer.writeResourceLocation(payload.selected);
+                    buffer.writeIdentifier(payload.selected);
                 }
                 buffer.writeVarInt(payload.samples.length);
                 for (long sample : payload.samples) {
@@ -41,9 +41,9 @@ public record TracerDataPayload(int containerId, List<TracerTerminalMenu.Entry> 
                 var entries = new ArrayList<TracerTerminalMenu.Entry>(count);
                 for (int i = 0; i < count; i++) {
                     entries.add(new TracerTerminalMenu.Entry(
-                            buffer.readResourceLocation(), buffer.readVarLong()));
+                            buffer.readIdentifier(), buffer.readVarLong()));
                 }
-                ResourceLocation selected = buffer.readBoolean() ? buffer.readResourceLocation() : null;
+                Identifier selected = buffer.readBoolean() ? buffer.readIdentifier() : null;
                 var samples = new long[buffer.readVarInt()];
                 for (int i = 0; i < samples.length; i++) {
                     samples[i] = buffer.readVarLong();

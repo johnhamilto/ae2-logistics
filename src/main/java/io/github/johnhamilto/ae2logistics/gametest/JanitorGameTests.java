@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
@@ -26,19 +26,19 @@ import io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity;
 public class JanitorGameTests {
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
     private static StorageBusPart placeBus(GameTestHelper helper, BlockPos pos, Direction side) {
-        var bus = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var bus = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         return (StorageBusPart) PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), side,
                 null, (IPartItem<?>) bus);
     }
 
     private static int count(GameTestHelper helper, BlockPos pos, net.minecraft.world.item.Item item) {
         int total = 0;
-        if (helper.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             for (int i = 0; i < chest.getContainerSize(); i++) {
                 if (chest.getItem(i).is(item)) {
                     total += chest.getItem(i).getCount();
@@ -56,7 +56,7 @@ public class JanitorGameTests {
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void janitorRehomesMisplacedStock(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         placeCable(helper, new BlockPos(2, 1, 1));
         helper.setBlock(new BlockPos(3, 1, 1), AE2Logistics.STORAGE_JANITOR.get());
@@ -64,7 +64,7 @@ public class JanitorGameTests {
         // General storage: unfiltered bus on chest A, holding misplaced tables.
         placeBus(helper, new BlockPos(1, 1, 1), Direction.NORTH);
         helper.setBlock(new BlockPos(1, 1, 0), net.minecraft.world.level.block.Blocks.CHEST);
-        if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.CRAFTING_TABLE, 40));
         }
         // The new home: partitioned, higher priority, on chest B.
@@ -74,7 +74,7 @@ public class JanitorGameTests {
         homeBus.getConfig().setStack(0, new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1));
 
         helper.runAfterDelay(40, () -> {
-            if (helper.getBlockEntity(new BlockPos(3, 1, 1))
+            if (helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class)
                     instanceof StorageJanitorBlockEntity janitor) {
                 janitor.toggle();
                 helper.assertTrue(janitor.running(), "janitor must start with stock present");
@@ -84,7 +84,7 @@ public class JanitorGameTests {
         });
 
         helper.runAfterDelay(140, () -> {
-            var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1));
+            var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
             helper.assertTrue(!janitor.running(), "two-pass run must finish on its own");
             helper.assertTrue(janitor.heldCount() == 0, "held buffer must be empty");
             helper.assertTrue(janitor.processedTotal() > 0, "run must have processed stock");
@@ -100,7 +100,7 @@ public class JanitorGameTests {
     @GameTest(template = "empty5", timeoutTicks = 400)
     public void janitorLeavesSettledStockAlone(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
         helper.setBlock(new BlockPos(2, 1, 1), AE2Logistics.STORAGE_JANITOR.get());
 
@@ -108,18 +108,18 @@ public class JanitorGameTests {
         helper.setBlock(new BlockPos(1, 1, 0), net.minecraft.world.level.block.Blocks.CHEST);
         bus.setPriority(10);
         bus.getConfig().setStack(0, new GenericStack(AEItemKey.of(Items.OAK_LOG), 1));
-        if (helper.getBlockEntity(new BlockPos(1, 1, 0)) instanceof ChestBlockEntity chest) {
+        if (helper.getBlockEntity(new BlockPos(1, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class) instanceof ChestBlockEntity chest) {
             chest.setItem(0, new ItemStack(Items.OAK_LOG, 25));
         }
 
         helper.runAfterDelay(40, () -> {
-            if (helper.getBlockEntity(new BlockPos(2, 1, 1))
+            if (helper.getBlockEntity(new BlockPos(2, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class)
                     instanceof StorageJanitorBlockEntity janitor) {
                 janitor.toggle();
             }
         });
         helper.runAfterDelay(140, () -> {
-            var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(2, 1, 1));
+            var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(2, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
             helper.assertTrue(!janitor.running() && janitor.heldCount() == 0,
                     "run must finish clean");
             helper.assertTrue(count(helper, new BlockPos(1, 1, 0), Items.OAK_LOG) == 25,

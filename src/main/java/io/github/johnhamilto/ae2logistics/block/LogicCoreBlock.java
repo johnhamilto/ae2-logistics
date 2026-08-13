@@ -32,7 +32,7 @@ public class LogicCoreBlock extends Block implements EntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hitResult) {
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer
+        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer
                 && level.getBlockEntity(pos) instanceof LogicCoreBlockEntity core) {
             serverPlayer.openMenu(
                     new SimpleMenuProvider(
@@ -40,6 +40,6 @@ public class LogicCoreBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.logic_core")),
                     buffer -> LogicCoreMenu.writeOpenData(buffer, core));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.sidedSuccess(level.isClientSide());
     }
 }

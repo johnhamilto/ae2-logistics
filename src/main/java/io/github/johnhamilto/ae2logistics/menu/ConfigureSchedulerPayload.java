@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
@@ -63,7 +63,7 @@ public record ConfigureSchedulerPayload(BlockPos pos, long[] floors, long[] batc
         for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
             var guardText = payload.guards[i].trim();
             scheduler.applyRuleConfig(i, payload.floors[i], payload.batches[i], payload.classes[i],
-                    guardText.isEmpty() ? null : ResourceLocation.tryParse(guardText),
+                    guardText.isEmpty() ? null : Identifier.tryParse(guardText),
                     payload.deadlines[i], payload.preempts[i] != 0);
         }
     }

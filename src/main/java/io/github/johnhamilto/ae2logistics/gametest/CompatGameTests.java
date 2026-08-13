@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -35,7 +35,7 @@ public class CompatGameTests {
             return;
         }
         helper.setBlock(new BlockPos(1, 1, 0),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("extendedae:ex_pattern_provider")));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("extendedae:ex_pattern_provider")));
 
         helper.runAfterDelay(10, () -> {
             var hostPos = helper.absolutePos(new BlockPos(1, 1, 1));
