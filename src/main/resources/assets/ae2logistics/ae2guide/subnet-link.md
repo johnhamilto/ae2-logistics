@@ -21,7 +21,9 @@ with the main network - and the main network mounts the subnet's storage.
 slots, the same fuzzy/inverter/capacity/void cards, access modes,
 filter-on-extract, priority, and memory-card support. If you know how to
 configure a storage bus, you already know this part. One channel on the main
-network, exactly like the bus it replaces.
+network, exactly like the bus it replaces. It also takes the
+[input cards](gated-storage-bus.md) - Conform and Stack Limiter - gating what
+the main network may push into the subnet.
 
 - Devices on the subnet share its power feed and AE2's normal ad-hoc limit of
   eight channels (add a controller on the subnet for more).

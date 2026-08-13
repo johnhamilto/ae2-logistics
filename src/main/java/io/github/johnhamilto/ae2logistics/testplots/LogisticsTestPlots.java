@@ -219,6 +219,26 @@ public final class LogisticsTestPlots {
     }
 
     /**
+     * Gated storage buses: the left lane wears a Conform Card over an iron-seeded
+     * chest (deposit iron from the terminal and it lands; anything else is refused),
+     * the right lane a Stack Limiter Card (one item goes in; take it and the next
+     * single follows).
+     */
+    @TestPlot("logistics_gated_storage_bus")
+    public static void gatedStorageBus(PlotBuilder plot) {
+        plot.creativeEnergyCell("0 0 0");
+        plot.cable("1 0 0").part(Direction.NORTH, AEParts.TERMINAL);
+        plot.cable("2 0 0").part(Direction.UP, def(AE2Logistics.GATED_STORAGE_BUS_PART),
+                part -> part.getUpgrades()
+                        .addItems(new ItemStack(AE2Logistics.CONFORM_CARD.get())));
+        plot.chest("2 1 0", new ItemStack(Items.IRON_INGOT, 8));
+        plot.cable("3 0 0").part(Direction.UP, def(AE2Logistics.GATED_STORAGE_BUS_PART),
+                part -> part.getUpgrades()
+                        .addItems(new ItemStack(AE2Logistics.STACK_LIMITER_CARD.get())));
+        plot.chest("3 1 0");
+    }
+
+    /**
      * Compat bed: an ExtendedAE provider virtualized through pre-linked provider
      * tunnels - drop a pattern into the Ex Pattern Provider and request. Builds a bare
      * sign pedestal instead when ExtendedAE is not in the dev runtime.

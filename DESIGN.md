@@ -1547,6 +1547,24 @@ mount with card-aware gating, and Subnet Link itself, being a StorageBusPart, wo
 carry both cards for free. Upstreaming a card-application hook is the alternative;
 decide whether stock-bus support is worth the PR before building the subclass.
 
+**Shipped 0.37.0, decisions as built.** The subclass, not the upstream PR (unbounded
+latency; revisit if AE2 ever grows a card-application hook). The seam turned out even
+cheaper than replicating the mount: `mountInventories(IStorageMounts)` receives the
+mount *collector*, so `GatedStorageBusPart` hands `super` a decorator and wraps
+whatever the stock pipeline mounts in an `InputCardGate` — all of AE2's target
+discovery, ticking monitors, and invalidation run untouched. F12.1 shipped as
+**Conform Card** (from the candidate list); F12.2 kept **Stack Limiter Card** with the
+whole-inventory scoping the section leans to (items only; non-item keys pass). Both
+cards also on Subnet Link. Stock bus: our cards are deliberately NOT registered for it
+— an inert socketed card reads as a working one, worse than rejection; a gametest pins
+the rejection. The cell variant (F12.1 note) remains unbuilt. Incidental fix: Subnet
+Link had never registered ANY card associations, so slot validation rejected the four
+stock cards in-game; both bus parts now register fuzzy/inverter/capacity(5)/void plus
+the two input cards. Contains-checks read the configured handler's stack report, so
+direct world edits show at tick granularity while network-side movements show
+immediately; under FILTER_ON_EXTRACT + write-only access the report is empty and the
+gate refuses everything ("can't see it, won't conform to it").
+
 ---
 
 ## 5. Suggested phasing
