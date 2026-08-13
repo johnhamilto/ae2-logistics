@@ -76,6 +76,7 @@ public class LogisticsTestInstance extends GameTestInstance {
         DevGateGameTests.register();
         GuardedCraftingGameTests.register();
         HardeningGameTests.register();
+        InputCardGameTests.register();
         JanitorGameTests.register();
         JobMonitorGameTests.register();
         LogicCoreGameTests.register();

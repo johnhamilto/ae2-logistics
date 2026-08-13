@@ -1,8 +1,8 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "ae2:storage_bus"},
-    {"item": "ae2logistics:regulus_crystal"}
+    "ae2:storage_bus",
+    "ae2logistics:regulus_crystal"
   ],
   "result": {"count": 1, "id": "ae2logistics:gated_storage_bus"}
 }

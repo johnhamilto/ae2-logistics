@@ -2,8 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:basic_card"},
-    {"item": "minecraft:hopper"}
+    "ae2:basic_card",
+    "minecraft:hopper"
   ],
   "result": {"count": 1, "id": "ae2logistics:stack_limiter_card"}
 }

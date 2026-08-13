@@ -153,10 +153,10 @@ public class AE2Logistics {
             () -> new Item.Properties().stacksTo(1));
 
     // Storage bus input cards (DESIGN F12); associations registered in common setup.
-    public static final DeferredItem<Item> CONFORM_CARD = ITEMS.register("conform_card",
-            () -> appeng.api.upgrades.Upgrades.createUpgradeCardItem(new Item.Properties()));
-    public static final DeferredItem<Item> STACK_LIMITER_CARD = ITEMS.register("stack_limiter_card",
-            () -> appeng.api.upgrades.Upgrades.createUpgradeCardItem(new Item.Properties()));
+    public static final DeferredItem<Item> CONFORM_CARD = ITEMS.registerItem("conform_card",
+            appeng.api.upgrades.Upgrades::createUpgradeCardItem);
+    public static final DeferredItem<Item> STACK_LIMITER_CARD = ITEMS.registerItem("stack_limiter_card",
+            appeng.api.upgrades.Upgrades::createUpgradeCardItem);
 
     public static final Supplier<DataComponentType<EncodedAdaptivePattern>> ENCODED_ADAPTIVE_PATTERN = DATA_COMPONENTS
             .register("encoded_adaptive_pattern", () -> DataComponentType.<EncodedAdaptivePattern>builder()

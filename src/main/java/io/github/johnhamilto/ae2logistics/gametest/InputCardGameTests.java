@@ -3,15 +3,12 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
@@ -34,14 +31,21 @@ import io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart;
  * stock storage bus deliberately does NOT take our cards (its card handling is
  * hardcoded upstream; an inert socketed card would look like a working one).
  */
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class InputCardGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("conformGatesBySeededContents", "empty5", 200, InputCardGameTests::conformGatesBySeededContents);
+        LogisticsTestInstance.add("conformInverterCollectsNewOnly", "empty5", 200, InputCardGameTests::conformInverterCollectsNewOnly);
+        LogisticsTestInstance.add("conformFuzzyWidens", "empty5", 200, InputCardGameTests::conformFuzzyWidens);
+        LogisticsTestInstance.add("limiterDripFeedsSingles", "empty5", 200, InputCardGameTests::limiterDripFeedsSingles);
+        LogisticsTestInstance.add("conformIntersectsPartition", "empty5", 200, InputCardGameTests::conformIntersectsPartition);
+        LogisticsTestInstance.add("cardsSocketViaSlotValidation", "empty5", 200, InputCardGameTests::cardsSocketViaSlotValidation);
+    }
 
     private static GatedStorageBusPart buildGatedBusOnChest(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), null, null,
                 (IPartItem<?>) cable);
         var part = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
@@ -52,9 +56,9 @@ public class InputCardGameTests {
     }
 
     private static ChestBlockEntity chest(GameTestHelper helper) {
-        var be = helper.getBlockEntity(new BlockPos(1, 1, 0));
-        helper.assertTrue(be instanceof ChestBlockEntity, "no chest");
-        return (ChestBlockEntity) be;
+        var be = helper.getBlockEntity(new BlockPos(1, 1, 0), ChestBlockEntity.class);
+        helper.assertTrue(be != null, "no chest");
+        return be;
     }
 
     private static MEStorage networkStorage(GameTestHelper helper, GatedStorageBusPart part) {
@@ -70,8 +74,7 @@ public class InputCardGameTests {
     }
 
     /** Conform Card: the chest's live contents ARE the filter; empty target accepts nothing. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void conformGatesBySeededContents(GameTestHelper helper) {
+    public static void conformGatesBySeededContents(GameTestHelper helper) {
         var part = buildGatedBusOnChest(helper);
         part.getUpgrades().addItems(new ItemStack(AE2Logistics.CONFORM_CARD.get()));
         chest(helper).setItem(0, new ItemStack(Items.IRON_INGOT, 4));
@@ -93,8 +96,7 @@ public class InputCardGameTests {
     }
 
     /** Conform + Inverter: accept only what is NOT present - a self-deduplicating chest. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void conformInverterCollectsNewOnly(GameTestHelper helper) {
+    public static void conformInverterCollectsNewOnly(GameTestHelper helper) {
         var part = buildGatedBusOnChest(helper);
         part.getUpgrades().addItems(new ItemStack(AE2Logistics.CONFORM_CARD.get()));
         part.getUpgrades().addItems(new ItemStack(AEItems.INVERTER_CARD));
@@ -111,8 +113,7 @@ public class InputCardGameTests {
     }
 
     /** Conform + Fuzzy: the contains-check widens exactly as partitions widen. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void conformFuzzyWidens(GameTestHelper helper) {
+    public static void conformFuzzyWidens(GameTestHelper helper) {
         var part = buildGatedBusOnChest(helper);
         part.getUpgrades().addItems(new ItemStack(AE2Logistics.CONFORM_CARD.get()));
         part.getUpgrades().addItems(new ItemStack(AEItems.FUZZY_CARD));
@@ -131,8 +132,7 @@ public class InputCardGameTests {
     }
 
     /** Stack Limiter: one item at a time, only while the target holds no items. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void limiterDripFeedsSingles(GameTestHelper helper) {
+    public static void limiterDripFeedsSingles(GameTestHelper helper) {
         var part = buildGatedBusOnChest(helper);
         part.getUpgrades().addItems(new ItemStack(AE2Logistics.STACK_LIMITER_CARD.get()));
 
@@ -153,8 +153,7 @@ public class InputCardGameTests {
     }
 
     /** Conform intersects the partition slots; it never overrides them. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void conformIntersectsPartition(GameTestHelper helper) {
+    public static void conformIntersectsPartition(GameTestHelper helper) {
         var part = buildGatedBusOnChest(helper);
         part.getUpgrades().addItems(new ItemStack(AE2Logistics.CONFORM_CARD.get()));
         part.getConfig().addFilter(Items.IRON_INGOT);
@@ -176,18 +175,17 @@ public class InputCardGameTests {
      * Link never registered any, so no card could physically be inserted in-game).
      * Our cards deliberately stay OUT of the stock storage bus.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void cardsSocketViaSlotValidation(GameTestHelper helper) {
+    public static void cardsSocketViaSlotValidation(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
-                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:fluix_glass_cable"));
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)), null, null,
                 (IPartItem<?>) cable);
         var link = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
                 Direction.UP, null, AE2Logistics.SUBNET_LINK_PART.get());
         var gated = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
                 Direction.NORTH, null, AE2Logistics.GATED_STORAGE_BUS_PART.get());
-        var stockItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2:storage_bus"));
+        var stockItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:storage_bus"));
         var stock = (StorageBusPart) PartHelper.setPart(helper.getLevel(),
                 helper.absolutePos(new BlockPos(1, 1, 1)), Direction.SOUTH, null,
                 (IPartItem<?>) stockItem);

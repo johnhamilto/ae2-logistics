@@ -1,10 +1,7 @@
 package io.github.johnhamilto.ae2logistics.parts;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.storage.IStorageMounts;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 import appeng.parts.storagebus.StorageBusPart;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
@@ -20,9 +17,6 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
  */
 public class GatedStorageBusPart extends StorageBusPart {
 
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/gated_storage_bus"));
-
     public GatedStorageBusPart(IPartItem<?> partItem) {
         super(partItem);
     }
@@ -37,10 +31,5 @@ public class GatedStorageBusPart extends StorageBusPart {
     @Override
     public net.minecraft.world.inventory.MenuType<?> getMenuType() {
         return AE2Logistics.GATED_STORAGE_BUS_MENU.get();
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }
