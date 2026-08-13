@@ -1357,8 +1357,8 @@ crash.
 > tunnel row is now partially superseded: the mesh already carries signals across grids,
 > so a signal P2P tunnel adds AE2-native routing convenience, not new capability.
 >
-> **Status (2026-08-06):** F11.8 (colored wireless connectors) added below — unbuilt,
-> and now the live plan for short-range wireless.
+> **Status (2026-08-12):** F11.8 (colored wireless connectors) shipped 0.35.0 as the
+> ME Wireless Connector — see its status note below.
 
 1. **F11.1 (linking overhaul)** — highest value, lowest risk, ships alone as a useful mod.
 2. **F11.2 (universal)** — moderate, gated on the channel-cost decision.
@@ -1375,6 +1375,18 @@ crash.
 ---
 
 ### F11.8 — Colored wireless connectors (short-range wireless as cable)
+
+> **Status (2026-08-12):** Shipped 0.35.0 as the ME Wireless Connector, as designed —
+> including the pathing bet: the parallel-dense-trunk and wireless-only-island
+> gametests both hold (the trunk carries with the link at 0 channels; the island
+> rides the link at exactly its channel count). Open questions closed: mutual reach
+> (min of the two ranges, gametested), in-place recoloring (dye right-click plus
+> fluix-crystal reset; the Color Applicator's recolor path stops at the cable and
+> never reaches parts), chunk boundaries (an unloading partner drops its node and
+> the link dies with it — F11.5 Q4's answer applies unchanged). Boosters ride AE2's
+> own WAP range curve (16 + boosters^1.5, cap 8) so range feels like AE2 wireless.
+> The dense tier stays deferred. Polish wanted later: smart-cable-style channel
+> display on the part face.
 
 **Added 2026-08-06.** The successor plan for short-range wireless: **decouple it from the
 Wireless Access Point entirely** and ship it as our own wireless cable part. F11.5's

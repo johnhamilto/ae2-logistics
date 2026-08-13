@@ -1,0 +1,6 @@
+{
+  "parent": "ae2logistics:part/wireless_connector_base",
+  "textures": {
+    "lens": "ae2logistics:part/wireless_connector_white"
+  }
+}
