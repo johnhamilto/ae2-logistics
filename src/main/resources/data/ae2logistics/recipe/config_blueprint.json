@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "minecraft:paper"},
-    {"item": "ae2logistics:regulus_crystal"},
-    {"item": "ae2:certus_quartz_crystal"}
+    "minecraft:paper",
+    "ae2logistics:regulus_crystal",
+    "ae2:certus_quartz_crystal"
   ],
-  "result": {"count": 1, "id": "ae2logistics:config_blueprint"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:config_blueprint"
+  }
 }

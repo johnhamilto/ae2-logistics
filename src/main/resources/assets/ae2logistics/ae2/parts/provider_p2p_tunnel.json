@@ -1,0 +1,14 @@
+{
+  "model": {
+    "type": "ae2:composite",
+    "models": [
+      {
+        "type": "ae2:model",
+        "model": "ae2logistics:part/provider_p2p_tunnel"
+      },
+      {
+        "type": "ae2:p2p_tunnel_frequency"
+      }
+    ]
+  }
+}

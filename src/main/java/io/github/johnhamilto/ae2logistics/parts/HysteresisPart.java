@@ -4,9 +4,6 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 
@@ -16,9 +13,6 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
  * "start the farm below 1k, stop it above 10k" behavior.
  */
 public class HysteresisPart extends LogicPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/hysteresis"));
 
     private boolean latched;
 
@@ -56,10 +50,5 @@ public class HysteresisPart extends LogicPart {
     public void readFromNBT(ValueInput data) {
         super.readFromNBT(data);
         latched = data.getBooleanOr("latched", false);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

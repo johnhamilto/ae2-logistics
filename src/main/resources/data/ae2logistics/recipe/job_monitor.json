@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:terminal"},
-    {"item": "ae2:calculation_processor"},
-    {"item": "ae2:crafting_unit"}
+    "ae2:terminal",
+    "ae2:calculation_processor",
+    "ae2:crafting_unit"
   ],
-  "result": {"count": 1, "id": "ae2logistics:job_monitor"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:job_monitor"
+  }
 }

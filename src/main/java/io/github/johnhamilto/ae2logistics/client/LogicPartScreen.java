@@ -5,14 +5,14 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.util.Icon;
-import appeng.client.gui.style.BackgroundGenerator;
+import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -43,10 +43,16 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
 
     public LogicPartScreen(LogicPartMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
-        super(menu, inventory, title, style);
-        this.imageWidth = 200;
+        // One menu type, two dialog sizes: the base class takes its size from the
+        // style doc's generatedBackground, so stretch that before super() reads it.
         // The sensor variant carries a player inventory (to feed the ghost slot by hand).
-        this.imageHeight = menu.type == LogicPartType.STOCK_SENSOR ? 222 : 166;
+        super(menu, inventory, title, withHeight(style,
+                menu.type == LogicPartType.STOCK_SENSOR ? 222 : 166));
+    }
+
+    private static ScreenStyle withHeight(ScreenStyle style, int height) {
+        style.getGeneratedBackground().setHeight(height);
+        return style;
     }
 
     private int controlY() {
@@ -212,7 +218,7 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
     }
 
     private void apply() {
-        PacketDistributor.sendToServer(new ConfigurePartPayload(
+        ClientPacketDistributor.sendToServer(new ConfigurePartPayload(
                 menu.pos,
                 menu.side,
                 fieldText(Field.OUT),
@@ -233,15 +239,14 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
-        // One menu type, two dialog sizes: the style doc carries no background (it
-        // could hold only one size), so the screen draws the generated chrome at its
-        // live size and gives every real slot AE2's standard inset.
-        BackgroundGenerator.draw(imageWidth, imageHeight, guiGraphics, offsetX, offsetY);
+        // The generated chrome comes from the style doc (at the live size set in the
+        // constructor); it carries no slot art, so give every real slot AE2's inset.
+        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         for (var slot : menu.slots) {
             if (slot.isActive()) {
-                Icon.SLOT_BACKGROUND.getBlitter()
+                Blitter.icon(Icon.SLOT_BACKGROUND)
                         .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
             }
         }
@@ -267,17 +272,17 @@ public class LogicPartScreen extends AEBaseScreen<LogicPartMenu> {
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         int y = 22;
         for (var row : rows) {
-            guiGraphics.drawString(font, row.label, 10, y, Palette.LABEL, false);
+            guiGraphics.text(font, row.label, 10, y, Palette.LABEL, false);
             y += 22;
         }
         if (menu.type == LogicPartType.STOCK_SENSOR) {
-            guiGraphics.drawString(font, "Watch:", 10, 34, Palette.LABEL, false);
-            guiGraphics.drawString(font, "click with an item", 32, 49, Palette.HINT, false);
+            guiGraphics.text(font, "Watch:", 10, 34, Palette.LABEL, false);
+            guiGraphics.text(font, "click with an item", 32, 49, Palette.HINT, false);
         }
 
-        guiGraphics.drawString(font, "Out: " + menu.outputValue(), 78, controlY() + 5, Palette.VALUE, false);
+        guiGraphics.text(font, "Out: " + menu.outputValue(), 78, controlY() + 5, Palette.VALUE, false);
     }
 }

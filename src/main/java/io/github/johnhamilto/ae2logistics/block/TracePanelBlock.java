@@ -7,7 +7,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -76,13 +75,10 @@ public class TracePanelBlock extends Block implements EntityBlock {
     }
 
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState,
-            boolean movedByPiston) {
-        boolean gone = !state.is(newState.getBlock());
-        super.onRemove(state, level, pos, newState, movedByPiston);
-        if (gone) {
-            reformNeighborhood(level, pos);
-        }
+    protected void affectNeighborsAfterRemoval(BlockState state, net.minecraft.server.level.ServerLevel level,
+            BlockPos pos, boolean movedByPiston) {
+        super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+        reformNeighborhood(level, pos);
     }
 
     private static void reformNeighborhood(Level level, BlockPos center) {
@@ -99,11 +95,11 @@ public class TracePanelBlock extends Block implements EntityBlock {
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level,
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level,
             BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         var channel = SignalCardItem.getChannel(stack);
         if (channel == null) {
-            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+            return InteractionResult.TRY_WITH_EMPTY_HAND;
         }
         if (!level.isClientSide() && level.getBlockEntity(pos) instanceof TracePanelBlockEntity panel) {
             boolean remove = player.isShiftKeyDown();
@@ -112,7 +108,7 @@ public class TracePanelBlock extends Block implements EntityBlock {
                     ? (remove ? "Trace removed: " : "Trace added: ") + channel
                     : (remove ? "Not bound: " : "Panel full or already bound: ") + channel));
         }
-        return ItemInteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.SUCCESS;
     }
 
     @Override
@@ -129,6 +125,6 @@ public class TracePanelBlock extends Block implements EntityBlock {
                         : "Traces: " + bound));
             }
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.SUCCESS;
     }
 }

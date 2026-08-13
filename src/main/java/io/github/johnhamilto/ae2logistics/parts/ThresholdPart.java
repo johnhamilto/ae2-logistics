@@ -1,16 +1,10 @@
 package io.github.johnhamilto.ae2logistics.parts;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 
 public class ThresholdPart extends LogicPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/threshold"));
 
     public ThresholdPart(IPartItem<?> partItem) {
         super(partItem);
@@ -33,10 +27,5 @@ public class ThresholdPart extends LogicPart {
             default -> a > b;
         };
         context.write(result ? 1 : 0);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

@@ -11,6 +11,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.crafting.ICraftingProvider;
@@ -333,8 +335,12 @@ public class ProviderTunnelGameTests {
                     net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
                     helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
             helper.assertTrue(handler != null, "output tunnel must expose a return item handler");
-            var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
-            helper.assertTrue(rest.isEmpty(), "return insert must be accepted, rest " + rest);
+            int inserted;
+            try (var tx = Transaction.openRoot()) {
+                inserted = handler.insert(ItemResource.of(Items.CRAFTING_TABLE), 5, tx);
+                tx.commit();
+            }
+            helper.assertTrue(inserted == 5, "return insert must be accepted, took " + inserted);
         });
 
         helper.runAfterDelay(50, () -> {
@@ -424,8 +430,12 @@ public class ProviderTunnelGameTests {
                     net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
                     helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
             helper.assertTrue(handler != null, "output endpoint must expose a return item handler");
-            var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
-            helper.assertTrue(rest.isEmpty(), "return insert must be accepted, rest " + rest);
+            int inserted;
+            try (var tx = Transaction.openRoot()) {
+                inserted = handler.insert(ItemResource.of(Items.CRAFTING_TABLE), 5, tx);
+                tx.commit();
+            }
+            helper.assertTrue(inserted == 5, "return insert must be accepted, took " + inserted);
         });
 
         helper.runAfterDelay(50, () -> {
@@ -481,8 +491,12 @@ public class ProviderTunnelGameTests {
                     net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
                     helper.absolutePos(new BlockPos(2, 1, 1)), Direction.UP);
             helper.assertTrue(handler != null, "output endpoint must expose a return item handler");
-            var rest = handler.insertItem(0, new ItemStack(Items.CRAFTING_TABLE, 5), false);
-            helper.assertTrue(rest.isEmpty(), "return insert must be accepted, rest " + rest);
+            int inserted;
+            try (var tx = Transaction.openRoot()) {
+                inserted = handler.insert(ItemResource.of(Items.CRAFTING_TABLE), 5, tx);
+                tx.commit();
+            }
+            helper.assertTrue(inserted == 5, "return insert must be accepted, took " + inserted);
         });
 
         helper.runAfterDelay(50, () -> {
@@ -504,8 +518,8 @@ public class ProviderTunnelGameTests {
     @SuppressWarnings("unchecked")
     private static ItemStack craftingPattern(GameTestHelper helper, String recipeId,
             ItemStack[] grid, ItemStack out) {
-        var holder = helper.getLevel().getRecipeManager()
-                .byKey(Identifier.parse(recipeId)).orElseThrow();
+        var holder = helper.getLevel().getServer().getRecipeManager()
+                .byKey(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, Identifier.parse(recipeId))).orElseThrow();
         return appeng.api.crafting.PatternDetailsHelper.encodeCraftingPattern(
                 (net.minecraft.world.item.crafting.RecipeHolder<net.minecraft.world.item.crafting.CraftingRecipe>) holder,
                 grid, out, false, false);

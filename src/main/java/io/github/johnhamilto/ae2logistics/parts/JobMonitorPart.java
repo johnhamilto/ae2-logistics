@@ -22,12 +22,9 @@ import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.stacks.GenericStack;
 import appeng.api.util.AECableType;
-import appeng.items.parts.PartModels;
 import appeng.parts.AEBasePart;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.menu.JobMonitorMenu;
@@ -44,9 +41,6 @@ import io.github.johnhamilto.ae2logistics.signal.SignalService;
  * One monitor per network; a second one on the same prefix doubles every count.
  */
 public class JobMonitorPart extends AEBasePart implements ILogicNode {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/job_monitor"));
 
     private String prefix = "craft";
     private int stallSeconds = 10;
@@ -280,10 +274,5 @@ public class JobMonitorPart extends AEBasePart implements ILogicNode {
         super.readFromNBT(data);
         data.getString("prefix").ifPresent(value -> prefix = value);
         data.getInt("stallSeconds").ifPresent(value -> stallSeconds = value);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

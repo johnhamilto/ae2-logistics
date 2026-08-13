@@ -31,7 +31,7 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
  */
 public class LogisticsTestInstance extends GameTestInstance {
 
-    private record Def(String template, int maxTicks, Consumer<GameTestHelper> test) {
+    private record Def(String template, int maxTicks, int padding, Consumer<GameTestHelper> test) {
     }
 
     private static final Map<Identifier, Def> DEFS = new LinkedHashMap<>();
@@ -56,7 +56,18 @@ public class LogisticsTestInstance extends GameTestInstance {
     }
 
     static void add(String name, String template, int maxTicks, Consumer<GameTestHelper> test) {
-        DEFS.put(AE2Logistics.id(name.toLowerCase(Locale.ROOT)), new Def(template, maxTicks, test));
+        add(name, template, maxTicks, 0, test);
+    }
+
+    /**
+     * Padding spaces the structure away from batch neighbors - wireless connector
+     * scenes need more than the 16-block base range, or fluix connectors link
+     * ACROSS test scenes and fuse unrelated test networks.
+     */
+    static void add(String name, String template, int maxTicks, int padding,
+            Consumer<GameTestHelper> test) {
+        DEFS.put(AE2Logistics.id(name.toLowerCase(Locale.ROOT)),
+                new Def(template, maxTicks, padding, test));
     }
 
     public static void registerAll(RegisterGameTestsEvent event) {
@@ -91,7 +102,7 @@ public class LogisticsTestInstance extends GameTestInstance {
             var testData = new TestData<>(
                     Holder.<TestEnvironmentDefinition<?>>direct(new TestEnvironmentDefinition.AllOf()),
                     AE2Logistics.id(def.template()),
-                    def.maxTicks(), 0, true, Rotation.NONE);
+                    def.maxTicks(), 0, true, Rotation.NONE, false, 1, 1, false, def.padding());
             event.registerTest(entry.getKey(), new LogisticsTestInstance(testData, entry.getKey()));
         }
     }

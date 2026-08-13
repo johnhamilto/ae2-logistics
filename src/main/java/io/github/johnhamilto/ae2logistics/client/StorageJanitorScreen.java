@@ -1,9 +1,9 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
@@ -26,7 +26,7 @@ public class StorageJanitorScreen extends AEBaseScreen<StorageJanitorMenu> {
     protected void init() {
         super.init();
         toggleButton = new AE2Button(leftPos + 10, topPos + imageHeight - 28, 84, 18,
-                Component.literal("Rejigger"), b -> PacketDistributor.sendToServer(
+                Component.literal("Rejigger"), b -> ClientPacketDistributor.sendToServer(
                         new JanitorTogglePayload(menu.pos)));
         addRenderableWidget(toggleButton);
     }
@@ -38,9 +38,9 @@ public class StorageJanitorScreen extends AEBaseScreen<StorageJanitorMenu> {
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Re-settles stored stock to wherever", 10, 20, Palette.HINT, false);
-        guiGraphics.drawString(font, "filters and priorities now point.", 10, 32, Palette.HINT, false);
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.text(font, "Re-settles stored stock to wherever", 10, 20, Palette.HINT, false);
+        guiGraphics.text(font, "filters and priorities now point.", 10, 32, Palette.HINT, false);
 
         String status;
         int color;
@@ -54,7 +54,7 @@ public class StorageJanitorScreen extends AEBaseScreen<StorageJanitorMenu> {
             status = menu.processed() > 0 ? "done" : "idle";
             color = menu.processed() > 0 ? Palette.OK : Palette.HINT;
         }
-        guiGraphics.drawString(font, status, 10, 52, color, false);
-        guiGraphics.drawString(font, "Processed: " + menu.processed(), 10, 66, Palette.LABEL, false);
+        guiGraphics.text(font, status, 10, 52, color, false);
+        guiGraphics.text(font, "Processed: " + menu.processed(), 10, 66, Palette.LABEL, false);
     }
 }

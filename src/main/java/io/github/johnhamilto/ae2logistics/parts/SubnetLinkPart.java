@@ -14,13 +14,10 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.IGridNodeListener;
 import appeng.api.networking.IManagedGridNode;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.storage.IStorageMounts;
 import appeng.api.storage.IStorageProvider;
 import appeng.core.definitions.AEItems;
-import appeng.items.parts.PartModels;
 import appeng.me.storage.MEInventoryHandler;
-import appeng.parts.PartModel;
 import appeng.parts.storagebus.StorageBusPart;
 import appeng.util.prioritylist.IPartitionList;
 
@@ -35,9 +32,6 @@ import io.github.johnhamilto.ae2logistics.block.SubnetStorages;
  * cards, access modes, priority, memory cards. One channel, like the bus it replaces.
  */
 public class SubnetLinkPart extends StorageBusPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/subnet_link"));
 
     /** Overlay energy and the storage window both key off the subnet grid. */
     private static final IGridNodeListener<SubnetLinkPart> SUBNET_LISTENER = new IGridNodeListener<>() {
@@ -255,11 +249,6 @@ public class SubnetLinkPart extends StorageBusPart {
         if (!isClientSide()) {
             subnetInstance().deserialize(data);
         }
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 
     /** Subnet cables connect with the full smart look, not the power-only stub. */

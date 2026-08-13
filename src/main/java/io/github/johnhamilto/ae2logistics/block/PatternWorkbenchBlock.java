@@ -41,15 +41,7 @@ public class PatternWorkbenchBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.pattern_workbench")),
                     buffer -> buffer.writeBlockPos(pos));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.SUCCESS;
     }
 
-    @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock())
-                && level.getBlockEntity(pos) instanceof PatternWorkbenchBlockEntity workbench) {
-            Containers.dropContents(level, pos, workbench.inventory());
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
-    }
 }

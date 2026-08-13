@@ -9,9 +9,6 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.signal.SignalMath;
@@ -22,9 +19,6 @@ import io.github.johnhamilto.ae2logistics.signal.SignalMath;
  * the value of input channel A, clamped to 0-15, as redstone.
  */
 public class RedstoneIOPart extends LogicPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/redstone_port"));
 
     private int emitted;
 
@@ -119,10 +113,5 @@ public class RedstoneIOPart extends LogicPart {
     public void readFromNBT(ValueInput data) {
         super.readFromNBT(data);
         emitted = data.getIntOr("emitted", 0);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

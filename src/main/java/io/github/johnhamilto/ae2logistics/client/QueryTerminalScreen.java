@@ -3,10 +3,11 @@ package io.github.johnhamilto.ae2logistics.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
@@ -55,14 +56,14 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
 
     private void save() {
         if (!nameBox.getValue().isBlank() && !expressionBox.getValue().isBlank()) {
-            PacketDistributor.sendToServer(new QueryEditPayload(menu.pos, (byte) menu.side.ordinal(),
+            ClientPacketDistributor.sendToServer(new QueryEditPayload(menu.pos, (byte) menu.side.ordinal(),
                     QueryEditPayload.ACTION_SAVE, nameBox.getValue(), expressionBox.getValue()));
         }
     }
 
     private void delete() {
         if (!nameBox.getValue().isBlank()) {
-            PacketDistributor.sendToServer(new QueryEditPayload(menu.pos, (byte) menu.side.ordinal(),
+            ClientPacketDistributor.sendToServer(new QueryEditPayload(menu.pos, (byte) menu.side.ordinal(),
                     QueryEditPayload.ACTION_DELETE, nameBox.getValue(), ""));
         }
     }
@@ -74,7 +75,7 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
         var current = expressionBox.getValue();
         if (!current.equals(lastRequested)) {
             lastRequested = current;
-            PacketDistributor.sendToServer(new QueryEditPayload(menu.pos, (byte) menu.side.ordinal(),
+            ClientPacketDistributor.sendToServer(new QueryEditPayload(menu.pos, (byte) menu.side.ordinal(),
                     QueryEditPayload.ACTION_PREVIEW, "", current));
         }
     }
@@ -84,19 +85,19 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         list.drawBackground(guiGraphics, offsetX, offsetY);
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Saved", 10, LIST_Y - 10, Palette.LABEL, false);
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.text(font, "Saved", 10, LIST_Y - 10, Palette.LABEL, false);
 
         var names = savedNames();
         if (names.isEmpty()) {
-            guiGraphics.drawString(font, "none yet", 12, LIST_Y + 2, Palette.HINT, false);
+            guiGraphics.text(font, "none yet", 12, LIST_Y + 2, Palette.HINT, false);
         }
         list.drawRows(guiGraphics, (g, index, y) -> {
             var name = names.get(index);
@@ -105,7 +106,7 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
                 label = label.substring(0, 13) + "..";
             }
             boolean selected = name.equals(nameBox.getValue());
-            g.drawString(font, label, 10, y, selected ? Palette.VALUE : Palette.ROW, false);
+            g.text(font, label, 10, y, selected ? Palette.VALUE : Palette.ROW, false);
         });
 
         if (!menu.previewError.isEmpty()) {
@@ -113,9 +114,9 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
             if (error.length() > 36) {
                 error = error.substring(0, 35) + "..";
             }
-            guiGraphics.drawString(font, error, 10, imageHeight - 14, Palette.ALERT, false);
+            guiGraphics.text(font, error, 10, imageHeight - 14, Palette.ALERT, false);
         } else if (!lastRequested.isBlank()) {
-            guiGraphics.drawString(font,
+            guiGraphics.text(font,
                     menu.previewMatches + " kinds, " + menu.previewTotal + " total",
                     RESULTS_X, LIST_Y - 10, Palette.OK, false);
         }
@@ -124,16 +125,16 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
             var stack = menu.previewStacks.get(i);
             int y = LIST_Y + i * 18;
             if (!stack.isEmpty()) {
-                guiGraphics.renderItem(stack, RESULTS_X, y);
+                guiGraphics.item(stack, RESULTS_X, y);
             }
-            guiGraphics.drawString(font, "x" + menu.previewAmounts.get(i),
+            guiGraphics.text(font, "x" + menu.previewAmounts.get(i),
                     RESULTS_X + 20, y + 5, Palette.ROW, false);
         }
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int index = list.rowAt(mouseX, mouseY, leftPos, topPos);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int index = list.rowAt(event.x(), event.y(), leftPos, topPos);
         var names = savedNames();
         if (index >= 0 && index < names.size()) {
             var name = names.get(index);
@@ -141,7 +142,7 @@ public class QueryTerminalScreen extends AEBaseScreen<QueryTerminalMenu> {
             expressionBox.setValue(menu.library.getOrDefault(name, ""));
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override

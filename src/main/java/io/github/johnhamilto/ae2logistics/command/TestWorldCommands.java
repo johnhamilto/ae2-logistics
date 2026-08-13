@@ -26,7 +26,7 @@ public final class TestWorldCommands {
 
     public static void register(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("ae2logistics")
-                .requires(source -> source.hasPermission(2))
+                .requires(net.minecraft.commands.Commands.hasPermission(new net.minecraft.server.permissions.PermissionCheck.Require(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)))
                 .then(Commands.literal("testworld")
                         .executes(TestWorldCommands::build)));
     }
@@ -41,7 +41,7 @@ public final class TestWorldCommands {
         var level = source.getLevel();
         var base = player.blockPosition();
 
-        var ids = TestPlots.getPlotIds().stream()
+        var ids = TestPlots.getPlots().stream().map(p -> p.id())
                 .filter(id -> id.getPath().startsWith("logistics_"))
                 .sorted(Comparator.comparing(net.minecraft.resources.Identifier::getPath))
                 .toList();

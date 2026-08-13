@@ -1,9 +1,10 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.util.Icon;
@@ -126,7 +127,7 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         } catch (NumberFormatException e) {
             priority = 0;
         }
-        PacketDistributor.sendToServer(new ConfigureMeshPayload(
+        ClientPacketDistributor.sendToServer(new ConfigureMeshPayload(
                 menu.pos, (byte) menu.side.ordinal(), frequencyBox.getValue(), roleValue, priority, maskValue));
     }
 
@@ -169,8 +170,8 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
 
     /** Clicking a roster row closes the screen and flashes a box at that endpoint. */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int index = roster.rowAt(mouseX, mouseY, leftPos, topPos);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int index = roster.rowAt(event.x(), event.y(), leftPos, topPos);
         if (index >= 0 && index < menu.roster().size()) {
             var info = menu.roster().get(index);
             if (!info.self()) {
@@ -178,7 +179,7 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
             }
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     /**
@@ -221,22 +222,22 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         roster.drawBackground(guiGraphics, offsetX, offsetY);
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Frequency", 10, 16, Palette.LABEL, false);
-        guiGraphics.drawString(font, "Priority", 124, 16, Palette.LABEL, false);
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.text(font, "Frequency", 10, 16, Palette.LABEL, false);
+        guiGraphics.text(font, "Priority", 124, 16, Palette.LABEL, false);
 
-        guiGraphics.drawString(font, "Linked Endpoints"
+        guiGraphics.text(font, "Linked Endpoints"
                 + (menu.rosterTotal() > 0 ? " (" + menu.rosterTotal() + ")" : ""),
                 10, 72, Palette.LABEL, false);
         if (menu.roster().isEmpty()) {
-            guiGraphics.drawString(font, frequencyValue.isBlank()
+            guiGraphics.text(font, frequencyValue.isBlank()
                     ? "set a frequency to link" : "none on this network", 12, 86, Palette.HINT, false);
             return;
         }
@@ -251,11 +252,11 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
                 // Accent bar on the well's left edge: "this row is the endpoint you opened".
                 g.fill(8, y - 2, 10, y + 15, 0xFF2E6E9E);
             }
-            g.renderItem(info.connected(), 10, y);
-            g.drawString(font, coords(info), 30, y + 4, info.self() ? Palette.LABEL : Palette.HINT, false);
-            g.drawString(font, roleLabel(info.role()), 112, y + 4, Palette.LABEL, false);
-            g.drawString(font, "p" + info.priority(), 134, y + 4, Palette.HINT, false);
-            g.drawString(font, statusLabel(info), 152, y + 4, statusColor(info.status()), false);
+            g.item(info.connected(), 10, y);
+            g.text(font, coords(info), 30, y + 4, info.self() ? Palette.LABEL : Palette.HINT, false);
+            g.text(font, roleLabel(info.role()), 112, y + 4, Palette.LABEL, false);
+            g.text(font, "p" + info.priority(), 134, y + 4, Palette.HINT, false);
+            g.text(font, statusLabel(info), 152, y + 4, statusColor(info.status()), false);
         });
     }
 }

@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
@@ -82,7 +83,7 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
     }
 
     private void send(byte action, int index, String text, long value) {
-        PacketDistributor.sendToServer(new ConfigTerminalActionPayload(
+        ClientPacketDistributor.sendToServer(new ConfigTerminalActionPayload(
                 menu.containerId, action, index, text, value));
     }
 
@@ -141,22 +142,22 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         list.drawBackground(guiGraphics, offsetX, offsetY);
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         if (!menu.clientNotice.isEmpty()) {
-            guiGraphics.drawString(font, menu.clientNotice,
+            guiGraphics.text(font, menu.clientNotice,
                     imageWidth - 10 - font.width(menu.clientNotice), 6, Palette.WAIT, false);
         }
 
         var indices = filteredIndices();
         if (indices.isEmpty()) {
-            guiGraphics.drawString(font, "No configurable devices", 12, LIST_Y + 4,
+            guiGraphics.text(font, "No configurable devices", 12, LIST_Y + 4,
                     Palette.HINT, false);
         }
         list.drawRows(guiGraphics, (g, index, y) -> {
@@ -175,19 +176,19 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
                 case io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex.DIFF_GONE -> Palette.ALERT;
                 default -> Palette.ROW;
             };
-            g.drawString(font, name, 30, y, nameColor, false);
+            g.text(font, name, 30, y, nameColor, false);
             var info = row.hasPos()
                     ? row.pos().getX() + "," + row.pos().getY() + "," + row.pos().getZ()
                     : "";
             if (row.hasPriority()) {
                 info = info + "  p" + row.priority();
             }
-            g.drawString(font, info, 30, y + 8, Palette.HINT, false);
+            g.text(font, info, 30, y + 8, Palette.HINT, false);
 
             var item = BuiltInRegistries.ITEM.getOptional(Identifier.tryParse(row.itemId()))
                     .orElse(null);
             if (item != null) {
-                g.renderItem(new ItemStack(item), 10, y - 1);
+                g.item(new ItemStack(item), 10, y - 1);
             }
         });
 
@@ -197,24 +198,24 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
             if (text.length() > 33) {
                 text = text.substring(0, 32) + "..";
             }
-            guiGraphics.drawString(font, text, 10, DETAIL_Y + i * 10, Palette.LABEL, false);
+            guiGraphics.text(font, text, 10, DETAIL_Y + i * 10, Palette.LABEL, false);
         }
         if (menu.selectedIndex >= 0 && menu.detailSettings.isEmpty()) {
-            guiGraphics.drawString(font, "no generic settings", 10, DETAIL_Y, Palette.HINT, false);
+            guiGraphics.text(font, "no generic settings", 10, DETAIL_Y, Palette.HINT, false);
         }
-        guiGraphics.drawString(font, "Pri", 10, DETAIL_Y + 46, Palette.LABEL, false);
+        guiGraphics.text(font, "Pri", 10, DETAIL_Y + 46, Palette.LABEL, false);
         if (!menu.clientClipboardType.isEmpty()) {
             var clip = "clip: " + menu.clientClipboardType;
             if (clip.length() > 34) {
                 clip = clip.substring(0, 33) + "..";
             }
-            guiGraphics.drawString(font, clip, 10, DETAIL_Y + 58, Palette.HINT, false);
+            guiGraphics.text(font, clip, 10, DETAIL_Y + 58, Palette.HINT, false);
         }
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int visibleIndex = list.rowAt(mouseX, mouseY, leftPos, topPos);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int visibleIndex = list.rowAt(event.x(), event.y(), leftPos, topPos);
         if (visibleIndex >= 0) {
             var indices = filteredIndices();
             if (visibleIndex < indices.size()) {
@@ -228,7 +229,7 @@ public class ConfigTerminalScreen extends AEBaseScreen<ConfigTerminalMenu> {
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override

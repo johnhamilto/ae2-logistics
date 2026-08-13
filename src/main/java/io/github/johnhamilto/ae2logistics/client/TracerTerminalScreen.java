@@ -1,9 +1,10 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
@@ -49,17 +50,17 @@ public class TracerTerminalScreen extends AEBaseScreen<TracerTerminalMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         list.drawBackground(guiGraphics, offsetX, offsetY);
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         var entries = menu.entries;
         if (entries.isEmpty()) {
-            guiGraphics.drawString(font, "No signals on this network", 12, LIST_Y + 4,
+            guiGraphics.text(font, "No signals on this network", 12, LIST_Y + 4,
                     Palette.HINT, false);
         }
 
@@ -73,25 +74,25 @@ public class TracerTerminalScreen extends AEBaseScreen<TracerTerminalMenu> {
             if (name.length() > 26) {
                 name = "..." + name.substring(name.length() - 23);
             }
-            g.drawString(font, name, 10, y, selected ? Palette.VALUE : Palette.ROW, false);
+            g.text(font, name, 10, y, selected ? Palette.VALUE : Palette.ROW, false);
             var value = fmt(entry.value());
-            g.drawString(font, value, 216 - font.width(value), y, Palette.LABEL, false);
+            g.text(font, value, 216 - font.width(value), y, Palette.LABEL, false);
         });
 
         renderChart(guiGraphics);
     }
 
-    private void renderChart(GuiGraphics guiGraphics) {
+    private void renderChart(GuiGraphicsExtractor guiGraphics) {
         if (menu.clientSelected == null) {
-            guiGraphics.drawString(font, "Select a channel for history", CHART_X,
+            guiGraphics.text(font, "Select a channel for history", CHART_X,
                     CHART_Y + CHART_H / 2, Palette.HINT, false);
             return;
         }
         var samples = menu.samples;
-        guiGraphics.drawString(font, menu.clientSelected.toString(), CHART_X, CHART_Y - 10,
+        guiGraphics.text(font, menu.clientSelected.toString(), CHART_X, CHART_Y - 10,
                 Palette.VALUE, false);
         if (samples.length < 2) {
-            guiGraphics.drawString(font, "Collecting samples...", CHART_X, CHART_Y + CHART_H / 2,
+            guiGraphics.text(font, "Collecting samples...", CHART_X, CHART_Y + CHART_H / 2,
                     Palette.HINT, false);
             return;
         }
@@ -104,24 +105,24 @@ public class TracerTerminalScreen extends AEBaseScreen<TracerTerminalMenu> {
         }
 
         Sparkline.draw(guiGraphics, CHART_X, CHART_Y, CHART_W, CHART_H, samples);
-        guiGraphics.drawString(font, fmt(max), CHART_X + CHART_W - font.width(fmt(max)) - 2,
+        guiGraphics.text(font, fmt(max), CHART_X + CHART_W - font.width(fmt(max)) - 2,
                 CHART_Y + 2, Sparkline.AXIS, false);
-        guiGraphics.drawString(font, fmt(min), CHART_X + CHART_W - font.width(fmt(min)) - 2,
+        guiGraphics.text(font, fmt(min), CHART_X + CHART_W - font.width(fmt(min)) - 2,
                 CHART_Y + CHART_H - 10, Sparkline.AXIS, false);
         var latest = "now: " + fmt(samples[samples.length - 1]);
-        guiGraphics.drawString(font, latest, CHART_X + 2, CHART_Y + CHART_H + 4, Palette.ROW, false);
+        guiGraphics.text(font, latest, CHART_X + 2, CHART_Y + CHART_H + 4, Palette.ROW, false);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int index = list.rowAt(mouseX, mouseY, leftPos, topPos);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int index = list.rowAt(event.x(), event.y(), leftPos, topPos);
         if (index >= 0 && index < menu.entries.size()) {
             var channel = menu.entries.get(index).channel();
             var next = channel.equals(menu.clientSelected) ? "" : channel.toString();
-            PacketDistributor.sendToServer(new SelectTracerChannelPayload(menu.containerId, next));
+            ClientPacketDistributor.sendToServer(new SelectTracerChannelPayload(menu.containerId, next));
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override

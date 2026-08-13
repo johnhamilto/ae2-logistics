@@ -12,15 +12,28 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
 
 public class PatternWorkbenchBlockEntity extends BlockEntity {
 
-    private final SimpleContainer inventory = new SimpleContainer(1);
+    private final SimpleContainer inventory = new SimpleContainer(1) {
+        @Override
+        public void setChanged() {
+            super.setChanged();
+            PatternWorkbenchBlockEntity.this.setChanged();
+        }
+    };
 
     public PatternWorkbenchBlockEntity(BlockPos pos, BlockState state) {
         super(AE2Logistics.PATTERN_WORKBENCH_BE.get(), pos, state);
-        inventory.addListener(container -> setChanged());
     }
 
     public SimpleContainer inventory() {
         return inventory;
+    }
+
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        super.preRemoveSideEffects(pos, state);
+        if (getLevel() != null) {
+            net.minecraft.world.Containers.dropContents(getLevel(), pos, inventory);
+        }
     }
 
     @Override

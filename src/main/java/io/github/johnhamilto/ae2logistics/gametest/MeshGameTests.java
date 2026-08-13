@@ -10,6 +10,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -98,9 +100,17 @@ public class MeshGameTests {
         helper.runAfterDelay(30, () -> {
             var handler = input.exposedItemHandler();
             helper.assertTrue(handler != null, "input endpoint must expose an item handler");
-            var restIron = handler.insertItem(0, new ItemStack(Items.IRON_INGOT, 8), false);
-            var restGold = handler.insertItem(0, new ItemStack(Items.GOLD_INGOT, 4), false);
-            helper.assertTrue(restIron.isEmpty() && restGold.isEmpty(),
+            int insertedIron;
+            int insertedGold;
+            try (var tx = Transaction.openRoot()) {
+                insertedIron = handler.insert(ItemResource.of(Items.IRON_INGOT), 8, tx);
+                tx.commit();
+            }
+            try (var tx = Transaction.openRoot()) {
+                insertedGold = handler.insert(ItemResource.of(Items.GOLD_INGOT), 4, tx);
+                tx.commit();
+            }
+            helper.assertTrue(insertedIron == 8 && insertedGold == 4,
                     "both batch stacks must be accepted by the mesh");
         });
 
@@ -255,9 +265,13 @@ public class MeshGameTests {
         helper.runAfterDelay(30, () -> {
             var handler = firstIn.exposedItemHandler();
             helper.assertTrue(handler != null, "input must expose a handler");
-            var rest = handler.insertItem(0, new ItemStack(Items.IRON_INGOT, 4), false);
-            helper.assertTrue(rest.getCount() == 4,
-                    "delivery into another mesh must be refused whole, got back " + rest.getCount());
+            int inserted;
+            try (var tx = Transaction.openRoot()) {
+                inserted = handler.insert(ItemResource.of(Items.IRON_INGOT), 4, tx);
+                tx.commit();
+            }
+            helper.assertTrue(inserted == 0,
+                    "delivery into another mesh must be refused whole, took " + inserted);
             helper.succeed();
         });
     }
@@ -633,8 +647,12 @@ public class MeshGameTests {
             var handler = input.exposedItemHandler();
             helper.assertTrue(handler != null,
                     "typed input endpoint must expose an item handler despite mask-0 config");
-            var rest = handler.insertItem(0, new ItemStack(Items.IRON_INGOT, 8), false);
-            helper.assertTrue(rest.isEmpty(), "typed tunnel must accept the stack");
+            int inserted;
+            try (var tx = Transaction.openRoot()) {
+                inserted = handler.insert(ItemResource.of(Items.IRON_INGOT), 8, tx);
+                tx.commit();
+            }
+            helper.assertTrue(inserted == 8, "typed tunnel must accept the stack");
         });
 
         helper.runAfterDelay(40, () -> {

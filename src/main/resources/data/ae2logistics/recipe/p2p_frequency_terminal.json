@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:terminal"},
-    {"item": "ae2:me_p2p_tunnel"},
-    {"item": "ae2:logic_processor"}
+    "ae2:terminal",
+    "ae2:me_p2p_tunnel",
+    "ae2:logic_processor"
   ],
-  "result": {"count": 1, "id": "ae2logistics:p2p_frequency_terminal"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:p2p_frequency_terminal"
+  }
 }

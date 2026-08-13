@@ -12,8 +12,9 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGridNode;
@@ -22,13 +23,10 @@ import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.util.AECableType;
-import appeng.items.parts.PartModels;
 import appeng.me.helpers.MachineSource;
 import appeng.parts.AEBasePart;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.menu.QueryExportBusMenu;
@@ -39,9 +37,6 @@ import io.github.johnhamilto.ae2logistics.query.QueryService;
  * The generalized tag-bus: one part, any predicate.
  */
 public class QueryExportBusPart extends AEBasePart implements IGridTickable {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/query_export_bus"));
 
     private static final int ITEMS_PER_OPERATION = 8;
 
@@ -75,7 +70,7 @@ public class QueryExportBusPart extends AEBasePart implements IGridTickable {
     }
 
     @Nullable
-    private IItemHandler adjacentItemHandler() {
+    private ResourceHandler<ItemResource> adjacentItemHandler() {
         var host = getHost().getBlockEntity();
         if (host.getLevel() == null) {
             return null;
@@ -130,13 +125,16 @@ public class QueryExportBusPart extends AEBasePart implements IGridTickable {
             if (extracted <= 0) {
                 continue;
             }
-            var rest = ItemHandlerHelper.insertItem(handler, key.toStack((int) extracted), false);
-            if (!rest.isEmpty()) {
-                inv.insert(key, rest.getCount(), Actionable.MODULATE, actionSource);
+            int inserted;
+            try (var tx = Transaction.openRoot()) {
+                inserted = handler.insert(key.toResource(), (int) extracted, tx);
+                tx.commit();
             }
-            int moved = (int) extracted - rest.getCount();
-            movedLastOperation += moved;
-            budget -= moved;
+            if (inserted < extracted) {
+                inv.insert(key, extracted - inserted, Actionable.MODULATE, actionSource);
+            }
+            movedLastOperation += inserted;
+            budget -= inserted;
         }
         return movedLastOperation > 0 ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
     }
@@ -176,10 +174,5 @@ public class QueryExportBusPart extends AEBasePart implements IGridTickable {
     public void readFromNBT(ValueInput data) {
         super.readFromNBT(data);
         source = data.getStringOr("query", "");
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

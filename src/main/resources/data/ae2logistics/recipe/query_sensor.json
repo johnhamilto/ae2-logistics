@@ -2,8 +2,11 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2logistics:stock_sensor"},
-    {"item": "ae2logistics:regulus_crystal"}
+    "ae2logistics:stock_sensor",
+    "ae2logistics:regulus_crystal"
   ],
-  "result": {"count": 1, "id": "ae2logistics:query_sensor"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:query_sensor"
+  }
 }

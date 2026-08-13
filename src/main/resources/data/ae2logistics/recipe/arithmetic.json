@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:logic_processor"},
-    {"item": "ae2:certus_quartz_crystal"},
-    {"item": "ae2:calculation_processor"}
+    "ae2:logic_processor",
+    "ae2:certus_quartz_crystal",
+    "ae2:calculation_processor"
   ],
-  "result": {"count": 1, "id": "ae2logistics:arithmetic"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:arithmetic"
+  }
 }

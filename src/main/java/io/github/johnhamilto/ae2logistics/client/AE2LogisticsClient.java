@@ -14,6 +14,9 @@ public final class AE2LogisticsClient {
         // Guide pages live in assets/ae2logistics/ae2guide/ and are contributed
         // directly into AE2's own guide (GuideME collects that folder across mods).
         SignalRenderer.initialize(modBus);
+        modBus.addListener((appeng.client.api.model.parts.RegisterPartModelsEvent event) ->
+                event.registerModelType(WirelessConnectorModel.Unbaked.ID,
+                        WirelessConnectorModel.Unbaked.MAP_CODEC));
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(EndpointHighlighter::render);
         modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) ->
                 event.registerBlockEntityRenderer(AE2Logistics.TRACE_PANEL_BE.get(),

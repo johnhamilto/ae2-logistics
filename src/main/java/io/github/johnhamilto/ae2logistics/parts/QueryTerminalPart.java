@@ -14,11 +14,8 @@ import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.util.AECableType;
-import appeng.items.parts.PartModels;
 import appeng.parts.AEBasePart;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.menu.QueryTerminalMenu;
@@ -29,9 +26,6 @@ import io.github.johnhamilto.ae2logistics.menu.QueryTerminalMenu;
  * preserves the network's saved searches.
  */
 public class QueryTerminalPart extends AEBasePart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/query_terminal"));
 
     private final TreeMap<String, String> savedQueries = new TreeMap<>();
 
@@ -102,10 +96,5 @@ public class QueryTerminalPart extends AEBasePart {
         for (var tag : data.childrenListOrEmpty("queries")) {
             savedQueries.put(tag.getStringOr("name", ""), tag.getStringOr("source", ""));
         }
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

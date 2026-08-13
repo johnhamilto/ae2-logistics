@@ -269,6 +269,19 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
     }
 
     @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        super.preRemoveSideEffects(pos, state);
+        if (getLevel() != null) {
+            var drops = new java.util.ArrayList<net.minecraft.world.item.ItemStack>();
+            logic.addDrops(drops);
+            for (var drop : drops) {
+                net.minecraft.world.Containers.dropItemStack(getLevel(),
+                        pos.getX(), pos.getY(), pos.getZ(), drop);
+            }
+        }
+    }
+
+    @Override
     public BlockEntity getBlockEntity() {
         return this;
     }

@@ -57,19 +57,7 @@ public class GuardedPatternProviderBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.guarded_pattern_provider")),
                     buffer -> GuardedProviderMenu.writeOpenData(buffer, provider));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.SUCCESS;
     }
 
-    @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock())
-                && level.getBlockEntity(pos) instanceof GuardedPatternProviderBlockEntity provider) {
-            var drops = new ArrayList<ItemStack>();
-            provider.getLogic().addDrops(drops);
-            for (var drop : drops) {
-                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), drop);
-            }
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
-    }
 }

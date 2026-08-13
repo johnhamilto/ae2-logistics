@@ -1,9 +1,10 @@
 # Port: Minecraft 26.1.2 / NeoForge 26.1.2.95 / AE2 26.1.10-beta
 
-Branch `mc-26.1`, bootstrapped 2026-08-12. The toolchain works end to end - Gradle
-configures, every dependency resolves, javac runs - and `compileJava` fails with
-3098 errors, fully inventoried below. `main` remains the shipping 1.21.1 line;
-this branch tracks the port and stays WIP until `make check` and `make test` pass.
+Branch `mc-26.1`, bootstrapped 2026-08-12. **PORTED as of 2026-08-13: `make check`
+compiles clean and the full gametest suite passes (123/123 required on 26.1.2;
+main's extra two are the AppMek compat pair that stays there).** `main` remains
+the shipping 1.21.1 line. What is NOT yet verified is everything a headless
+server cannot see - see "Remaining before release" at the end.
 
 AE2 and GuideME are still BETA on this line (NeoForge 26.1.2.x is stable), so
 expect upstream churn; re-check versions before each porting session.
@@ -176,6 +177,44 @@ Everything here was read from the AE2 v26.1.10-beta clone or the NeoForge
 - Signature lookup of record while porting:
   `build/moddev/artifacts/minecraft-patched-26.1.2.95-sources.jar` (the patched
   vanilla sources MDG builds locally) - grep it before guessing any vanilla API.
+
+- 2026-08-13 session two, 804 -> 0 and suite green: part models onto the
+  data-driven system (28 ae2/parts JSONs + statics deleted; WirelessConnectorModel
+  is a custom PartModel.Unbaked type picking one of 17 baked models from the
+  part's COLOR_DATA ModelProperty, registered via RegisterPartModelsEvent);
+  42 items/<id>.json item-model definitions generated; screens/widgets/JEI ported
+  against AE2's 26.1 client (GuiGraphicsExtractor, MouseButtonEvent,
+  ClientPacketDistributor, Blitter.icon; LogicPart screen height now flows through
+  its style doc since imageWidth/Height went final); world renderers on the new
+  pipeline (highlighter as three in-file RenderPipelines with the two-pass
+  occlusion look at AfterWeather, TracePanel BER on extract/submit with a real
+  render bounding box, signal faces on AEKeyRenderer); transfer API (mesh
+  handlers as InsertionOnlyResourceHandler forwarding through the caller's
+  transaction, always-claim round-robin - idempotent within a tick); blocks/items
+  onto merged InteractionResult, preRemoveSideEffects/affectNeighborsAfterRemoval,
+  consumer tooltips; commands onto PermissionCheck(COMMANDS_GAMEMASTER);
+  registrations onto registerBlock/registerItem (26.1 requires ids on
+  Properties); RETURN PATHS REDESIGNED: machines insert into AE2's
+  PatternProviderReturnInventory buffer (transaction-safe) and parts flush to
+  the MEStorage on tick - MEStorage routing reaches AE2 facades that open root
+  transactions and must never run inside one (the crash that proved it is in the
+  log for 2026-08-13 01:05); recipes converted to bare-string ingredients
+  (26.1 format); TreeMatrix cases build lazily (registration fires before item
+  components bind); gametest structure PADDING added (24) for wireless connector
+  scenes - 26.1 packs batch structures within wireless range and fluix
+  connectors fused unrelated test networks (a real footgun demo, in a way).
+  Toolchain note: NFRT pins a Java 21 toolchain for downloadAssets, so
+  gradle.properties lists both Homebrew JDK paths.
+
+## Remaining before release (not visible to a headless server)
+
+- In-game visual pass (`make client`): part models incl. the connector's 17
+  colors, screens on the new chrome, Trace Panel + highlighter renderers, the
+  signal face sprite (renderer agent flagged the items-vs-blocks atlas split),
+  paletted_permutations atlas sources against AE2 26.1's texture paths.
+- `make data` (datagen) and `make guide` (GuideME 26.1) untested.
+- Deprecation-warning pass; compat suite still dormant pending 26.1 ports;
+  AE2/GuideME are still betas - re-pin before any release.
 
 ## Open decisions
 

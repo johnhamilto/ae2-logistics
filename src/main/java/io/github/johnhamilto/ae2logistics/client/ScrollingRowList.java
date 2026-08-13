@@ -1,6 +1,6 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import appeng.client.gui.WidgetContainer;
 import appeng.client.gui.widgets.Scrollbar;
@@ -16,7 +16,7 @@ import appeng.client.gui.widgets.Scrollbar;
 public final class ScrollingRowList {
 
     public interface RowRenderer {
-        void render(GuiGraphics guiGraphics, int index, int y);
+        void render(GuiGraphicsExtractor guiGraphics, int index, int y);
     }
 
     private final Scrollbar scrollbar = new Scrollbar(Scrollbar.SMALL);
@@ -58,7 +58,7 @@ public final class ScrollingRowList {
     }
 
     /** The well and gutter, in absolute coordinates - call from drawBG. */
-    public void drawBackground(GuiGraphics guiGraphics, int offsetX, int offsetY) {
+    public void drawBackground(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY) {
         if (rowCount == 0) {
             guiGraphics.fill(offsetX + left, offsetY + top, offsetX + right, offsetY + bottom,
                     Palette.WELL);
@@ -73,7 +73,7 @@ public final class ScrollingRowList {
     }
 
     /** The visible row window, in panel-local coordinates - call from drawFG. */
-    public void drawRows(GuiGraphics guiGraphics, RowRenderer renderer) {
+    public void drawRows(GuiGraphicsExtractor guiGraphics, RowRenderer renderer) {
         int first = scrollbar.getCurrentScroll();
         int shown = Math.min(rowCount - first, visibleRows);
         for (int i = 0; i < shown; i++) {

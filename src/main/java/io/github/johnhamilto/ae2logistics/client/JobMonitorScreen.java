@@ -1,9 +1,9 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
@@ -77,7 +77,7 @@ public class JobMonitorScreen extends AEBaseScreen<JobMonitorMenu> {
         } catch (NumberFormatException e) {
             stallSeconds = 10;
         }
-        PacketDistributor.sendToServer(new ConfigureJobMonitorPayload(
+        ClientPacketDistributor.sendToServer(new ConfigureJobMonitorPayload(
                 menu.pos, (byte) menu.side.ordinal(), prefixBox.getValue(), stallSeconds));
     }
 
@@ -90,40 +90,40 @@ public class JobMonitorScreen extends AEBaseScreen<JobMonitorMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         board.drawBackground(guiGraphics, offsetX, offsetY);
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Prefix", 10, 22, Palette.LABEL, false);
-        guiGraphics.drawString(font, "Stall (s)", 10, 44, Palette.LABEL, false);
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.text(font, "Prefix", 10, 22, Palette.LABEL, false);
+        guiGraphics.text(font, "Stall (s)", 10, 44, Palette.LABEL, false);
 
-        guiGraphics.drawString(font, "Jobs: " + menu.activeJobs()
+        guiGraphics.text(font, "Jobs: " + menu.activeJobs()
                 + (menu.stalledJobs() > 0 ? "  (" + menu.stalledJobs() + " stalled)" : "")
                 + "   Pending: " + menu.pendingItems(),
                 10, 64, menu.stalledJobs() > 0 ? Palette.ALERT : Palette.VALUE, false);
 
         if (menu.board().isEmpty()) {
-            guiGraphics.drawString(font, "no crafting CPUs on this network", 12, 78,
+            guiGraphics.text(font, "no crafting CPUs on this network", 12, 78,
                     Palette.HINT, false);
             return;
         }
         board.drawRows(guiGraphics, (g, index, y) -> {
             var row = menu.board().get(index);
-            g.renderItem(row.output(), 10, y);
+            g.item(row.output(), 10, y);
             var name = row.cpuName().isBlank() ? "(unnamed)" : row.cpuName();
-            g.drawString(font, truncate(name, 13), 30, y + 4,
+            g.text(font, truncate(name, 13), 30, y + 4,
                     row.cpuName().isBlank() ? Palette.MUTED : Palette.LABEL, false);
             if (row.busy()) {
                 var left = Long.toString(row.remaining());
-                g.drawString(font, left, 148 - font.width(left), y + 4, Palette.HINT, false);
-                g.drawString(font, row.stalled() ? "stalled" : "crafting", 152, y + 4,
+                g.text(font, left, 148 - font.width(left), y + 4, Palette.HINT, false);
+                g.text(font, row.stalled() ? "stalled" : "crafting", 152, y + 4,
                         row.stalled() ? Palette.ALERT : Palette.OK, false);
             } else {
-                g.drawString(font, "idle", 152, y + 4, Palette.MUTED, false);
+                g.text(font, "idle", 152, y + 4, Palette.MUTED, false);
             }
         });
     }

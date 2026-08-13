@@ -1,5 +1,9 @@
 {
   "includes": ["common/common.json", "common/player_inventory.json"],
+  "generatedBackground": {
+    "width": 200,
+    "height": 166
+  },
   "slots": {
     "CONFIG": {
       "left": 10,

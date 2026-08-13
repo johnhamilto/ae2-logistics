@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "tag": "ae2logistics:p2p_tunnels"
-    },
-    {
-      "item": "ae2:logic_processor"
-    },
-    {
-      "item": "minecraft:bucket"
-    }
+    "#ae2logistics:p2p_tunnels",
+    "ae2:logic_processor",
+    "minecraft:bucket"
   ],
   "result": {
     "count": 1,

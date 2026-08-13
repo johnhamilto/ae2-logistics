@@ -5,9 +5,6 @@ import java.util.Set;
 import net.minecraft.resources.Identifier;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.signal.SignalMath;
@@ -17,9 +14,6 @@ import io.github.johnhamilto.ae2logistics.signal.SignalMath;
  * 2-72000, pulse clamped 1 to period-1).
  */
 public class TimerPart extends LogicPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/timer"));
 
     private long ticks;
 
@@ -43,10 +37,5 @@ public class TimerPart extends LogicPart {
         long pulse = SignalMath.clamp(valueB, 1, period - 1);
         context.write(ticks % period < pulse ? 1 : 0);
         ticks++;
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

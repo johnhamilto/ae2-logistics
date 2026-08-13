@@ -14,11 +14,8 @@ import net.minecraft.world.phys.Vec3;
 import appeng.api.networking.IGridNodeListener;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.util.AECableType;
-import appeng.items.parts.PartModels;
 import appeng.parts.AEBasePart;
-import appeng.parts.PartModel;
 import appeng.parts.p2p.P2PTunnelPart;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
@@ -31,9 +28,6 @@ import io.github.johnhamilto.ae2logistics.menu.P2PFrequencyTerminalMenu;
  * NBT - those migrate onto the tunnels the first time the part sees its grid.
  */
 public class P2PFrequencyTerminalPart extends AEBasePart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/p2p_frequency_terminal"));
 
     private final Map<Short, String> legacyNames = new HashMap<>();
 
@@ -133,10 +127,5 @@ public class P2PFrequencyTerminalPart extends AEBasePart {
         for (var tag : data.childrenListOrEmpty("frequencyNames")) {
             legacyNames.put((short) tag.getShortOr("freq", (short) 0), tag.getStringOr("name", ""));
         }
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

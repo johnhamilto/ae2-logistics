@@ -1,9 +1,9 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
@@ -67,19 +67,19 @@ public class QuerySensorScreen extends AEBaseScreen<QuerySensorMenu> {
     }
 
     private void apply() {
-        PacketDistributor.sendToServer(new ConfigureQueryPartPayload(
+        ClientPacketDistributor.sendToServer(new ConfigureQueryPartPayload(
                 menu.pos, (byte) menu.side.ordinal(), channelBox.getValue(), expressionBox.getValue()));
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "Output", 10, 22, Palette.LABEL, false);
-        guiGraphics.drawString(font, "Query", 10, 42, Palette.LABEL, false);
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.text(font, "Output", 10, 22, Palette.LABEL, false);
+        guiGraphics.text(font, "Query", 10, 42, Palette.LABEL, false);
         if (!menu.source.isBlank() && !menu.sourceValid()) {
-            guiGraphics.drawString(font, "query has a syntax error", 10, 78, Palette.ALERT, false);
+            guiGraphics.text(font, "query has a syntax error", 10, 78, Palette.ALERT, false);
         }
-        guiGraphics.drawString(font, "Writes total matching amount", 10, 96, Palette.HINT, false);
-        guiGraphics.drawString(font, "e.g. tag:c:ores AND stored", 10, 108, Palette.HINT, false);
-        guiGraphics.drawString(font, "Out: " + menu.liveValue(), 78, imageHeight - 22, Palette.VALUE, false);
+        guiGraphics.text(font, "Writes total matching amount", 10, 96, Palette.HINT, false);
+        guiGraphics.text(font, "e.g. tag:c:ores AND stored", 10, 108, Palette.HINT, false);
+        guiGraphics.text(font, "Out: " + menu.liveValue(), 78, imageHeight - 22, Palette.VALUE, false);
     }
 }

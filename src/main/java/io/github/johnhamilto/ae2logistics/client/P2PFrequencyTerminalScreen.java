@@ -5,12 +5,13 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
@@ -119,13 +120,13 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
 
     private void retuneSelected() {
         if (selected instanceof P2PLine line && hasTarget) {
-            PacketDistributor.sendToServer(new P2PActionPayload(
+            ClientPacketDistributor.sendToServer(new P2PActionPayload(
                     P2PActionPayload.ACTION_RETUNE, line.row().pos(), line.row().side(),
                     targetFrequency, "", ""));
         } else if (selected instanceof MeshEndpointLine endpointLine && meshTarget != null) {
             var row = endpointLine.row();
             if (row.sameGrid() && !row.frequency().equals(meshTarget)) {
-                PacketDistributor.sendToServer(new io.github.johnhamilto.ae2logistics.menu.MeshRetunePayload(
+                ClientPacketDistributor.sendToServer(new io.github.johnhamilto.ae2logistics.menu.MeshRetunePayload(
                         menu.pos, (byte) menu.side.ordinal(), row.frequency(),
                         row.pos(), row.side(), row.dimension(), meshTarget));
             }
@@ -135,15 +136,15 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
     /** Renaming a mesh row - header or endpoint - retags the whole frequency. */
     private void rename() {
         if (selected instanceof P2PLine line) {
-            PacketDistributor.sendToServer(new P2PActionPayload(
+            ClientPacketDistributor.sendToServer(new P2PActionPayload(
                     P2PActionPayload.ACTION_RENAME, menu.pos, (byte) menu.side.ordinal(),
                     line.row().frequency(), nameBox.getValue(), ""));
         } else if (selected instanceof MeshHeaderLine header) {
-            PacketDistributor.sendToServer(new P2PActionPayload(
+            ClientPacketDistributor.sendToServer(new P2PActionPayload(
                     P2PActionPayload.ACTION_MESH_RENAME, menu.pos, (byte) menu.side.ordinal(),
                     (short) 0, nameBox.getValue(), header.frequency()));
         } else if (selected instanceof MeshEndpointLine endpointLine) {
-            PacketDistributor.sendToServer(new P2PActionPayload(
+            ClientPacketDistributor.sendToServer(new P2PActionPayload(
                     P2PActionPayload.ACTION_MESH_RENAME, menu.pos, (byte) menu.side.ordinal(),
                     (short) 0, nameBox.getValue(), endpointLine.row().frequency()));
         }
@@ -201,17 +202,17 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         list.drawBackground(guiGraphics, offsetX, offsetY);
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         var lines = buildLines();
         if (lines.isEmpty()) {
-            guiGraphics.drawString(font, "No P2P tunnels or mesh endpoints", LIST_X + 2, LIST_Y + 4,
+            guiGraphics.text(font, "No P2P tunnels or mesh endpoints", LIST_X + 2, LIST_Y + 4,
                     Palette.HINT, false);
         }
 
@@ -224,33 +225,33 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
             if (meshTarget != null && !row.frequency().equals(meshTarget)) {
                 where += row.sameGrid() ? " -> " + meshTarget : " (remote: cannot retune)";
             }
-            guiGraphics.drawString(font, where, 10, imageHeight - 58, Palette.HINT, false);
+            guiGraphics.text(font, where, 10, imageHeight - 58, Palette.HINT, false);
         } else if (meshTarget != null) {
-            guiGraphics.drawString(font, "Target: " + meshTarget, 10, imageHeight - 58,
+            guiGraphics.text(font, "Target: " + meshTarget, 10, imageHeight - 58,
                     Palette.WAIT, false);
         } else if (hasTarget) {
-            guiGraphics.drawString(font, "Target: " + String.format("%04X", targetFrequency & 0xFFFF),
+            guiGraphics.text(font, "Target: " + String.format("%04X", targetFrequency & 0xFFFF),
                     10, imageHeight - 58, Palette.WAIT, false);
         }
     }
 
-    private void drawLine(GuiGraphics guiGraphics, Line line, int y) {
+    private void drawLine(GuiGraphicsExtractor guiGraphics, Line line, int y) {
         boolean isSelected = line.equals(selected);
         if (isSelected) {
             guiGraphics.fill(9, y - 2, 218, y + ROW_HEIGHT - 2, 0x332E6E9E);
         }
 
         if (line instanceof MeshHeaderLine header) {
-            guiGraphics.drawString(font, "MESH", LIST_X, y, Palette.VALUE, false);
+            guiGraphics.text(font, "MESH", LIST_X, y, Palette.VALUE, false);
             var label = header.frequency();
             if (label.length() > 18) {
                 label = label.substring(0, 17) + "..";
             }
-            guiGraphics.drawString(font, label, LIST_X + 32, y,
+            guiGraphics.text(font, label, LIST_X + 32, y,
                     isSelected ? Palette.VALUE : Palette.ROW, false);
-            guiGraphics.drawString(font, "x" + header.count(), LIST_X + 162, y, Palette.HINT, false);
+            guiGraphics.text(font, "x" + header.count(), LIST_X + 162, y, Palette.HINT, false);
             if (header.flagged()) {
-                guiGraphics.drawString(font, "!", LIST_X + 186, y, Palette.WAIT, false);
+                guiGraphics.text(font, "!", LIST_X + 186, y, Palette.WAIT, false);
             }
         } else if (line instanceof MeshEndpointLine endpointLine) {
             var row = endpointLine.row();
@@ -264,15 +265,15 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
                 case MeshEndpointPart.ROLE_BOTH -> Palette.VALUE;
                 default -> Palette.OK;
             };
-            guiGraphics.drawString(font, roleText, LIST_X + 8, y, roleColor, false);
+            guiGraphics.text(font, roleText, LIST_X + 8, y, roleColor, false);
             var caps = capsLabel(row.capabilities());
             if (caps.length() > 12) {
                 caps = caps.substring(0, 11) + "..";
             }
-            guiGraphics.drawString(font, caps, LIST_X + 40, y, Palette.HINT, false);
-            guiGraphics.drawString(font, row.sameGrid() ? "here" : "remote", LIST_X + 122, y,
+            guiGraphics.text(font, caps, LIST_X + 40, y, Palette.HINT, false);
+            guiGraphics.text(font, row.sameGrid() ? "here" : "remote", LIST_X + 122, y,
                     row.sameGrid() ? Palette.HINT : Palette.REMOTE, false);
-            guiGraphics.drawString(font, statusLabel(row.status()), LIST_X + 168, y,
+            guiGraphics.text(font, statusLabel(row.status()), LIST_X + 168, y,
                     statusColor(row.status()), false);
         } else if (line instanceof P2PLine p2pLine) {
             var row = p2pLine.row();
@@ -281,18 +282,19 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
             if (label.length() > 16) {
                 label = label.substring(0, 15) + "..";
             }
-            guiGraphics.drawString(font, label, LIST_X, y,
+            guiGraphics.text(font, label, LIST_X, y,
                     isTarget ? Palette.WAIT : isSelected ? Palette.VALUE : Palette.ROW, false);
 
             var item = BuiltInRegistries.ITEM.getValue(Identifier.parse(row.itemId()));
-            var typeName = item.getDescription().getString().replace(" P2P Tunnel", "");
+            var typeName = Component.translatable(item.getDescriptionId()).getString()
+                    .replace(" P2P Tunnel", "");
             if (typeName.length() > 8) {
                 typeName = typeName.substring(0, 8);
             }
-            guiGraphics.drawString(font, typeName, LIST_X + 92, y, Palette.HINT, false);
-            guiGraphics.drawString(font, row.output() ? "OUT" : "IN", LIST_X + 142, y,
+            guiGraphics.text(font, typeName, LIST_X + 92, y, Palette.HINT, false);
+            guiGraphics.text(font, row.output() ? "OUT" : "IN", LIST_X + 142, y,
                     row.output() ? Palette.OUT : Palette.OK, false);
-            guiGraphics.drawString(font,
+            guiGraphics.text(font,
                     row.pos().getX() + "," + row.pos().getY() + "," + row.pos().getZ(),
                     LIST_X + 166, y, Palette.HINT, false);
         }
@@ -304,8 +306,8 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int index = list.rowAt(mouseX, mouseY, leftPos, topPos);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int index = list.rowAt(event.x(), event.y(), leftPos, topPos);
         if (index >= 0) {
             var lines = buildLines();
             if (index < lines.size()) {
@@ -321,7 +323,7 @@ public class P2PFrequencyTerminalScreen extends AEBaseScreen<P2PFrequencyTermina
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override

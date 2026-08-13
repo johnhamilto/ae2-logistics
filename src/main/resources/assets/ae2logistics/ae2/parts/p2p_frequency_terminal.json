@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "ae2:model",
+    "model": "ae2logistics:part/p2p_frequency_terminal"
+  }
+}

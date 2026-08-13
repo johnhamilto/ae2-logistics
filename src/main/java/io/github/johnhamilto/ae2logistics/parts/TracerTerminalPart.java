@@ -10,11 +10,8 @@ import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.util.AECableType;
-import appeng.items.parts.PartModels;
 import appeng.parts.AEBasePart;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.menu.TracerTerminalMenu;
@@ -25,9 +22,6 @@ import io.github.johnhamilto.ae2logistics.signal.SignalService;
  * five-minute sparkline history.
  */
 public class TracerTerminalPart extends AEBasePart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/tracer_terminal"));
 
     public TracerTerminalPart(IPartItem<?> partItem) {
         super(partItem);
@@ -69,10 +63,5 @@ public class TracerTerminalPart extends AEBasePart {
             return null;
         }
         return node.getGrid().getService(SignalService.class);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

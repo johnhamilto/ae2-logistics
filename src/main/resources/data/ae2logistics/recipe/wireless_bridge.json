@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:wireless_receiver"},
-    {"item": "ae2logistics:regulus_crystal"},
-    {"item": "ae2:calculation_processor"}
+    "ae2:wireless_receiver",
+    "ae2logistics:regulus_crystal",
+    "ae2:calculation_processor"
   ],
-  "result": {"count": 1, "id": "ae2logistics:wireless_bridge"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:wireless_bridge"
+  }
 }

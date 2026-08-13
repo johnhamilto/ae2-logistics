@@ -2,10 +2,13 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "minecraft:crafting_table"},
-    {"item": "ae2:fuzzy_card"},
-    {"item": "ae2:certus_quartz_crystal"},
-    {"item": "minecraft:iron_ingot"}
+    "minecraft:crafting_table",
+    "ae2:fuzzy_card",
+    "ae2:certus_quartz_crystal",
+    "minecraft:iron_ingot"
   ],
-  "result": {"count": 1, "id": "ae2logistics:pattern_workbench"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:pattern_workbench"
+  }
 }

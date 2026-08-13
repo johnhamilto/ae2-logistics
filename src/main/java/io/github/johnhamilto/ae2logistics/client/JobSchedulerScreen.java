@@ -1,12 +1,13 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.util.Icon;
+import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -34,13 +35,13 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         // Generated chrome carries no slot art: give every active slot AE2's inset.
         for (var slot : menu.slots) {
             if (slot.isActive()) {
-                Icon.SLOT_BACKGROUND.getBlitter()
+                Blitter.icon(Icon.SLOT_BACKGROUND)
                         .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
             }
         }
@@ -141,7 +142,7 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
             deadlines[i] = parse(deadlineBoxes[i].getValue(), 0);
             preempts[i] = (byte) (preemptValues[i] ? 1 : 0);
         }
-        PacketDistributor.sendToServer(new ConfigureSchedulerPayload(
+        ClientPacketDistributor.sendToServer(new ConfigureSchedulerPayload(
                 menu.pos, floors, batches, classValues.clone(), guards, deadlines, preempts));
     }
 
@@ -183,18 +184,18 @@ public class JobSchedulerScreen extends AEBaseScreen<JobSchedulerMenu> {
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, "floor", 34, 12, Palette.HINT, false);
-        guiGraphics.drawString(font, "batch", 78, 12, Palette.HINT, false);
-        guiGraphics.drawString(font, "class", 116, 12, Palette.HINT, false);
-        guiGraphics.drawString(font, "guard", 156, 12, Palette.HINT, false);
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.text(font, "floor", 34, 12, Palette.HINT, false);
+        guiGraphics.text(font, "batch", 78, 12, Palette.HINT, false);
+        guiGraphics.text(font, "class", 116, 12, Palette.HINT, false);
+        guiGraphics.text(font, "guard", 156, 12, Palette.HINT, false);
 
         for (int i = 0; i < JobSchedulerBlockEntity.RULES; i++) {
             int state = menu.ruleStateValue(i);
-            guiGraphics.drawString(font, stateLabel(state), 10,
+            guiGraphics.text(font, stateLabel(state), 10,
                     JobSchedulerMenu.GHOST_Y + i * JobSchedulerMenu.ROW_STEP + 19,
                     stateColor(state), false);
         }
-        guiGraphics.drawString(font, "second line: deadline sec + preemption", 10, 124, Palette.HINT, false);
+        guiGraphics.text(font, "second line: deadline sec + preemption", 10, 124, Palette.HINT, false);
     }
 }

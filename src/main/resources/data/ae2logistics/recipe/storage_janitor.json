@@ -7,15 +7,9 @@
   ],
   "category": "misc",
   "ingredients": [
-    {
-      "item": "ae2:io_port"
-    },
-    {
-      "item": "ae2logistics:regulus_crystal"
-    },
-    {
-      "item": "ae2:logic_processor"
-    }
+    "ae2:io_port",
+    "ae2logistics:regulus_crystal",
+    "ae2:logic_processor"
   ],
   "result": {
     "count": 1,

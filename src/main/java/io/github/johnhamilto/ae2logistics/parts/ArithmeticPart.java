@@ -1,17 +1,11 @@
 package io.github.johnhamilto.ae2logistics.parts;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.signal.SignalMath;
 
 public class ArithmeticPart extends LogicPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/arithmetic"));
 
     public ArithmeticPart(IPartItem<?> partItem) {
         super(partItem);
@@ -36,10 +30,5 @@ public class ArithmeticPart extends LogicPart {
             default -> SignalMath.modulo(a, b);
         };
         context.write(result);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

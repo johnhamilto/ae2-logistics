@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:logic_processor"},
-    {"item": "ae2:certus_quartz_crystal"},
-    {"item": "minecraft:tripwire_hook"}
+    "ae2:logic_processor",
+    "ae2:certus_quartz_crystal",
+    "minecraft:tripwire_hook"
   ],
-  "result": {"count": 1, "id": "ae2logistics:counter"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:counter"
+  }
 }

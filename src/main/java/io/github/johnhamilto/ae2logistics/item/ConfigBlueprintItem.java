@@ -17,7 +17,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -65,7 +64,7 @@ public class ConfigBlueprintItem extends Item {
         var level = context.getLevel();
         if (!(level instanceof ServerLevel serverLevel)
                 || !(context.getPlayer() instanceof ServerPlayer player)) {
-            return InteractionResult.sidedSuccess(level.isClientSide());
+            return InteractionResult.SUCCESS;
         }
         var stack = context.getItemInHand();
         var clicked = context.getClickedPos();
@@ -102,14 +101,14 @@ public class ConfigBlueprintItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        var stack = player.getItemInHand(hand);
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (player.isShiftKeyDown() && !level.isClientSide()) {
+            var stack = player.getItemInHand(hand);
             stack.remove(AE2Logistics.BLUEPRINT_CORNER.get());
             stack.remove(AE2Logistics.BLUEPRINT_DATA.get());
             player.sendOverlayMessage(Component.literal("Blueprint cleared"));
         }
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+        return InteractionResult.SUCCESS;
     }
 
     /** Captures all AE2-based devices in the box; positions relative to the min corner. */
@@ -195,17 +194,18 @@ public class ConfigBlueprintItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip,
-            TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context,
+            net.minecraft.world.item.component.TooltipDisplay display,
+            java.util.function.Consumer<Component> tooltip, TooltipFlag flag) {
         var entries = stack.get(AE2Logistics.BLUEPRINT_DATA.get());
         if (entries != null) {
-            tooltip.add(Component.literal(entries.size() + " device configs")
+            tooltip.accept(Component.literal(entries.size() + " device configs")
                     .withStyle(net.minecraft.ChatFormatting.AQUA));
         } else if (stack.has(AE2Logistics.BLUEPRINT_CORNER.get())) {
-            tooltip.add(Component.literal("Corner set - click the opposite corner")
+            tooltip.accept(Component.literal("Corner set - click the opposite corner")
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         } else {
-            tooltip.add(Component.literal("Click two corners to capture device configs")
+            tooltip.accept(Component.literal("Click two corners to capture device configs")
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
     }

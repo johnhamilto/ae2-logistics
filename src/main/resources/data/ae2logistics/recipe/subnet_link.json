@@ -1,9 +1,12 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "ae2:interface"},
-    {"item": "ae2:storage_bus"},
-    {"item": "ae2:quartz_fiber"}
+    "ae2:interface",
+    "ae2:storage_bus",
+    "ae2:quartz_fiber"
   ],
-  "result": {"count": 1, "id": "ae2logistics:subnet_link"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:subnet_link"
+  }
 }

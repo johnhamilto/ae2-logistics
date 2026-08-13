@@ -11,8 +11,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.GridHelper;
@@ -67,8 +67,11 @@ public class HardeningGameTests {
         helper.runAfterDelay(30, () -> {
             var handler = input.exposedFluidHandler();
             helper.assertTrue(handler != null, "input must expose a fluid handler");
-            int filled = handler.fill(new FluidStack(Fluids.WATER, 1000),
-                    IFluidHandler.FluidAction.EXECUTE);
+            int filled;
+            try (var tx = Transaction.openRoot()) {
+                filled = handler.insert(FluidResource.of(Fluids.WATER), 1000, tx);
+                tx.commit();
+            }
             helper.assertTrue(filled == 1000, "the mesh must accept a full bucket, took " + filled);
         });
         helper.runAfterDelay(40, () -> {
@@ -108,7 +111,11 @@ public class HardeningGameTests {
 
             var handler = input.exposedEnergyHandler();
             helper.assertTrue(handler != null, "input must expose an energy handler");
-            int accepted = handler.receiveEnergy(100000, false);
+            int accepted;
+            try (var tx = Transaction.openRoot()) {
+                accepted = handler.insert(100000, tx);
+                tx.commit();
+            }
             helper.assertTrue(accepted > 0, "the acceptor must take FE through the mesh");
         });
         // getStoredPower caches for 90 ticks; assert well past the refresh window.

@@ -1,15 +1,12 @@
 package io.github.johnhamilto.ae2logistics.parts;
 
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -18,14 +15,11 @@ import net.minecraft.world.phys.Vec3;
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.core.AEConfig;
 import appeng.core.definitions.AEItems;
-import appeng.items.parts.PartModels;
 import appeng.parts.AEBasePart;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.wireless.WirelessLinkRegistry;
@@ -47,19 +41,9 @@ public class WirelessConnectorPart extends AEBasePart {
 
     public static final int MAX_BOOSTERS = 8;
 
-    private static final Map<AEColor, IPartModel> MODELS = buildModels();
-
-    @PartModels
-    public static final List<IPartModel> ALL_MODELS = List.copyOf(MODELS.values());
-
-    private static Map<AEColor, IPartModel> buildModels() {
-        var map = new EnumMap<AEColor, IPartModel>(AEColor.class);
-        for (var color : AEColor.values()) {
-            map.put(color, new PartModel(
-                    AE2Logistics.id("part/wireless_connector_" + color.registryPrefix)));
-        }
-        return map;
-    }
+    /** Feeds the client part model (one baked model per color, picked by this property). */
+    public static final net.neoforged.neoforge.model.data.ModelProperty<AEColor> COLOR_DATA =
+            new net.neoforged.neoforge.model.data.ModelProperty<>();
 
     private AEColor color = AEColor.TRANSPARENT;
     private int boosters;
@@ -125,8 +109,9 @@ public class WirelessConnectorPart extends AEBasePart {
     @Override
     public boolean onUseItemOn(ItemStack heldItem, Player player, InteractionHand hand, Vec3 pos) {
         AEColor dyed = null;
-        if (heldItem.getItem() instanceof DyeItem dye) {
-            dyed = fromDye(dye.getDyeColor());
+        var dyeColor = heldItem.get(net.minecraft.core.component.DataComponents.DYE);
+        if (dyeColor != null) {
+            dyed = fromDye(dyeColor);
         } else if (heldItem.is(AEItems.FLUIX_CRYSTAL.asItem())) {
             dyed = AEColor.TRANSPARENT;
         }
@@ -237,6 +222,12 @@ public class WirelessConnectorPart extends AEBasePart {
     }
 
     @Override
+    public void collectModelData(net.neoforged.neoforge.model.data.ModelData.Builder builder) {
+        super.collectModelData(builder);
+        builder.with(COLOR_DATA, color);
+    }
+
+    @Override
     public void getBoxes(IPartCollisionHelper bch) {
         // Base plate against the face, antenna mast toward the cable; matches the model.
         bch.addBox(4, 4, 13, 12, 12, 16);
@@ -246,10 +237,5 @@ public class WirelessConnectorPart extends AEBasePart {
     @Override
     public float getCableConnectionLength(AECableType cable) {
         return 4;
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODELS.get(color);
     }
 }

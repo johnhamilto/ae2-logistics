@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:terminal"},
-    {"item": "ae2logistics:regulus_crystal"},
-    {"item": "ae2:engineering_processor"}
+    "ae2:terminal",
+    "ae2logistics:regulus_crystal",
+    "ae2:engineering_processor"
   ],
-  "result": {"count": 1, "id": "ae2logistics:config_terminal"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:config_terminal"
+  }
 }

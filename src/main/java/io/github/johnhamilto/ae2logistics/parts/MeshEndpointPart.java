@@ -10,24 +10,23 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.energy.IEnergyStorage;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.TransferPreconditions;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.util.AECableType;
-import appeng.items.parts.PartModels;
 import appeng.parts.AEBasePart;
-import appeng.parts.PartModel;
+import appeng.util.InsertionOnlyResourceHandler;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.menu.MeshEndpointMenu;
@@ -44,36 +43,15 @@ import io.github.johnhamilto.ae2logistics.signal.SignalService;
  * items lock the mask to a single transport (combine all six to craft the universal).
  */
 public class MeshEndpointPart extends AEBasePart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/mesh_endpoint"));
-    @PartModels
-    public static final IPartModel MODEL_REDSTONE = new PartModel(AE2Logistics.id("part/mesh_endpoint_redstone"));
-    @PartModels
-    public static final IPartModel MODEL_ITEM = new PartModel(AE2Logistics.id("part/mesh_endpoint_item"));
-    @PartModels
-    public static final IPartModel MODEL_FLUID = new PartModel(AE2Logistics.id("part/mesh_endpoint_fluid"));
-    @PartModels
-    public static final IPartModel MODEL_ENERGY = new PartModel(AE2Logistics.id("part/mesh_endpoint_energy"));
-    @PartModels
-    public static final IPartModel MODEL_SIGNAL = new PartModel(AE2Logistics.id("part/mesh_endpoint_signal"));
-    @PartModels
-    public static final IPartModel MODEL_ME = new PartModel(AE2Logistics.id("part/mesh_endpoint_me"));
-    @PartModels
-    public static final IPartModel MODEL_PROVIDER = new PartModel(AE2Logistics.id("part/mesh_endpoint_provider"));
-
-    private record TypedVariant(int mask, IPartModel model) {
-    }
-
     /** Part items whose capability mask is fixed; anything else is the universal part. */
-    private static final Map<Identifier, TypedVariant> TYPED = Map.of(
-            AE2Logistics.id("mesh_endpoint_redstone"), new TypedVariant(MeshRegistry.TYPE_REDSTONE, MODEL_REDSTONE),
-            AE2Logistics.id("mesh_endpoint_item"), new TypedVariant(MeshRegistry.TYPE_ITEM, MODEL_ITEM),
-            AE2Logistics.id("mesh_endpoint_fluid"), new TypedVariant(MeshRegistry.TYPE_FLUID, MODEL_FLUID),
-            AE2Logistics.id("mesh_endpoint_energy"), new TypedVariant(MeshRegistry.TYPE_ENERGY, MODEL_ENERGY),
-            AE2Logistics.id("mesh_endpoint_signal"), new TypedVariant(MeshRegistry.TYPE_SIGNAL, MODEL_SIGNAL),
-            AE2Logistics.id("mesh_endpoint_me"), new TypedVariant(MeshRegistry.TYPE_ME, MODEL_ME),
-            AE2Logistics.id("mesh_endpoint_provider"), new TypedVariant(MeshRegistry.TYPE_PROVIDER, MODEL_PROVIDER));
+    private static final Map<Identifier, Integer> TYPED_MASKS = Map.of(
+            AE2Logistics.id("mesh_endpoint_redstone"), MeshRegistry.TYPE_REDSTONE,
+            AE2Logistics.id("mesh_endpoint_item"), MeshRegistry.TYPE_ITEM,
+            AE2Logistics.id("mesh_endpoint_fluid"), MeshRegistry.TYPE_FLUID,
+            AE2Logistics.id("mesh_endpoint_energy"), MeshRegistry.TYPE_ENERGY,
+            AE2Logistics.id("mesh_endpoint_signal"), MeshRegistry.TYPE_SIGNAL,
+            AE2Logistics.id("mesh_endpoint_me"), MeshRegistry.TYPE_ME,
+            AE2Logistics.id("mesh_endpoint_provider"), MeshRegistry.TYPE_PROVIDER);
 
     public static final byte ROLE_IN = 0;
     public static final byte ROLE_OUT = 1;
@@ -101,40 +79,37 @@ public class MeshEndpointPart extends AEBasePart {
     @Nullable
     private SignalService publishedTo;
 
-    private final IItemHandler itemHandler = new MeshItemHandler();
-    private final IFluidHandler fluidHandler = new MeshFluidHandler();
-    private final IEnergyStorage energyHandler = new MeshEnergyHandler();
+    private final ResourceHandler<ItemResource> itemHandler = new MeshItemHandler();
+    private final ResourceHandler<FluidResource> fluidHandler = new MeshFluidHandler();
+    private final EnergyHandler energyHandler = new MeshEnergyHandler();
     private final io.github.johnhamilto.ae2logistics.provider.ProviderBatchRouter<MeshEndpointPart> providerStorage =
             new io.github.johnhamilto.ae2logistics.provider.ProviderBatchRouter<>(new MeshProviderTargets());
     private final java.util.Set<appeng.api.stacks.AEKey> lastBatch = new java.util.HashSet<>();
     private final appeng.api.storage.MEStorage providerReturnPath = new ProviderReturnPath();
-    private final appeng.api.behaviors.GenericInternalInventory returnGenericInv =
-            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.genericInv(providerReturnPath);
-    private final IItemHandler returnItemHandler =
-            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.itemHandler(providerReturnPath);
-    private final IFluidHandler returnFluidHandler =
-            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.fluidHandler(providerReturnPath);
+    private final io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.ReturnBuffer returnBuffer =
+            io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.buffer(
+                    () -> getHost().markForSave());
 
     public MeshEndpointPart(IPartItem<?> partItem) {
         super(partItem);
         getMainNode()
                 .setFlags(GridFlags.REQUIRE_CHANNEL, GridFlags.DENSE_CAPACITY)
                 .setIdlePowerUsage(1.0);
-        var typed = typedVariant();
+        var typed = typedMask();
         if (typed != null) {
-            capabilities = typed.mask();
+            capabilities = typed;
         }
     }
 
     @Nullable
-    private TypedVariant typedVariant() {
-        return TYPED.get(net.minecraft.core.registries.BuiltInRegistries.ITEM
+    private Integer typedMask() {
+        return TYPED_MASKS.get(net.minecraft.core.registries.BuiltInRegistries.ITEM
                 .getKey(getPartItem().asItem()));
     }
 
     /** True for the typed part items, whose capability mask cannot be edited. */
     public boolean capabilityLocked() {
-        return typedVariant() != null;
+        return typedMask() != null;
     }
 
     public String frequency() {
@@ -185,9 +160,9 @@ public class MeshEndpointPart extends AEBasePart {
     }
 
     public void applyMeshConfig(String newFrequency, byte newRole, int newPriority, int newCapabilities) {
-        var typed = typedVariant();
+        var typed = typedMask();
         if (typed != null) {
-            newCapabilities = typed.mask();
+            newCapabilities = typed;
         }
         // Unregistering changes the old frequency's membership, so the registry tears
         // down and rebuilds that frequency's ME lanes without us on the next tick.
@@ -308,7 +283,7 @@ public class MeshEndpointPart extends AEBasePart {
     // --- transport plumbing used by MeshRegistry ---
 
     @Nullable
-    public IItemHandler adjacentItemHandler() {
+    public ResourceHandler<ItemResource> adjacentItemHandler() {
         var host = getHost().getBlockEntity();
         if (host.getLevel() == null) {
             return null;
@@ -318,7 +293,7 @@ public class MeshEndpointPart extends AEBasePart {
     }
 
     @Nullable
-    public IFluidHandler adjacentFluidHandler() {
+    public ResourceHandler<FluidResource> adjacentFluidHandler() {
         var host = getHost().getBlockEntity();
         if (host.getLevel() == null) {
             return null;
@@ -328,7 +303,7 @@ public class MeshEndpointPart extends AEBasePart {
     }
 
     @Nullable
-    public IEnergyStorage adjacentEnergyHandler() {
+    public EnergyHandler adjacentEnergyHandler() {
         var host = getHost().getBlockEntity();
         if (host.getLevel() == null) {
             return null;
@@ -444,7 +419,7 @@ public class MeshEndpointPart extends AEBasePart {
     /** Machines return any registered key type through the generic view (chemicals, flux, ...). */
     @Nullable
     public appeng.api.behaviors.GenericInternalInventory exposedReturnGenericInv() {
-        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnGenericInv : null;
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnBuffer.genericInv() : null;
     }
 
     /** The bare return path, for compat bridges wrapping their own capability around it. */
@@ -537,141 +512,73 @@ public class MeshEndpointPart extends AEBasePart {
         }
     }
 
-    // --- exposed capabilities (insert-only; mirror the next target for blocking mode) ---
+    // --- exposed capabilities (insert-only) ---
 
     @Nullable
-    public IItemHandler exposedItemHandler() {
+    public ResourceHandler<ItemResource> exposedItemHandler() {
         if (attuned(MeshRegistry.TYPE_ITEM) && role != ROLE_OUT) {
             return itemHandler;
         }
-        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnItemHandler : null;
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnBuffer.itemHandler() : null;
     }
 
     @Nullable
-    public IFluidHandler exposedFluidHandler() {
+    public ResourceHandler<FluidResource> exposedFluidHandler() {
         if (attuned(MeshRegistry.TYPE_FLUID) && role != ROLE_OUT) {
             return fluidHandler;
         }
-        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnFluidHandler : null;
+        return attuned(MeshRegistry.TYPE_PROVIDER) && role == ROLE_OUT ? returnBuffer.fluidHandler() : null;
     }
 
     @Nullable
-    public IEnergyStorage exposedEnergyHandler() {
+    public EnergyHandler exposedEnergyHandler() {
         return attuned(MeshRegistry.TYPE_ENERGY) && role != ROLE_OUT ? energyHandler : null;
     }
 
-    private class MeshItemHandler implements IItemHandler {
-        @Nullable
-        private IItemHandler mirror() {
-            var target = MeshRegistry.peekTarget(frequency, MeshRegistry.TYPE_ITEM, MeshEndpointPart.this);
-            return target == null ? null : target.adjacentItemHandler();
+    private class MeshItemHandler extends InsertionOnlyResourceHandler<ItemResource> {
+        MeshItemHandler() {
+            super(ItemResource.EMPTY);
         }
 
         @Override
-        public int getSlots() {
-            var mirror = mirror();
-            return mirror == null ? 1 : mirror.getSlots();
-        }
-
-        @Override
-        public ItemStack getStackInSlot(int slot) {
-            var mirror = mirror();
-            return mirror == null || slot >= mirror.getSlots() ? ItemStack.EMPTY : mirror.getStackInSlot(slot);
-        }
-
-        @Override
-        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            if (appeng.api.stacks.AEItemKey.of(stack) == null) {
-                return stack;
-            }
-            return MeshRegistry.forwardItem(MeshEndpointPart.this, stack, simulate);
-        }
-
-        @Override
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            return ItemStack.EMPTY;
-        }
-
-        @Override
-        public int getSlotLimit(int slot) {
-            return 64;
-        }
-
-        @Override
-        public boolean isItemValid(int slot, ItemStack stack) {
-            return appeng.api.stacks.AEItemKey.of(stack) != null;
+        public int insert(ItemResource resource, int amount, TransactionContext transaction) {
+            TransferPreconditions.checkNonEmptyNonNegative(resource, amount);
+            return MeshRegistry.forwardItem(MeshEndpointPart.this, resource, amount, transaction);
         }
     }
 
-    private class MeshFluidHandler implements IFluidHandler {
-        @Override
-        public int getTanks() {
-            return 1;
+    private class MeshFluidHandler extends InsertionOnlyResourceHandler<FluidResource> {
+        MeshFluidHandler() {
+            super(FluidResource.EMPTY);
         }
 
         @Override
-        public FluidStack getFluidInTank(int tank) {
-            return FluidStack.EMPTY;
-        }
-
-        @Override
-        public int getTankCapacity(int tank) {
-            return 16000;
-        }
-
-        @Override
-        public boolean isFluidValid(int tank, FluidStack stack) {
-            return true;
-        }
-
-        @Override
-        public int fill(FluidStack resource, FluidAction action) {
-            if (resource.isEmpty()) {
-                return 0;
-            }
-            return MeshRegistry.forwardFluid(MeshEndpointPart.this, resource, action.simulate());
-        }
-
-        @Override
-        public FluidStack drain(FluidStack resource, FluidAction action) {
-            return FluidStack.EMPTY;
-        }
-
-        @Override
-        public FluidStack drain(int maxDrain, FluidAction action) {
-            return FluidStack.EMPTY;
+        public int insert(FluidResource resource, int amount, TransactionContext transaction) {
+            TransferPreconditions.checkNonEmptyNonNegative(resource, amount);
+            return MeshRegistry.forwardFluid(MeshEndpointPart.this, resource, amount, transaction);
         }
     }
 
-    private class MeshEnergyHandler implements IEnergyStorage {
+    private class MeshEnergyHandler implements EnergyHandler {
         @Override
-        public int receiveEnergy(int maxReceive, boolean simulate) {
-            return MeshRegistry.forwardEnergy(MeshEndpointPart.this, maxReceive, simulate);
+        public int insert(int amount, TransactionContext transaction) {
+            TransferPreconditions.checkNonNegative(amount);
+            return MeshRegistry.forwardEnergy(MeshEndpointPart.this, amount, transaction);
         }
 
         @Override
-        public int extractEnergy(int maxExtract, boolean simulate) {
+        public int extract(int amount, TransactionContext transaction) {
             return 0;
         }
 
         @Override
-        public int getEnergyStored() {
+        public long getAmountAsLong() {
             return 0;
         }
 
         @Override
-        public int getMaxEnergyStored() {
+        public long getCapacityAsLong() {
             return Integer.MAX_VALUE;
-        }
-
-        @Override
-        public boolean canExtract() {
-            return false;
-        }
-
-        @Override
-        public boolean canReceive() {
-            return true;
         }
     }
 
@@ -726,6 +633,20 @@ public class MeshEndpointPart extends AEBasePart {
         return true;
     }
 
+    /** Tick-time flush (from MeshRegistry): MEStorage routing must run outside transactions. */
+    public void flushReturns() {
+        if (attuned(MeshRegistry.TYPE_PROVIDER)) {
+            returnBuffer.flush(providerReturnPath);
+        }
+    }
+
+    @Override
+    public void addAdditionalDrops(java.util.List<net.minecraft.world.item.ItemStack> drops, boolean wrenched) {
+        super.addAdditionalDrops(drops, wrenched);
+        var host = getHost().getBlockEntity();
+        returnBuffer.addDrops(drops, host.getLevel(), host.getBlockPos());
+    }
+
     @Override
     public void writeToNBT(ValueOutput data) {
         super.writeToNBT(data);
@@ -733,6 +654,7 @@ public class MeshEndpointPart extends AEBasePart {
         data.putByte("role", role);
         data.putInt("priority", priority);
         data.putInt("capabilities", capabilities);
+        returnBuffer.writeToNBT(data, "returnBuffer");
         if (carriedNode != null) {
             carriedNode.serialize(data);
         }
@@ -745,18 +667,13 @@ public class MeshEndpointPart extends AEBasePart {
         role = data.getByteOr("role", (byte) 0);
         priority = data.getIntOr("priority", 0);
         capabilities = data.getIntOr("capabilities", 0);
-        var typed = typedVariant();
+        returnBuffer.readFromNBT(data, "returnBuffer");
+        var typed = typedMask();
         if (typed != null) {
-            capabilities = typed.mask();
+            capabilities = typed;
         }
         if ((capabilities & MeshRegistry.TYPE_ME) != 0 && !isClientSide()) {
             carriedInstance().deserialize(data);
         }
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        var typed = typedVariant();
-        return typed == null ? MODEL : typed.model();
     }
 }

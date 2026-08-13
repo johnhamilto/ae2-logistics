@@ -12,9 +12,9 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 import io.github.johnhamilto.ae2logistics.signal.SignalMath;
@@ -252,7 +252,7 @@ public final class MeshRegistry {
         return list;
     }
 
-    /** The endpoint the next item/fluid transfer would go to; used for blocking-mode mirroring. */
+    /** The endpoint the next item/fluid transfer would go to, without claiming it. */
     @Nullable
     public static MeshEndpointPart peekTarget(String frequency, int type, MeshEndpointPart from) {
         return peekTarget(frequency, type, from, null);
@@ -299,51 +299,49 @@ public final class MeshRegistry {
         return chosen;
     }
 
-    public static ItemStack forwardItem(MeshEndpointPart from, ItemStack stack, boolean simulate) {
-        if (DEPTH.get() > 0 || stack.isEmpty()) {
-            return stack;
+    public static int forwardItem(MeshEndpointPart from, ItemResource resource, int amount,
+            TransactionContext transaction) {
+        if (DEPTH.get() > 0 || amount <= 0) {
+            return 0;
         }
-        var itemKey = appeng.api.stacks.AEItemKey.of(stack);
-        var target = simulate
-                ? peekTarget(from.frequency(), TYPE_ITEM, from, itemKey)
-                : claimTarget(from.frequency(), TYPE_ITEM, from, itemKey);
+        // Always claim, even for simulated inserts: claims are idempotent within a tick
+        // (the sticky-map check returns the same target without advancing the cursor),
+        // so cross-tick simulate-only churn only skews round-robin, never correctness.
+        var target = claimTarget(from.frequency(), TYPE_ITEM, from,
+                appeng.api.stacks.AEItemKey.of(resource));
         if (target == null) {
-            return stack;
+            return 0;
         }
         DEPTH.set(DEPTH.get() + 1);
         try {
             var handler = target.adjacentItemHandler();
-            return handler == null ? stack : ItemHandlerHelper.insertItem(handler, stack, simulate);
+            return handler == null ? 0 : handler.insert(resource, amount, transaction);
         } finally {
             DEPTH.set(DEPTH.get() - 1);
         }
     }
 
-    public static int forwardFluid(MeshEndpointPart from, FluidStack stack, boolean simulate) {
-        if (DEPTH.get() > 0 || stack.isEmpty()) {
+    public static int forwardFluid(MeshEndpointPart from, FluidResource resource, int amount,
+            TransactionContext transaction) {
+        if (DEPTH.get() > 0 || amount <= 0) {
             return 0;
         }
-        var fluidKey = appeng.api.stacks.AEFluidKey.of(stack);
-        var target = simulate
-                ? peekTarget(from.frequency(), TYPE_FLUID, from, fluidKey)
-                : claimTarget(from.frequency(), TYPE_FLUID, from, fluidKey);
+        var target = claimTarget(from.frequency(), TYPE_FLUID, from,
+                appeng.api.stacks.AEFluidKey.of(resource));
         if (target == null) {
             return 0;
         }
         DEPTH.set(DEPTH.get() + 1);
         try {
             var handler = target.adjacentFluidHandler();
-            return handler == null ? 0
-                    : handler.fill(stack, simulate
-                            ? net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.SIMULATE
-                            : net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
+            return handler == null ? 0 : handler.insert(resource, amount, transaction);
         } finally {
             DEPTH.set(DEPTH.get() - 1);
         }
     }
 
     /** Energy is divisible: spread across every valid target in priority order. */
-    public static int forwardEnergy(MeshEndpointPart from, int amount, boolean simulate) {
+    public static int forwardEnergy(MeshEndpointPart from, int amount, TransactionContext transaction) {
         if (DEPTH.get() > 0 || amount <= 0) {
             return 0;
         }
@@ -353,7 +351,7 @@ public final class MeshRegistry {
             for (var target : outputs(from.frequency(), TYPE_ENERGY, from)) {
                 var handler = target.adjacentEnergyHandler();
                 if (handler != null) {
-                    inserted += handler.receiveEnergy(amount - inserted, simulate);
+                    inserted += handler.insert(amount - inserted, transaction);
                     if (inserted >= amount) {
                         break;
                     }
@@ -511,6 +509,7 @@ public final class MeshRegistry {
                 Map<Identifier, Long> signals = null;
 
                 for (var part : carrierMembers) {
+                    part.flushReturns();
                     if (part.isSource(TYPE_REDSTONE)) {
                         redstone = Math.max(redstone, part.readFaceRedstone());
                     }

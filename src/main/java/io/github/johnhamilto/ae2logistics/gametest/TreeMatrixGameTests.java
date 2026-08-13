@@ -33,12 +33,33 @@ public class TreeMatrixGameTests {
             AEItemKey request, long amount, boolean expect) {
     }
 
+    // Registration fires before item components bind, so cases() (which builds
+    // ItemStacks) must not run until the test itself does - names alone register.
+    private static final List<String> CASE_NAMES = List.of(
+            "exact_present", "exact_rejects_renamed", "fuzzy_accepts_renamed_nondamageable",
+            "tag_accepts_member", "tag_rejects_nonmember", "anyof_accepts_listed",
+            "anyof_rejects_unlisted_tagmate", "band99_accepts_pristine", "band99_rejects_damaged",
+            "fuzzy_accepts_damaged_renamed", "catalyst_fuzzy_reuses_damaged_tool",
+            "depth2_fuzzy_leaf_renamed_log", "depth2_exact_leaf_rejects_other_log",
+            "depth2_anyof_leaf_listed_log", "depth3_mixed_specs_renamed_leaf",
+            "depth3_wrong_leaf_fails");
+
     static void register() {
-        for (var testCase : cases()) {
-            LogisticsTestInstance.add("matrix_" + testCase.name(), "empty5", 400,
-                    helper -> PatternGameTests.planPlot(helper, testCase.patterns(), testCase.storage(),
-                            testCase.request(), testCase.amount(), testCase.expect(), testCase.name()));
+        for (var name : CASE_NAMES) {
+            LogisticsTestInstance.add("matrix_" + name, "empty5", 400,
+                    helper -> runCase(name, helper));
         }
+    }
+
+    private static void runCase(String name, net.minecraft.gametest.framework.GameTestHelper helper) {
+        for (var testCase : cases()) {
+            if (testCase.name().equals(name)) {
+                PatternGameTests.planPlot(helper, testCase.patterns(), testCase.storage(),
+                        testCase.request(), testCase.amount(), testCase.expect(), testCase.name());
+                return;
+            }
+        }
+        throw helper.assertionException("unknown matrix case " + name);
     }
 
     private static List<Case> cases() {

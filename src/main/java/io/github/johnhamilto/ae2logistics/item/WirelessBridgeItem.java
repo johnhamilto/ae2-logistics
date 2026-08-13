@@ -39,21 +39,22 @@ public class WirelessBridgeItem extends BlockItem {
                             "Bridge anchored to access point at " + pos.toShortString()));
                 }
             }
-            return InteractionResult.sidedSuccess(level.isClientSide());
+            return InteractionResult.SUCCESS;
         }
         return super.useOn(context);
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip,
-            TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltip, flag);
+    public void appendHoverText(ItemStack stack, TooltipContext context,
+            net.minecraft.world.item.component.TooltipDisplay display,
+            java.util.function.Consumer<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, display, tooltip, flag);
         var anchor = stack.get(AE2Logistics.BRIDGE_ANCHOR.get());
         if (anchor != null) {
-            tooltip.add(Component.literal("Anchored: " + anchor.pos().toShortString())
+            tooltip.accept(Component.literal("Anchored: " + anchor.pos().toShortString())
                     .withStyle(net.minecraft.ChatFormatting.AQUA));
         } else {
-            tooltip.add(Component.literal("Click an access point to anchor")
+            tooltip.accept(Component.literal("Click an access point to anchor")
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
     }

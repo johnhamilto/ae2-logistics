@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:wireless_access_point"},
-    {"item": "ae2logistics:regulus_crystal"},
-    {"item": "ae2:engineering_processor"}
+    "ae2:wireless_access_point",
+    "ae2logistics:regulus_crystal",
+    "ae2:engineering_processor"
   ],
-  "result": {"count": 1, "id": "ae2logistics:dense_wireless_access_point"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:dense_wireless_access_point"
+  }
 }

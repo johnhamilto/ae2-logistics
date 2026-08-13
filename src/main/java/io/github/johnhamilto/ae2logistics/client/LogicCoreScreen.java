@@ -3,15 +3,17 @@ package io.github.johnhamilto.ae2logistics.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.util.Icon;
+import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -46,8 +48,7 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
     public LogicCoreScreen(LogicCoreMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
         super(menu, inventory, title, style);
-        this.imageWidth = 200;
-        this.imageHeight = 252;
+        // Window size (200x252) comes from the style doc's generatedBackground.
     }
 
     @Override
@@ -242,7 +243,7 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
         menu.valueBs[selected] = valueB;
         menu.flags[selected] = flagValue;
 
-        PacketDistributor.sendToServer(new ConfigureCoreEntryPayload(menu.pos,
+        ClientPacketDistributor.sendToServer(new ConfigureCoreEntryPayload(menu.pos,
                 ConfigureCoreEntryPayload.ACTION_APPLY, (byte) selected, (byte) type,
                 out, inA, inB, opValue, valueA, valueB, flagValue));
     }
@@ -256,9 +257,9 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int x = (int) mouseX - leftPos;
-        int y = (int) mouseY - topPos;
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int x = (int) event.x() - leftPos;
+        int y = (int) event.y() - topPos;
         if (x >= 8 && x < 192 && y >= LogicCoreMenu.ROW_Y
                 && y < LogicCoreMenu.ROW_Y + LogicCoreMenu.ROWS * LogicCoreMenu.ROW_STEP) {
             int row = (y - LogicCoreMenu.ROW_Y) / LogicCoreMenu.ROW_STEP;
@@ -267,16 +268,16 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
                     apply();
                 }
                 menu.setSelected(row);
-                PacketDistributor.sendToServer(ConfigureCoreEntryPayload.select(menu.pos, row));
+                ClientPacketDistributor.sendToServer(ConfigureCoreEntryPayload.select(menu.pos, row));
                 rebuildDetail();
             }
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         // The style doc's generatedBackground draws the panel; player slots need
@@ -284,22 +285,22 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
         // (a stock-sensor entry is selected) - it always exists in the menu.
         for (var slot : menu.slots) {
             if (slot.isActive() && slot.container instanceof Inventory) {
-                Icon.SLOT_BACKGROUND.getBlitter()
+                Blitter.icon(Icon.SLOT_BACKGROUND)
                         .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
             }
         }
         int selY = offsetY + LogicCoreMenu.ROW_Y + menu.selected() * LogicCoreMenu.ROW_STEP;
         guiGraphics.fill(offsetX + 7, selY - 1, offsetX + 193, selY + 11, 0x30405A78);
         if (selectedType() == LogicPartType.STOCK_SENSOR.ordinal()) {
-            Icon.SLOT_BACKGROUND.getBlitter()
+            Blitter.icon(Icon.SLOT_BACKGROUND)
                     .dest(offsetX + LogicCoreMenu.GHOST_X - 1, offsetY + LogicCoreMenu.GHOST_Y - 1)
                     .blit(guiGraphics);
         }
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
-        guiGraphics.drawString(font, menu.coreActive() ? "online" : "offline", 160, 6,
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+        guiGraphics.text(font, menu.coreActive() ? "online" : "offline", 160, 6,
                 menu.coreActive() ? Palette.OK : Palette.ALERT, false);
 
         for (int i = 0; i < LogicCoreMenu.ROWS; i++) {
@@ -307,18 +308,18 @@ public class LogicCoreScreen extends AEBaseScreen<LogicCoreMenu> {
             int type = menu.types[i];
             boolean active = menu.entryActive(i);
             int labelColor = type < 0 ? Palette.MUTED : active ? Palette.LABEL : Palette.ALERT;
-            guiGraphics.drawString(font, (i + 1) + " " + typeName(type), 10, y, labelColor, false);
+            guiGraphics.text(font, (i + 1) + " " + typeName(type), 10, y, labelColor, false);
             if (type >= 0) {
                 var out = menu.outs[i];
-                guiGraphics.drawString(font, truncate(out, 16), 62, y, Palette.HINT, false);
+                guiGraphics.text(font, truncate(out, 16), 62, y, Palette.HINT, false);
                 var value = Long.toString(menu.entryValue(i));
-                guiGraphics.drawString(font, value, 190 - font.width(value), y,
+                guiGraphics.text(font, value, 190 - font.width(value), y,
                         active ? Palette.OK : Palette.MUTED, false);
             }
         }
 
         if (selectedType() == LogicPartType.STOCK_SENSOR.ordinal()) {
-            guiGraphics.drawString(font, "click slot with held item to watch", 32, 141, Palette.HINT, false);
+            guiGraphics.text(font, "click slot with held item to watch", 32, 141, Palette.HINT, false);
         }
     }
 

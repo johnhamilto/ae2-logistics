@@ -53,6 +53,6 @@ public class JobSchedulerBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.job_scheduler")),
                     buffer -> JobSchedulerMenu.writeOpenData(buffer, scheduler));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.SUCCESS;
     }
 }

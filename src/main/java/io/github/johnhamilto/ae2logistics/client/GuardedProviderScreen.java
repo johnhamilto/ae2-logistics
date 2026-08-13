@@ -1,12 +1,13 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.util.Icon;
+import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -32,13 +33,13 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         // Generated chrome carries no slot art: give every active slot AE2's inset.
         for (var slot : menu.slots) {
             if (slot.isActive()) {
-                Icon.SLOT_BACKGROUND.getBlitter()
+                Blitter.icon(Icon.SLOT_BACKGROUND)
                         .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
             }
         }
@@ -131,19 +132,19 @@ public class GuardedProviderScreen extends AEBaseScreen<GuardedProviderMenu> {
         } catch (NumberFormatException e) {
             basePriority = 0;
         }
-        PacketDistributor.sendToServer(new ConfigureGuardPayload(
+        ClientPacketDistributor.sendToServer(new ConfigureGuardPayload(
                 menu.pos, guardChannelBox.getValue(), guardOp, value, gateExecution,
                 priorityChannelBox.getValue(), basePriority));
     }
 
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         var status = menu.guardPassing() ? "Palette.OK" : "Palette.WAIT";
         var statusText = status + "  p" + menu.livePriority();
-        guiGraphics.drawString(font, statusText, imageWidth - 10 - font.width(statusText), 6,
+        guiGraphics.text(font, statusText, imageWidth - 10 - font.width(statusText), 6,
                 menu.guardPassing() ? Palette.OK : Palette.WAIT, false);
-        guiGraphics.drawString(font, "Guard", 10, 48, Palette.LABEL, false);
-        guiGraphics.drawString(font, "passes if", 10, 70, Palette.HINT, false);
-        guiGraphics.drawString(font, "Priority", 10, 116, Palette.LABEL, false);
+        guiGraphics.text(font, "Guard", 10, 48, Palette.LABEL, false);
+        guiGraphics.text(font, "passes if", 10, 70, Palette.HINT, false);
+        guiGraphics.text(font, "Priority", 10, 116, Palette.LABEL, false);
     }
 }

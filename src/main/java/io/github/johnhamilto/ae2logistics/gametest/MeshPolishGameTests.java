@@ -471,7 +471,7 @@ public class MeshPolishGameTests {
                     Identifier.fromNamespaceAndPath(AE2Logistics.MOD_ID, id)));
             helper.assertTrue(recipe.isPresent(), id + " recipe must exist");
             boolean tunnelSlot = false;
-            for (var ingredient : recipe.get().value().getIngredients()) {
+            for (var ingredient : recipe.get().value().placementInfo().ingredients()) {
                 tunnelSlot |= ingredient.test(new ItemStack(ae2Tunnel));
             }
             helper.assertTrue(tunnelSlot, id + " must accept any tagged tunnel");

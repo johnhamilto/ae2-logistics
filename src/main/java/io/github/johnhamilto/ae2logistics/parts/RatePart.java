@@ -1,9 +1,6 @@
 package io.github.johnhamilto.ae2logistics.parts;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.signal.SignalMath;
@@ -13,9 +10,6 @@ import io.github.johnhamilto.ae2logistics.signal.SignalMath;
  * over the window (valueA seconds, clamped 1-60). Shrinking values report 0.
  */
 public class RatePart extends LogicPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/rate"));
 
     private long[] samples = new long[0];
     private int cursor;
@@ -52,10 +46,5 @@ public class RatePart extends LogicPart {
 
         long delta = current - oldest;
         context.write(delta <= 0 ? 0 : delta / windowSeconds);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

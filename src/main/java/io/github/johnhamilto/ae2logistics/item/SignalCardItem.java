@@ -31,12 +31,14 @@ public class SignalCardItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context,
+            net.minecraft.world.item.component.TooltipDisplay display,
+            java.util.function.Consumer<Component> tooltip, TooltipFlag flag) {
         var channel = getChannel(stack);
         if (channel != null) {
-            tooltip.add(Component.literal(channel.toString()).withStyle(ChatFormatting.AQUA));
+            tooltip.accept(Component.literal(channel.toString()).withStyle(ChatFormatting.AQUA));
         } else {
-            tooltip.add(Component.translatable("tooltip.ae2logistics.signal_card.unbound")
+            tooltip.accept(Component.translatable("tooltip.ae2logistics.signal_card.unbound")
                     .withStyle(ChatFormatting.GRAY));
         }
     }

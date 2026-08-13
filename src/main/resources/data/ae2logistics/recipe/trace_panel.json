@@ -7,15 +7,9 @@
   ],
   "category": "misc",
   "ingredients": [
-    {
-      "item": "ae2:quartz_glass"
-    },
-    {
-      "item": "ae2:logic_processor"
-    },
-    {
-      "item": "ae2logistics:regulus_crystal"
-    }
+    "ae2:quartz_glass",
+    "ae2:logic_processor",
+    "ae2logistics:regulus_crystal"
   ],
   "result": {
     "count": 4,

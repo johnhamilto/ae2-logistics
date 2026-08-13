@@ -2,9 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"tag": "ae2logistics:p2p_tunnels"},
-    {"item": "ae2logistics:regulus_crystal"},
-    {"item": "ae2:engineering_processor"}
+    "#ae2logistics:p2p_tunnels",
+    "ae2logistics:regulus_crystal",
+    "ae2:engineering_processor"
   ],
   "result": {
     "count": 1,

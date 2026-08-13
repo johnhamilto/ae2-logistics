@@ -17,7 +17,7 @@ public final class WirelessCommands {
 
     public static void register(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("ae2logistics")
-                .requires(source -> source.hasPermission(2))
+                .requires(net.minecraft.commands.Commands.hasPermission(new net.minecraft.server.permissions.PermissionCheck.Require(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)))
                 .then(Commands.literal("wireless")
                         .then(Commands.literal("status")
                                 .executes(WirelessCommands::status))));

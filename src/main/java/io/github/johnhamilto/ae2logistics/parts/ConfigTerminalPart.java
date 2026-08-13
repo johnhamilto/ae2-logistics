@@ -10,11 +10,8 @@ import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.util.AECableType;
-import appeng.items.parts.PartModels;
 import appeng.parts.AEBasePart;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.menu.ConfigTerminalMenu;
@@ -25,9 +22,6 @@ import io.github.johnhamilto.ae2logistics.menu.ConfigTerminalMenu;
  * devices - one at a time or fleet-wide.
  */
 public class ConfigTerminalPart extends AEBasePart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/config_terminal"));
 
     private static final Codec<java.util.Map<String, String>> SNAPSHOT_CODEC =
             Codec.unboundedMap(Codec.STRING, Codec.STRING);
@@ -94,10 +88,5 @@ public class ConfigTerminalPart extends AEBasePart {
                     });
         }
         return true;
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

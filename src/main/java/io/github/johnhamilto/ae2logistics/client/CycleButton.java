@@ -1,6 +1,8 @@
 package io.github.johnhamilto.ae2logistics.client;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.Component;
 
 import appeng.client.gui.AEBaseScreen;
@@ -21,17 +23,18 @@ public class CycleButton extends AE2Button {
     }
 
     @Override
-    protected boolean isValidClickButton(int button) {
-        return button == 0 || button == 1;
+    protected boolean isValidClickButton(MouseButtonInfo buttonInfo) {
+        return buttonInfo.button() == 0 || buttonInfo.button() == 1;
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.active && this.visible && isValidClickButton(button) && this.clicked(mouseX, mouseY)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (this.active && this.visible && isValidClickButton(event.buttonInfo())
+                && this.isMouseOver(event.x(), event.y())) {
             this.playDownSound(Minecraft.getInstance().getSoundManager());
             // AEBaseScreen re-dispatches right-clicks to widgets as button 0; the
             // screen flag is the only trace of the real button.
-            boolean reverse = button == 1
+            boolean reverse = event.button() == 1
                     || Minecraft.getInstance().screen instanceof AEBaseScreen<?> screen
                             && screen.isHandlingRightClick();
             step.apply(this, reverse ? -1 : 1);

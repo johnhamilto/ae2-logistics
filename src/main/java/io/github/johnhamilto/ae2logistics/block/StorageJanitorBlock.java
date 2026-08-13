@@ -53,6 +53,6 @@ public class StorageJanitorBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.storage_janitor")),
                     buffer -> StorageJanitorMenu.writeOpenData(buffer, janitor));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.SUCCESS;
     }
 }

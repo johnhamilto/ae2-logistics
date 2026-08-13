@@ -5,19 +5,21 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import appeng.api.ids.AEComponents;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.AEBaseScreen;
 import appeng.util.Icon;
+import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AE2Button;
 import appeng.client.gui.widgets.AETextField;
@@ -53,13 +55,13 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     }
 
     @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
+    public void drawBG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY,
             float partialTicks) {
         super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
         // Generated chrome carries no slot art: give every active slot AE2's inset.
         for (var slot : menu.slots) {
             if (slot.isActive()) {
-                Icon.SLOT_BACKGROUND.getBlitter()
+                Blitter.icon(Icon.SLOT_BACKGROUND)
                         .dest(offsetX + slot.x - 1, offsetY + slot.y - 1).blit(guiGraphics);
             }
         }
@@ -97,7 +99,7 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     private void wrapOrUnwrap() {
         var stack = menu.patternStack();
         if (stack.is(AE2Logistics.GUARDED_PATTERN.get())) {
-            PacketDistributor.sendToServer(new WrapPatternPayload(
+            ClientPacketDistributor.sendToServer(new WrapPatternPayload(
                     menu.pos, WrapPatternPayload.ACTION_UNWRAP, "", 0, 0));
         } else if (!stack.isEmpty()) {
             long value;
@@ -106,7 +108,7 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
             } catch (NumberFormatException e) {
                 value = 0;
             }
-            PacketDistributor.sendToServer(new WrapPatternPayload(
+            ClientPacketDistributor.sendToServer(new WrapPatternPayload(
                     menu.pos, WrapPatternPayload.ACTION_WRAP,
                     guardChannelBox.getValue(), guardOp, value));
         }
@@ -170,20 +172,20 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
 
     /** Gui-relative painting on top of the styled background. */
     @Override
-    public void drawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         if (menu.patternStack().isEmpty()) {
-            guiGraphics.drawString(font, "Insert an encoded pattern", 8, 78, Palette.HINT, false);
+            guiGraphics.text(font, "Insert an encoded pattern", 8, 78, Palette.HINT, false);
             return;
         }
         var encoded = decoded();
         if (encoded == null) {
             // Crafting/smithing/stonecutting patterns match exactly; guards still apply.
-            guiGraphics.drawString(font, "No adaptive matching", 9, 31, Palette.HINT, false);
-            guiGraphics.drawString(font, "for this pattern type", 9, 43, Palette.HINT, false);
-            guiGraphics.drawString(font, "Guard", 8, 76, Palette.LABEL, false);
+            guiGraphics.text(font, "No adaptive matching", 9, 31, Palette.HINT, false);
+            guiGraphics.text(font, "for this pattern type", 9, 43, Palette.HINT, false);
+            guiGraphics.text(font, "Guard", 8, 76, Palette.LABEL, false);
             return;
         }
-        guiGraphics.drawString(font, "Guard", 8, 76, Palette.LABEL, false);
+        guiGraphics.text(font, "Guard", 8, 76, Palette.LABEL, false);
 
         var inputs = encoded.sparseInputs();
         for (int i = 0; i < 9 && i < inputs.size(); i++) {
@@ -193,7 +195,7 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
             }
             int x = GRID_X + (i % 3) * 18;
             int y = GRID_Y + (i / 3) * 18;
-            guiGraphics.renderItem(itemKey.toStack(), x, y);
+            guiGraphics.item(itemKey.toStack(), x, y);
             var spec = encoded.specFor(i);
             var badge = switch (spec.mode()) {
                 case EXACT -> "";
@@ -213,30 +215,30 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
                     case TAG -> 0xF5C542;
                     default -> 0xB08CFF;
                 };
-                guiGraphics.drawString(font, badge, x + 17 - font.width(badge), y + 8, color, true);
+                guiGraphics.text(font, badge, x + 17 - font.width(badge), y + 8, color, true);
             }
             if (spec.catalyst()) {
-                guiGraphics.drawString(font, "C", x - 1, y - 2, 0xFFD24D, true);
+                guiGraphics.text(font, "C", x - 1, y - 2, 0xFFD24D, true);
             }
         }
 
         var outputs = encoded.sparseOutputs();
         if (!outputs.isEmpty() && outputs.get(0) != null
                 && outputs.get(0).what() instanceof AEItemKey outKey) {
-            guiGraphics.renderItem(outKey.toStack(), 116, 35);
+            guiGraphics.item(outKey.toStack(), 116, 35);
         }
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         var encoded = decoded();
         if (encoded != null) {
             renderGridTooltip(guiGraphics, encoded, mouseX, mouseY);
         }
     }
 
-    private void renderGridTooltip(GuiGraphics guiGraphics, EncodedAdaptivePattern encoded, int mouseX, int mouseY) {
+    private void renderGridTooltip(GuiGraphicsExtractor guiGraphics, EncodedAdaptivePattern encoded, int mouseX, int mouseY) {
         int index = gridIndexAt(mouseX, mouseY);
         if (index < 0 || index >= encoded.sparseInputs().size()) {
             return;
@@ -273,7 +275,7 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
         }
         lines.add(Component.literal("Click: cycle | +item: alternative").withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
         lines.add(Component.literal("Shift: reset | Ctrl: catalyst").withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
-        guiGraphics.renderComponentTooltip(font, lines, mouseX, mouseY);
+        guiGraphics.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
     }
 
     private int gridIndexAt(double mouseX, double mouseY) {
@@ -286,22 +288,22 @@ public class PatternWorkbenchScreen extends AEBaseScreen<PatternWorkbenchMenu> {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int index = gridIndexAt(mouseX, mouseY);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int index = gridIndexAt(event.x(), event.y());
         if (index >= 0 && decoded() != null) {
             byte action;
-            if (hasShiftDown()) {
+            if (getMinecraft().hasShiftDown()) {
                 action = CyclePatternSpecPayload.ACTION_RESET;
-            } else if (hasControlDown()) {
+            } else if (getMinecraft().hasControlDown()) {
                 action = CyclePatternSpecPayload.ACTION_TOGGLE_CATALYST;
             } else if (!menu.getCarried().isEmpty()) {
                 action = CyclePatternSpecPayload.ACTION_ADD_ALTERNATIVE;
             } else {
                 action = CyclePatternSpecPayload.ACTION_CYCLE;
             }
-            PacketDistributor.sendToServer(new CyclePatternSpecPayload(menu.pos, index, action));
+            ClientPacketDistributor.sendToServer(new CyclePatternSpecPayload(menu.pos, index, action));
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 }

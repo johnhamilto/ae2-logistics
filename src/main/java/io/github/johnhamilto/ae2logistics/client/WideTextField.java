@@ -1,7 +1,7 @@
 package io.github.johnhamilto.ae2logistics.client;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
@@ -33,7 +33,7 @@ public class WideTextField extends AETextField {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partial) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partial) {
         if (isVisible()) {
             int yOffset = !editableMirror ? 12 : isFocused() ? 24 : 0;
             int left = getX() - PADDING;
@@ -45,6 +45,6 @@ public class WideTextField extends AETextField {
                         .blit(guiGraphics);
             }
         }
-        super.renderWidget(guiGraphics, mouseX, mouseY, partial);
+        super.extractWidgetRenderState(guiGraphics, mouseX, mouseY, partial);
     }
 }

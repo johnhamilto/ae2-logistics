@@ -7,8 +7,8 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import appeng.client.gui.AEBaseScreen;
 
@@ -73,7 +73,7 @@ public class JeiIntegration implements IModPlugin {
                     public void accept(I dropped) {
                         // Optimistic client-side update plus the authoritative server set.
                         ghostTarget.setGhost(index, stack);
-                        PacketDistributor.sendToServer(
+                        ClientPacketDistributor.sendToServer(
                                 new GhostSlotPayload(menu.containerId, index, stack));
                     }
                 });

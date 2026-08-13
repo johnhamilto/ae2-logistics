@@ -2,9 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {"item": "ae2:crafting_unit"},
-    {"item": "ae2logistics:regulus_crystal"},
-    {"item": "ae2:engineering_processor"}
+    "ae2:crafting_unit",
+    "ae2logistics:regulus_crystal",
+    "ae2:engineering_processor"
   ],
-  "result": {"count": 1, "id": "ae2logistics:job_scheduler"}
+  "result": {
+    "count": 1,
+    "id": "ae2logistics:job_scheduler"
+  }
 }

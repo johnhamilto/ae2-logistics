@@ -40,6 +40,6 @@ public class LogicCoreBlock extends Block implements EntityBlock {
                             Component.translatable("block.ae2logistics.logic_core")),
                     buffer -> LogicCoreMenu.writeOpenData(buffer, core));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.SUCCESS;
     }
 }

@@ -2,15 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "ae2:fluix_glass_cable"
-    },
-    {
-      "item": "ae2:wireless_receiver"
-    },
-    {
-      "item": "ae2logistics:regulus_crystal"
-    }
+    "ae2:fluix_glass_cable",
+    "ae2:wireless_receiver",
+    "ae2logistics:regulus_crystal"
   ],
   "result": {
     "count": 2,

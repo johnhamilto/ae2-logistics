@@ -8,6 +8,9 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 
 import appeng.api.behaviors.GenericInternalInventory;
 import appeng.api.config.Actionable;
@@ -21,14 +24,11 @@ import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.AEKeyType;
 import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.MEStorage;
-import appeng.items.parts.PartModels;
-import appeng.parts.p2p.P2PModels;
 import appeng.parts.p2p.P2PTunnelPart;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
@@ -51,20 +51,12 @@ import io.github.johnhamilto.ae2logistics.provider.ReturnAdapters;
 public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
         implements IGridTickable {
 
-    private static final P2PModels MODELS = new P2PModels(AE2Logistics.id("part/provider_p2p_tunnel"));
-
-    @PartModels
-    public static List<IPartModel> getModels() {
-        return MODELS.getModels();
-    }
-
     private final VirtualProvider virtualProvider = new VirtualProvider();
     private final MEStorage returnPath = new ReturnPath();
-    private final GenericInternalInventory returnGenericInv = ReturnAdapters.genericInv(returnPath);
-    private final net.neoforged.neoforge.items.IItemHandler returnItemHandler =
-            ReturnAdapters.itemHandler(returnPath);
-    private final net.neoforged.neoforge.fluids.capability.IFluidHandler returnFluidHandler =
-            ReturnAdapters.fluidHandler(returnPath);
+    private final ReturnAdapters.ReturnBuffer returnBuffer = ReturnAdapters.buffer(() -> {
+        getHost().markForSave();
+        getMainNode().ifPresent((grid, node) -> grid.getTickManager().alertDevice(node));
+    });
 
     public ProviderP2PTunnelPart(IPartItem<?> partItem) {
         super(partItem);
@@ -91,18 +83,18 @@ public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
      */
     @Nullable
     public GenericInternalInventory exposedReturnGenericInv() {
-        return isOutput() ? returnGenericInv : null;
+        return isOutput() ? returnBuffer.genericInv() : null;
     }
 
     /** Machines return results via plain item capability on the output face. */
     @Nullable
-    public net.neoforged.neoforge.items.IItemHandler exposedReturnItemHandler() {
-        return isOutput() ? returnItemHandler : null;
+    public ResourceHandler<ItemResource> exposedReturnItemHandler() {
+        return isOutput() ? returnBuffer.itemHandler() : null;
     }
 
     @Nullable
-    public net.neoforged.neoforge.fluids.capability.IFluidHandler exposedReturnFluidHandler() {
-        return isOutput() ? returnFluidHandler : null;
+    public ResourceHandler<FluidResource> exposedReturnFluidHandler() {
+        return isOutput() ? returnBuffer.fluidHandler() : null;
     }
 
     /** The push target behind this (output) tunnel's face. */
@@ -147,8 +139,32 @@ public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
     public TickRateModulation tickingRequest(IGridNode node, int ticksSinceLastCall) {
         if (isOutput()) {
             virtualProvider.maybeRequestUpdate();
+            // Tick-time flush: machines return into the buffer inside their own
+            // transfer transactions; MEStorage routing must run outside them.
+            if (returnBuffer.flush(returnPath)) {
+                return TickRateModulation.URGENT;
+            }
         }
         return TickRateModulation.SLOWER;
+    }
+
+    @Override
+    public void writeToNBT(net.minecraft.world.level.storage.ValueOutput data) {
+        super.writeToNBT(data);
+        returnBuffer.writeToNBT(data, "returnBuffer");
+    }
+
+    @Override
+    public void readFromNBT(net.minecraft.world.level.storage.ValueInput data) {
+        super.readFromNBT(data);
+        returnBuffer.readFromNBT(data, "returnBuffer");
+    }
+
+    @Override
+    public void addAdditionalDrops(java.util.List<net.minecraft.world.item.ItemStack> drops, boolean wrenched) {
+        super.addAdditionalDrops(drops, wrenched);
+        var host = getHost().getBlockEntity();
+        returnBuffer.addDrops(drops, host.getLevel(), host.getBlockPos());
     }
 
     /**
@@ -336,10 +352,5 @@ public class ProviderP2PTunnelPart extends P2PTunnelPart<ProviderP2PTunnelPart>
         public Component getDescription() {
             return Component.literal("Provider P2P Return " + getFrequency());
         }
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODELS.getModel(isPowered(), isActive());
     }
 }

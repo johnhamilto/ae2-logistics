@@ -105,10 +105,10 @@ public class AE2Logistics {
             CONDITION_CODECS.register("dev_only", () -> DevOnlyCondition.CODEC);
 
     /** Per cable-bus block entity: part side name -> P2P frequency name. See {@code P2PNames}. */
-    public static final Supplier<net.neoforged.neoforge.attachment.AttachmentType<java.util.Map<String, String>>> P2P_NAMES =
+    public static final Supplier<net.neoforged.neoforge.attachment.AttachmentType<java.util.HashMap<String, String>>> P2P_NAMES =
             ATTACHMENTS.register("p2p_names",
                     () -> net.neoforged.neoforge.attachment.AttachmentType
-                            .<java.util.Map<String, String>>builder(() -> new java.util.HashMap<>())
+                            .<java.util.HashMap<String, String>>builder(() -> new java.util.HashMap<>())
                             .serialize(
                                     com.mojang.serialization.Codec
                                             .unboundedMap(com.mojang.serialization.Codec.STRING,
@@ -118,16 +118,15 @@ public class AE2Logistics {
                                     map -> !map.isEmpty())
                             .build());
 
-    public static final DeferredBlock<RegisterBankBlock> REGISTER_BANK = BLOCKS.register("register_bank",
-            () -> new RegisterBankBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+    public static final DeferredBlock<RegisterBankBlock> REGISTER_BANK = BLOCKS.registerBlock("register_bank", RegisterBankBlock::new,
+            () -> BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<BlockItem> REGISTER_BANK_ITEM = ITEMS.registerSimpleBlockItem(REGISTER_BANK);
     public static final Supplier<BlockEntityType<RegisterBankBlockEntity>> REGISTER_BANK_BE = BLOCK_ENTITIES
             .register("register_bank", () -> new BlockEntityType<>(RegisterBankBlockEntity::new, REGISTER_BANK.get()));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.StorageJanitorBlock> STORAGE_JANITOR =
-            BLOCKS.register("storage_janitor",
-                    () -> new io.github.johnhamilto.ae2logistics.block.StorageJanitorBlock(
-                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+            BLOCKS.registerBlock("storage_janitor", io.github.johnhamilto.ae2logistics.block.StorageJanitorBlock::new,
+                    () -> BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<BlockItem> STORAGE_JANITOR_ITEM = ITEMS.registerSimpleBlockItem(STORAGE_JANITOR);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity>> STORAGE_JANITOR_BE =
             BLOCK_ENTITIES.register("storage_janitor", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity::new,
@@ -137,9 +136,8 @@ public class AE2Logistics {
                     .create(io.github.johnhamilto.ae2logistics.menu.StorageJanitorMenu::new));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.TracePanelBlock> TRACE_PANEL =
-            BLOCKS.register("trace_panel",
-                    () -> new io.github.johnhamilto.ae2logistics.block.TracePanelBlock(
-                            BlockBehaviour.Properties.of().strength(1.5f).sound(SoundType.METAL).noOcclusion()));
+            BLOCKS.registerBlock("trace_panel", io.github.johnhamilto.ae2logistics.block.TracePanelBlock::new,
+                    () -> BlockBehaviour.Properties.of().strength(1.5f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<BlockItem> TRACE_PANEL_ITEM = ITEMS.registerSimpleBlockItem(TRACE_PANEL);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity>> TRACE_PANEL_BE =
             BLOCK_ENTITIES.register("trace_panel", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity::new,
@@ -151,8 +149,8 @@ public class AE2Logistics {
                     .networkSynchronized(Identifier.STREAM_CODEC)
                     .build());
 
-    public static final DeferredItem<SignalCardItem> SIGNAL_CARD = ITEMS.register("signal_card",
-            () -> new SignalCardItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<SignalCardItem> SIGNAL_CARD = ITEMS.registerItem("signal_card", SignalCardItem::new,
+            () -> new Item.Properties().stacksTo(1));
 
     public static final Supplier<DataComponentType<EncodedAdaptivePattern>> ENCODED_ADAPTIVE_PATTERN = DATA_COMPONENTS
             .register("encoded_adaptive_pattern", () -> DataComponentType.<EncodedAdaptivePattern>builder()
@@ -160,14 +158,13 @@ public class AE2Logistics {
                     .networkSynchronized(EncodedAdaptivePattern.STREAM_CODEC)
                     .build());
 
-    public static final DeferredItem<Item> ADAPTIVE_PATTERN = ITEMS.register("adaptive_processing_pattern",
-            () -> PatternDetailsHelper.encodedPatternItemBuilder(AdaptivePattern::new)
+    public static final DeferredItem<Item> ADAPTIVE_PATTERN = ITEMS.registerItem("adaptive_processing_pattern",
+            properties -> PatternDetailsHelper.encodedPatternItemBuilder(AdaptivePattern::new)
                     .invalidPatternTooltip(AdaptivePattern::getInvalidPatternTooltip)
-                    .build(new Item.Properties()));
+                    .build(properties));
 
     /** The mod's themed resource: forms when charged certus, redstone, and glowstone meet water. */
-    public static final DeferredItem<Item> REGULUS_CRYSTAL = ITEMS.register("regulus_crystal",
-            () -> new Item(new Item.Properties()));
+    public static final DeferredItem<Item> REGULUS_CRYSTAL = ITEMS.registerItem("regulus_crystal", Item::new);
 
     public static final Supplier<DataComponentType<io.github.johnhamilto.ae2logistics.crafting.GuardedPatternData>> GUARDED_PATTERN_DATA =
             DATA_COMPONENTS.register("guarded_pattern",
@@ -185,16 +182,15 @@ public class AE2Logistics {
                     () -> DataComponentType.<java.util.List<io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem.Entry>>builder()
                             .persistent(io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem.Entry.LIST_CODEC)
                             .build());
-    public static final DeferredItem<Item> CONFIG_BLUEPRINT = ITEMS.register("config_blueprint",
-            () -> new io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem(
-                    new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<Item> CONFIG_BLUEPRINT = ITEMS.registerItem("config_blueprint", io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem::new,
+            () -> new Item.Properties().stacksTo(1));
 
-    public static final DeferredItem<Item> GUARDED_PATTERN = ITEMS.register("guarded_pattern",
-            () -> PatternDetailsHelper
+    public static final DeferredItem<Item> GUARDED_PATTERN = ITEMS.registerItem("guarded_pattern",
+            properties -> PatternDetailsHelper
                     .encodedPatternItemBuilder(io.github.johnhamilto.ae2logistics.crafting.GuardedPattern::new)
                     .invalidPatternTooltip(
                             io.github.johnhamilto.ae2logistics.crafting.GuardedPattern::getInvalidPatternTooltip)
-                    .build(new Item.Properties()));
+                    .build(properties));
 
     // Memory-card payloads: settings our parts export beyond AE2's generic ones.
     public static final Supplier<DataComponentType<net.minecraft.nbt.CompoundTag>> EXPORTED_LOGIC_SETTINGS =
@@ -210,9 +206,9 @@ public class AE2Logistics {
                     () -> DataComponentType.<net.minecraft.nbt.CompoundTag>builder()
                             .persistent(net.minecraft.nbt.CompoundTag.CODEC).build());
 
-    public static final DeferredBlock<PatternWorkbenchBlock> PATTERN_WORKBENCH = BLOCKS.register(
-            "pattern_workbench",
-            () -> new PatternWorkbenchBlock(BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+    public static final DeferredBlock<PatternWorkbenchBlock> PATTERN_WORKBENCH = BLOCKS.registerBlock(
+            "pattern_workbench", PatternWorkbenchBlock::new,
+            () -> BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<BlockItem> PATTERN_WORKBENCH_ITEM = ITEMS
             .registerSimpleBlockItem(PATTERN_WORKBENCH);
     public static final Supplier<BlockEntityType<PatternWorkbenchBlockEntity>> PATTERN_WORKBENCH_BE = BLOCK_ENTITIES
@@ -222,9 +218,8 @@ public class AE2Logistics {
             "pattern_workbench", () -> IMenuTypeExtension.create(PatternWorkbenchMenu::new));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.JobSchedulerBlock> JOB_SCHEDULER =
-            BLOCKS.register("job_scheduler",
-                    () -> new io.github.johnhamilto.ae2logistics.block.JobSchedulerBlock(
-                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+            BLOCKS.registerBlock("job_scheduler", io.github.johnhamilto.ae2logistics.block.JobSchedulerBlock::new,
+                    () -> BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<BlockItem> JOB_SCHEDULER_ITEM = ITEMS
             .registerSimpleBlockItem(JOB_SCHEDULER);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity>> JOB_SCHEDULER_BE =
@@ -235,9 +230,8 @@ public class AE2Logistics {
                     .create(io.github.johnhamilto.ae2logistics.menu.JobSchedulerMenu::new));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.LogicCoreBlock> LOGIC_CORE =
-            BLOCKS.register("logic_core",
-                    () -> new io.github.johnhamilto.ae2logistics.block.LogicCoreBlock(
-                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+            BLOCKS.registerBlock("logic_core", io.github.johnhamilto.ae2logistics.block.LogicCoreBlock::new,
+                    () -> BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<BlockItem> LOGIC_CORE_ITEM = ITEMS
             .registerSimpleBlockItem(LOGIC_CORE);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.LogicCoreBlockEntity>> LOGIC_CORE_BE =
@@ -254,9 +248,8 @@ public class AE2Logistics {
                             .persistent(net.minecraft.core.GlobalPos.CODEC).build());
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.DenseWapBlock> DENSE_WAP =
-            BLOCKS.register("dense_wireless_access_point",
-                    () -> new io.github.johnhamilto.ae2logistics.block.DenseWapBlock(
-                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+            BLOCKS.registerBlock("dense_wireless_access_point", io.github.johnhamilto.ae2logistics.block.DenseWapBlock::new,
+                    () -> BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<BlockItem> DENSE_WAP_ITEM = ITEMS
             .registerSimpleBlockItem(DENSE_WAP);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.DenseWapBlockEntity>> DENSE_WAP_BE =
@@ -264,21 +257,18 @@ public class AE2Logistics {
                             DENSE_WAP.get()));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlock> WIRELESS_BRIDGE =
-            BLOCKS.register("wireless_bridge",
-                    () -> new io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlock(
-                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+            BLOCKS.registerBlock("wireless_bridge", io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlock::new,
+                    () -> BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<io.github.johnhamilto.ae2logistics.item.WirelessBridgeItem> WIRELESS_BRIDGE_ITEM =
-            ITEMS.register("wireless_bridge",
-                    () -> new io.github.johnhamilto.ae2logistics.item.WirelessBridgeItem(
-                            WIRELESS_BRIDGE.get(), new Item.Properties()));
+            ITEMS.registerItem("wireless_bridge",
+                    properties -> new io.github.johnhamilto.ae2logistics.item.WirelessBridgeItem(WIRELESS_BRIDGE.get(), properties));
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlockEntity>> WIRELESS_BRIDGE_BE =
             BLOCK_ENTITIES.register("wireless_bridge", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlockEntity::new,
                             WIRELESS_BRIDGE.get()));
 
     public static final DeferredBlock<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock> GUARDED_PROVIDER =
-            BLOCKS.register("guarded_pattern_provider",
-                    () -> new io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock(
-                            BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion()));
+            BLOCKS.registerBlock("guarded_pattern_provider", io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlock::new,
+                    () -> BlockBehaviour.Properties.of().strength(2.0f).sound(SoundType.METAL).noOcclusion());
     public static final DeferredItem<BlockItem> GUARDED_PROVIDER_ITEM = ITEMS
             .registerSimpleBlockItem(GUARDED_PROVIDER);
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.GuardedPatternProviderBlockEntity>> GUARDED_PROVIDER_BE =
@@ -441,7 +431,7 @@ public class AE2Logistics {
     private static <T extends IPart> DeferredItem<PartItem<T>> part(String id, Class<T> partClass,
             Function<IPartItem<T>, T> factory) {
         // 26.1: part models are client-side data now; the @PartModels scan is gone.
-        return ITEMS.register(id, () -> new PartItem<>(new Item.Properties(), partClass, factory));
+        return ITEMS.registerItem(id, properties -> new PartItem<>(properties, partClass, factory));
     }
 
     public static Identifier id(String path) {
@@ -602,7 +592,7 @@ public class AE2Logistics {
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.TestWorldCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.JanitorCommands::register);
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             AE2LogisticsClient.initialize(modBus);
         }
 

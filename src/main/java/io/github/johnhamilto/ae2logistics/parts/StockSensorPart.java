@@ -9,10 +9,7 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
 import appeng.api.stacks.GenericStack;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 
@@ -21,9 +18,6 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
  * tick, turning inventory levels into signals without commands or emitters.
  */
 public class StockSensorPart extends LogicPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/stock_sensor"));
 
     @Nullable
     private GenericStack watched;
@@ -76,10 +70,5 @@ public class StockSensorPart extends LogicPart {
     public void readFromNBT(ValueInput data) {
         super.readFromNBT(data);
         watched = data.read("watched", GenericStack.CODEC).orElse(null);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

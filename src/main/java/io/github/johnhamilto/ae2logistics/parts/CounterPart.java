@@ -8,9 +8,6 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.IPartModel;
-import appeng.items.parts.PartModels;
-import appeng.parts.PartModel;
 
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.signal.SignalMath;
@@ -20,9 +17,6 @@ import io.github.johnhamilto.ae2logistics.signal.SignalMath;
  * count; valueA is an optional wrap modulus (0 = no wrap). The count persists.
  */
 public class CounterPart extends LogicPart {
-
-    @PartModels
-    public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/counter"));
 
     private long count;
     private boolean lastInput;
@@ -85,10 +79,5 @@ public class CounterPart extends LogicPart {
         super.readFromNBT(data);
         count = data.getLongOr("count", 0L);
         lastInput = data.getBooleanOr("lastInput", false);
-    }
-
-    @Override
-    public IPartModel getStaticModels() {
-        return MODEL;
     }
 }

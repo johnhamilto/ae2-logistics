@@ -19,10 +19,10 @@ import io.github.johnhamilto.ae2logistics.wireless.WirelessLinkRegistry;
 public class WirelessConnectorGameTests {
 
     static void register() {
-        LogisticsTestInstance.add("connectorColorsGateLinking", "empty5", 200, WirelessConnectorGameTests::connectorColorsGateLinking);
-        LogisticsTestInstance.add("parallelTrunkLeavesWirelessIdle", "empty12", 400, WirelessConnectorGameTests::parallelTrunkLeavesWirelessIdle);
-        LogisticsTestInstance.add("wirelessOnlyIslandCarriesChannels", "empty12", 400, WirelessConnectorGameTests::wirelessOnlyIslandCarriesChannels);
-        LogisticsTestInstance.add("rangeIsMutualReach", "empty20", 400, WirelessConnectorGameTests::rangeIsMutualReach);
+        LogisticsTestInstance.add("connectorColorsGateLinking", "empty5", 200, 24, WirelessConnectorGameTests::connectorColorsGateLinking);
+        LogisticsTestInstance.add("parallelTrunkLeavesWirelessIdle", "empty12", 400, 24, WirelessConnectorGameTests::parallelTrunkLeavesWirelessIdle);
+        LogisticsTestInstance.add("wirelessOnlyIslandCarriesChannels", "empty12", 400, 24, WirelessConnectorGameTests::wirelessOnlyIslandCarriesChannels);
+        LogisticsTestInstance.add("rangeIsMutualReach", "empty20", 400, 24, WirelessConnectorGameTests::rangeIsMutualReach);
         LogisticsTestInstance.add("connectorStateSurvivesNbtRoundTrip", "empty5", WirelessConnectorGameTests::connectorStateSurvivesNbtRoundTrip);
     }
 

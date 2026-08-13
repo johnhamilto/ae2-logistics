@@ -1,6 +1,6 @@
 package io.github.johnhamilto.ae2logistics.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /**
  * The house sparkline: dark plot panel, bright column-joined line. Shared by the
@@ -17,7 +17,7 @@ public final class Sparkline {
     }
 
     /** Draws the panel and the line; callers add labels. No-op below two samples. */
-    public static void draw(GuiGraphics guiGraphics, int x, int y, int width, int height,
+    public static void draw(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height,
             long[] samples) {
         guiGraphics.fill(x, y, x + width, y + height, PANEL);
         if (samples.length < 2) {
