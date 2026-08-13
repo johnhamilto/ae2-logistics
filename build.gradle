@@ -1,5 +1,5 @@
 plugins {
-    id 'net.neoforged.moddev' version '2.0.78'
+    id 'net.neoforged.moddev' version '2.0.143'
 }
 
 group = project.mod_group
@@ -11,7 +11,7 @@ base {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -38,28 +38,9 @@ dependencies {
     implementation "org.appliedenergistics:appliedenergistics2:${project.ae2_version}"
     compileOnly "org.appliedenergistics:guideme:${project.guideme_version}"
 
-    // Dev-environment QoL only; not shipped dependencies.
-    runtimeOnly "maven.modrinth:jade:${project.jade_version}"
-    compileOnly "mezz.jei:jei-1.21.1-common-api:${project.jei_version}"
-    compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${project.jei_version}"
-    runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${project.jei_version}"
-
-    // The de facto standard AE2 suite, runtime only: integration tests detect these
-    // via ModList and skip when absent, so none of them are real dependencies.
-    // AppMek + Mekanism also sit on the COMPILE classpath for the guarded chemical
-    // bridge (compat/AppMekReturns, classloaded only when the mod is present) -
-    // compileOnly adds no runtime requirement and neoforge.mods.toml lists neither.
-    compileOnly "maven.modrinth:applied-mekanistics:${project.appmek_version}"
-    compileOnly "maven.modrinth:mekanism:${project.mekanism_version}"
-    runtimeOnly "maven.modrinth:glodium:${project.glodium_version}"
-    runtimeOnly "maven.modrinth:extended-ae:${project.extendedae_version}"
-    runtimeOnly "maven.modrinth:mega:${project.megacells_version}"
-    runtimeOnly "maven.modrinth:applied-mekanistics:${project.appmek_version}"
-    runtimeOnly "maven.modrinth:mekanism:${project.mekanism_version}"
-    runtimeOnly "maven.modrinth:merequester:${project.merequester_version}"
-    runtimeOnly "maven.modrinth:applied-energistics-2-wireless-terminals:${project.ae2wtlib_version}"
-    runtimeOnly "curse.maven:ae2-network-analyser-961856:${project.network_analyser_fileid}"
-    runtimeOnly "curse.maven:ae2-jei-integration-1074338:${project.ae2_jei_integration_fileid}"
+    // Dev-runtime QoL (JEI, Jade) and the 1.21.1 compat suite (plus the AppMek
+    // chemical bridge and its compileOnly deps) are absent on this branch until
+    // their 26.1 ports exist - main's build.gradle lists the full set.
 }
 
 sourceSets {
@@ -114,6 +95,8 @@ neoForge {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    // Port-era: surface every error at once instead of javac's first hundred.
+    options.compilerArgs += ['-Xmaxerrs', '10000']
 }
 
 tasks.withType(ProcessResources).configureEach {

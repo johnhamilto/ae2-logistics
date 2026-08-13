@@ -1,7 +1,7 @@
 # All targets funnel into the Gradle wrapper; this file makes the common
-# commands memorable and finds Homebrew's JDK 21 without any shell config.
+# commands memorable and finds Homebrew's JDK 25 without any shell config.
 
-BREW_JDK := $(shell brew --prefix openjdk@21 2>/dev/null)
+BREW_JDK := $(shell brew --prefix openjdk@25 2>/dev/null)
 ifneq ($(BREW_JDK),)
 export JAVA_HOME := $(BREW_JDK)/libexec/openjdk.jdk/Contents/Home
 endif
