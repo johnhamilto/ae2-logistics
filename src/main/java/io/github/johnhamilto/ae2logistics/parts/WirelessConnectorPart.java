@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 import appeng.api.networking.IGridNode;
@@ -202,21 +202,21 @@ public class WirelessConnectorPart extends AEBasePart {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         data.putString("color", color.name());
         data.putInt("boosters", boosters);
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
         try {
-            color = AEColor.valueOf(data.getString("color"));
+            color = AEColor.valueOf(data.getStringOr("color", ""));
         } catch (IllegalArgumentException e) {
             color = AEColor.TRANSPARENT;
         }
-        boosters = Math.max(0, Math.min(MAX_BOOSTERS, data.getInt("boosters")));
+        boosters = Math.max(0, Math.min(MAX_BOOSTERS, data.getIntOr("boosters", 0)));
     }
 
     @Override

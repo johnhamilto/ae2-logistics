@@ -3,7 +3,6 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -11,8 +10,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -23,9 +20,22 @@ import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 import io.github.johnhamilto.ae2logistics.signal.SignalService;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class MeshGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("redstoneMeshIsWiredOr", "empty5", 200, MeshGameTests::redstoneMeshIsWiredOr);
+        LogisticsTestInstance.add("itemMeshKeepsBatchesTogether", "empty5", 200, MeshGameTests::itemMeshKeepsBatchesTogether);
+        LogisticsTestInstance.add("providerP2PDistributesBatchesAcrossMachines", "empty5", 400, MeshGameTests::providerP2PDistributesBatchesAcrossMachines);
+        LogisticsTestInstance.add("meshDeliveryCannotEnterAnotherMesh", "empty5", 200, MeshGameTests::meshDeliveryCannotEnterAnotherMesh);
+        LogisticsTestInstance.add("providerP2PBlocksWhenAllMachinesBusy", "empty5", 400, MeshGameTests::providerP2PBlocksWhenAllMachinesBusy);
+        LogisticsTestInstance.add("meMeshSplitsWhenEndpointLeaves", "empty5", 300, MeshGameTests::meMeshSplitsWhenEndpointLeaves);
+        LogisticsTestInstance.add("meMeshCarriesFedNetworks", "empty5", 200, MeshGameTests::meMeshCarriesFedNetworks);
+        LogisticsTestInstance.add("meshFrequenciesAreNetworkScoped", "empty5", 200, MeshGameTests::meshFrequenciesAreNetworkScoped);
+        LogisticsTestInstance.add("meMeshBundlesChannelsAcrossLanes", "empty12", 400, MeshGameTests::meMeshBundlesChannelsAcrossLanes);
+        LogisticsTestInstance.add("signalMeshBridgesNetworks", "empty5", 200, MeshGameTests::signalMeshBridgesNetworks);
+        LogisticsTestInstance.add("typedEndpointLocksCapabilityMask", "empty5", 100, MeshGameTests::typedEndpointLocksCapabilityMask);
+        LogisticsTestInstance.add("typedEndpointsFormTunnel", "empty5", 200, MeshGameTests::typedEndpointsFormTunnel);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -46,8 +56,7 @@ public class MeshGameTests {
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void redstoneMeshIsWiredOr(GameTestHelper helper) {
+    public static void redstoneMeshIsWiredOr(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -70,8 +79,7 @@ public class MeshGameTests {
     }
 
     /** Two stacks inserted in one tick must land in ONE chest - the provider-batch guarantee. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void itemMeshKeepsBatchesTogether(GameTestHelper helper) {
+    public static void itemMeshKeepsBatchesTogether(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -123,8 +131,7 @@ public class MeshGameTests {
      * one mesh input must land each complete batch on a DIFFERENT machine, because the
      * first machine still holds its batch - the provider's own setting maps through.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void providerP2PDistributesBatchesAcrossMachines(GameTestHelper helper) {
+    public static void providerP2PDistributesBatchesAcrossMachines(GameTestHelper helper) {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(2, 1, 0),
@@ -197,13 +204,13 @@ public class MeshGameTests {
                             var result = grid.getCraftingService().submitJob(plan, null, null, true,
                                     new appeng.me.helpers.MachineSource(input));
                             if (!result.successful()) {
-                                throw new net.minecraft.gametest.framework.GameTestAssertException(
+                                throw helper.assertionException(
                                         "submit failed: " + result.errorCode());
                             }
                             job.submitted = true;
                         }
                     } catch (java.util.concurrent.TimeoutException e) {
-                        throw new net.minecraft.gametest.framework.GameTestAssertException("planning");
+                        throw helper.assertionException("planning");
                     } catch (java.util.concurrent.ExecutionException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -231,8 +238,7 @@ public class MeshGameTests {
     }
 
     /** A mesh delivery aimed at another mesh input must be refused, not looped. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meshDeliveryCannotEnterAnotherMesh(GameTestHelper helper) {
+    public static void meshDeliveryCannotEnterAnotherMesh(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -257,8 +263,7 @@ public class MeshGameTests {
     }
 
     /** With a single machine still holding its batch, the provider must push nothing more. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void providerP2PBlocksWhenAllMachinesBusy(GameTestHelper helper) {
+    public static void providerP2PBlocksWhenAllMachinesBusy(GameTestHelper helper) {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(2, 1, 0),
@@ -320,7 +325,7 @@ public class MeshGameTests {
                             job.submitted = true;
                         }
                     } catch (java.util.concurrent.TimeoutException e) {
-                        throw new net.minecraft.gametest.framework.GameTestAssertException("planning");
+                        throw helper.assertionException("planning");
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -335,8 +340,7 @@ public class MeshGameTests {
     }
 
     /** Removing an endpoint from the frequency must split the carried grids again. */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void meMeshSplitsWhenEndpointLeaves(GameTestHelper helper) {
+    public static void meMeshSplitsWhenEndpointLeaves(GameTestHelper helper) {
         // One backbone network carries the frequency (frequencies never cross networks).
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
@@ -378,8 +382,7 @@ public class MeshGameTests {
      * ME tunneling is true P2P: the networks fed INTO the endpoints' faces fuse across
      * the mesh, carried by the host network - which itself is never fused into them.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meMeshCarriesFedNetworks(GameTestHelper helper) {
+    public static void meMeshCarriesFedNetworks(GameTestHelper helper) {
         // One backbone network carries the frequency (frequencies never cross networks).
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
@@ -422,8 +425,7 @@ public class MeshGameTests {
      * different host networks must NOT link - the host network is the carrier,
      * exactly like AE2's own P2P tunnels.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meshFrequenciesAreNetworkScoped(GameTestHelper helper) {
+    public static void meshFrequenciesAreNetworkScoped(GameTestHelper helper) {
         // Two DISJOINT host networks (gap at x=2), each with a powered cable.
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
@@ -469,8 +471,7 @@ public class MeshGameTests {
      * must become two LANES (disjoint pairs, not a star) for 24 + 9 = 33 channels of
      * interfaces to path across the mesh. Every interface must come online.
      */
-    @GameTest(template = "empty12", timeoutTicks = 400)
-    public void meMeshBundlesChannelsAcrossLanes(GameTestHelper helper) {
+    public static void meMeshBundlesChannelsAcrossLanes(GameTestHelper helper) {
         var controllerBlock = BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:controller"));
         var creativeCell = BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell"));
         var interfaceBlock = BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:interface"));
@@ -545,8 +546,7 @@ public class MeshGameTests {
      * Signals bridge subnets THROUGH the mesh: the input face reads the subnet touching
      * it, the output face injects into its subnet, and the host network carries.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void signalMeshBridgesNetworks(GameTestHelper helper) {
+    public static void signalMeshBridgesNetworks(GameTestHelper helper) {
         // Backbone network carrying both endpoints.
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
@@ -590,8 +590,7 @@ public class MeshGameTests {
     }
 
     /** Typed part items lock the capability mask no matter what config arrives. */
-    @GameTest(template = "empty5", timeoutTicks = 100)
-    public void typedEndpointLocksCapabilityMask(GameTestHelper helper) {
+    public static void typedEndpointLocksCapabilityMask(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -615,8 +614,7 @@ public class MeshGameTests {
     }
 
     /** A typed input/output pair forwards items even when the config carries mask 0. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void typedEndpointsFormTunnel(GameTestHelper helper) {
+    public static void typedEndpointsFormTunnel(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));

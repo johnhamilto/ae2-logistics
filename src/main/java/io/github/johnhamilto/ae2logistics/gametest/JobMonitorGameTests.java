@@ -3,15 +3,12 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -21,9 +18,11 @@ import appeng.api.stacks.GenericStack;
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.JobMonitorPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class JobMonitorGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("jobMonitorTracksActiveStallAndCancel", "empty5", 600, JobMonitorGameTests::jobMonitorTracksActiveStallAndCancel);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -34,8 +33,7 @@ public class JobMonitorGameTests {
      * A job whose provider has nowhere to push sits busy at zero progress: the monitor
      * must report it active, then stalled once the window passes, then idle after cancel.
      */
-    @GameTest(template = "empty5", timeoutTicks = 600)
-    public void jobMonitorTracksActiveStallAndCancel(GameTestHelper helper) {
+    public static void jobMonitorTracksActiveStallAndCancel(GameTestHelper helper) {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(2, 1, 0),
@@ -96,13 +94,13 @@ public class JobMonitorGameTests {
                             var result = grid.getCraftingService().submitJob(plan, null, null, true,
                                     new appeng.me.helpers.MachineSource(monitor));
                             if (!result.successful()) {
-                                throw new net.minecraft.gametest.framework.GameTestAssertException(
+                                throw helper.assertionException(
                                         "submit failed: " + result.errorCode());
                             }
                             job.submitted = true;
                         }
                     } catch (java.util.concurrent.TimeoutException e) {
-                        throw new net.minecraft.gametest.framework.GameTestAssertException("planning");
+                        throw helper.assertionException("planning");
                     } catch (java.util.concurrent.ExecutionException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }

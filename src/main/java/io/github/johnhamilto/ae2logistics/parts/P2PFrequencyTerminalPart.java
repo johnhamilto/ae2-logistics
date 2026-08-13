@@ -3,13 +3,12 @@ package io.github.johnhamilto.ae2logistics.parts;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 import appeng.api.networking.IGridNodeListener;
@@ -115,28 +114,24 @@ public class P2PFrequencyTerminalPart extends AEBasePart {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         if (!legacyNames.isEmpty()) {
-            var list = new net.minecraft.nbt.ListTag();
+            var list = data.childrenList("frequencyNames");
             for (var entry : legacyNames.entrySet()) {
-                var tag = new CompoundTag();
+                var tag = list.addChild();
                 tag.putShort("freq", entry.getKey());
                 tag.putString("name", entry.getValue());
-                list.add(tag);
             }
-            data.put("frequencyNames", list);
         }
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
         legacyNames.clear();
-        for (Tag element : data.getList("frequencyNames", Tag.TAG_COMPOUND)) {
-            if (element instanceof CompoundTag tag) {
-                legacyNames.put(tag.getShort("freq"), tag.getString("name"));
-            }
+        for (var tag : data.childrenListOrEmpty("frequencyNames")) {
+            legacyNames.put((short) tag.getShortOr("freq", (short) 0), tag.getStringOr("name", ""));
         }
     }
 

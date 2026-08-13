@@ -3,13 +3,10 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -23,9 +20,12 @@ import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class MemoryCardGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("memoryCardRoundTripsLogicConfig", "empty5", 200, MemoryCardGameTests::memoryCardRoundTripsLogicConfig);
+        LogisticsTestInstance.add("memoryCardRoundTripsMeshConfig", "empty5", 200, MemoryCardGameTests::memoryCardRoundTripsMeshConfig);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -33,8 +33,7 @@ public class MemoryCardGameTests {
     }
 
     /** Memory-card settings round-trip: full logic config plus the sensor's watched key. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void memoryCardRoundTripsLogicConfig(GameTestHelper helper) {
+    public static void memoryCardRoundTripsLogicConfig(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
@@ -72,8 +71,7 @@ public class MemoryCardGameTests {
     }
 
     /** Mesh endpoint settings round-trip and re-register under the new frequency. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void memoryCardRoundTripsMeshConfig(GameTestHelper helper) {
+    public static void memoryCardRoundTripsMeshConfig(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));

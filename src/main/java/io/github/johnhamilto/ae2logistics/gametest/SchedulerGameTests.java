@@ -5,12 +5,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -19,9 +16,21 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 import io.github.johnhamilto.ae2logistics.signal.SignalService;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class SchedulerGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("constantFeedsThreshold", EMPTY, SchedulerGameTests::constantFeedsThreshold);
+        LogisticsTestInstance.add("multipleWritersSum", EMPTY, SchedulerGameTests::multipleWritersSum);
+        LogisticsTestInstance.add("sameTickPropagationThroughChain", EMPTY, SchedulerGameTests::sameTickPropagationThroughChain);
+        LogisticsTestInstance.add("cycleAdvancesExactlyOncePerTick", EMPTY, 200, SchedulerGameTests::cycleAdvancesExactlyOncePerTick);
+        LogisticsTestInstance.add("stockSensorReadsNetworkStorage", EMPTY, SchedulerGameTests::stockSensorReadsNetworkStorage);
+        LogisticsTestInstance.add("timerDrivesCounter", EMPTY, 200, SchedulerGameTests::timerDrivesCounter);
+        LogisticsTestInstance.add("historyRecordsSamples", EMPTY, 200, SchedulerGameTests::historyRecordsSamples);
+        LogisticsTestInstance.add("redstoneInputModeReadsFace", EMPTY, SchedulerGameTests::redstoneInputModeReadsFace);
+        LogisticsTestInstance.add("hysteresisLatchesBetweenSetpoints", EMPTY, 300, SchedulerGameTests::hysteresisLatchesBetweenSetpoints);
+        LogisticsTestInstance.add("redstoneOutputStrongVsWeak", EMPTY, 200, SchedulerGameTests::redstoneOutputStrongVsWeak);
+        LogisticsTestInstance.add("redstoneOutputEmits", EMPTY, SchedulerGameTests::redstoneOutputEmits);
+    }
 
     private static final String EMPTY = "empty5";
 
@@ -54,8 +63,7 @@ public class SchedulerGameTests {
         return node.getGrid().getService(SignalService.class);
     }
 
-    @GameTest(template = EMPTY)
-    public void constantFeedsThreshold(GameTestHelper helper) {
+    public static void constantFeedsThreshold(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
         var threshold = place(helper, busPos, Direction.NORTH, AE2Logistics.THRESHOLD_PART.get());
@@ -71,8 +79,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY)
-    public void multipleWritersSum(GameTestHelper helper) {
+    public static void multipleWritersSum(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var first = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
         var second = place(helper, busPos, Direction.NORTH, AE2Logistics.CONSTANT_PART.get());
@@ -87,8 +94,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY)
-    public void sameTickPropagationThroughChain(GameTestHelper helper) {
+    public static void sameTickPropagationThroughChain(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
         var doubler = place(helper, busPos, Direction.NORTH, AE2Logistics.ARITHMETIC_PART.get());
@@ -106,8 +112,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY, timeoutTicks = 200)
-    public void cycleAdvancesExactlyOncePerTick(GameTestHelper helper) {
+    public static void cycleAdvancesExactlyOncePerTick(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var increment = place(helper, busPos, Direction.UP, AE2Logistics.ARITHMETIC_PART.get());
         var echo = place(helper, busPos, Direction.NORTH, AE2Logistics.ARITHMETIC_PART.get());
@@ -127,8 +132,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY)
-    public void stockSensorReadsNetworkStorage(GameTestHelper helper) {
+    public static void stockSensorReadsNetworkStorage(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
 
         helper.setBlock(new BlockPos(3, 1, 1), Blocks.CHEST);
@@ -162,8 +166,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY, timeoutTicks = 200)
-    public void timerDrivesCounter(GameTestHelper helper) {
+    public static void timerDrivesCounter(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var timer = place(helper, busPos, Direction.UP, AE2Logistics.TIMER_PART.get());
         var counter = place(helper, busPos, Direction.NORTH, AE2Logistics.COUNTER_PART.get());
@@ -181,8 +184,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY, timeoutTicks = 200)
-    public void historyRecordsSamples(GameTestHelper helper) {
+    public static void historyRecordsSamples(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
         constant.applyConfig(SRC, null, null, 0, 500, 0, false);
@@ -198,8 +200,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY)
-    public void redstoneInputModeReadsFace(GameTestHelper helper) {
+    public static void redstoneInputModeReadsFace(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var port = place(helper, busPos, Direction.UP, AE2Logistics.REDSTONE_IO_PART.get());
         port.applyConfig(SRC, null, null, 0, 0, 0, false);
@@ -213,8 +214,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY, timeoutTicks = 300)
-    public void hysteresisLatchesBetweenSetpoints(GameTestHelper helper) {
+    public static void hysteresisLatchesBetweenSetpoints(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
         var latch = place(helper, busPos, Direction.NORTH, AE2Logistics.HYSTERESIS_PART.get());
@@ -238,8 +238,7 @@ public class SchedulerGameTests {
     }
 
     /** Strong emission conducts through a solid block; weak emission must not. */
-    @GameTest(template = EMPTY, timeoutTicks = 200)
-    public void redstoneOutputStrongVsWeak(GameTestHelper helper) {
+    public static void redstoneOutputStrongVsWeak(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
         var port = place(helper, busPos, Direction.SOUTH, AE2Logistics.REDSTONE_IO_PART.get());
@@ -263,8 +262,7 @@ public class SchedulerGameTests {
         });
     }
 
-    @GameTest(template = EMPTY)
-    public void redstoneOutputEmits(GameTestHelper helper) {
+    public static void redstoneOutputEmits(GameTestHelper helper) {
         var busPos = setupNetwork(helper);
         var constant = place(helper, busPos, Direction.UP, AE2Logistics.CONSTANT_PART.get());
         var port = place(helper, busPos, Direction.NORTH, AE2Logistics.REDSTONE_IO_PART.get());

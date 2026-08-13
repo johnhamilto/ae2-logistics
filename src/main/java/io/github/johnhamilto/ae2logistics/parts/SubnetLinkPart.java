@@ -2,9 +2,9 @@ package io.github.johnhamilto.ae2logistics.parts;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.config.IncludeExclude;
 import appeng.api.config.Settings;
@@ -242,18 +242,18 @@ public class SubnetLinkPart extends StorageBusPart {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         if (subnetNode != null) {
-            subnetNode.saveToNBT(data);
+            subnetNode.serialize(data);
         }
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
         if (!isClientSide()) {
-            subnetInstance().loadFromNBT(data);
+            subnetInstance().deserialize(data);
         }
     }
 

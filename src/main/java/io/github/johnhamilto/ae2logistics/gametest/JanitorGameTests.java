@@ -3,14 +3,11 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -21,9 +18,12 @@ import appeng.parts.storagebus.StorageBusPart;
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.StorageJanitorBlockEntity;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class JanitorGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("janitorRehomesMisplacedStock", "empty5", 400, JanitorGameTests::janitorRehomesMisplacedStock);
+        LogisticsTestInstance.add("janitorLeavesSettledStockAlone", "empty5", 400, JanitorGameTests::janitorLeavesSettledStockAlone);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -53,8 +53,7 @@ public class JanitorGameTests {
      * higher-priority home appears, one janitor run re-settles it - and the run
      * ends on its own with nothing stranded in the held buffer.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void janitorRehomesMisplacedStock(GameTestHelper helper) {
+    public static void janitorRehomesMisplacedStock(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -97,8 +96,7 @@ public class JanitorGameTests {
     }
 
     /** Correctly-placed stock survives a run unmoved - the janitor is idempotent. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void janitorLeavesSettledStockAlone(GameTestHelper helper) {
+    public static void janitorLeavesSettledStockAlone(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));

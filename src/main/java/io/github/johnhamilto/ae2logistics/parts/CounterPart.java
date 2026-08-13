@@ -3,9 +3,9 @@ package io.github.johnhamilto.ae2logistics.parts;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
@@ -74,17 +74,17 @@ public class CounterPart extends LogicPart {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         data.putLong("count", count);
         data.putBoolean("lastInput", lastInput);
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
-        count = data.getLong("count");
-        lastInput = data.getBoolean("lastInput");
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
+        count = data.getLongOr("count", 0L);
+        lastInput = data.getBooleanOr("lastInput", false);
     }
 
     @Override

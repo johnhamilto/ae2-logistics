@@ -35,10 +35,8 @@ import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.networking.GridServices;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartItem;
-import appeng.api.parts.PartModels;
 import appeng.api.stacks.AEKeyTypes;
 import appeng.items.parts.PartItem;
-import appeng.items.parts.PartModelsHelper;
 
 import io.github.johnhamilto.ae2logistics.block.PatternWorkbenchBlock;
 import io.github.johnhamilto.ae2logistics.block.PatternWorkbenchBlockEntity;
@@ -115,7 +113,8 @@ public class AE2Logistics {
                                     com.mojang.serialization.Codec
                                             .unboundedMap(com.mojang.serialization.Codec.STRING,
                                                     com.mojang.serialization.Codec.STRING)
-                                            .xmap(java.util.HashMap::new, java.util.HashMap::new),
+                                            .xmap(java.util.HashMap::new, java.util.HashMap::new)
+                                            .fieldOf("names"),
                                     map -> !map.isEmpty())
                             .build());
 
@@ -164,7 +163,7 @@ public class AE2Logistics {
     public static final DeferredItem<Item> ADAPTIVE_PATTERN = ITEMS.register("adaptive_processing_pattern",
             () -> PatternDetailsHelper.encodedPatternItemBuilder(AdaptivePattern::new)
                     .invalidPatternTooltip(AdaptivePattern::getInvalidPatternTooltip)
-                    .build());
+                    .build(new Item.Properties()));
 
     /** The mod's themed resource: forms when charged certus, redstone, and glowstone meet water. */
     public static final DeferredItem<Item> REGULUS_CRYSTAL = ITEMS.register("regulus_crystal",
@@ -195,7 +194,7 @@ public class AE2Logistics {
                     .encodedPatternItemBuilder(io.github.johnhamilto.ae2logistics.crafting.GuardedPattern::new)
                     .invalidPatternTooltip(
                             io.github.johnhamilto.ae2logistics.crafting.GuardedPattern::getInvalidPatternTooltip)
-                    .build());
+                    .build(new Item.Properties()));
 
     // Memory-card payloads: settings our parts export beyond AE2's generic ones.
     public static final Supplier<DataComponentType<net.minecraft.nbt.CompoundTag>> EXPORTED_LOGIC_SETTINGS =
@@ -441,7 +440,7 @@ public class AE2Logistics {
 
     private static <T extends IPart> DeferredItem<PartItem<T>> part(String id, Class<T> partClass,
             Function<IPartItem<T>, T> factory) {
-        PartModels.registerModels(PartModelsHelper.createModels(partClass));
+        // 26.1: part models are client-side data now; the @PartModels scan is gone.
         return ITEMS.register(id, () -> new PartItem<>(new Item.Properties(), partClass, factory));
     }
 
@@ -464,8 +463,13 @@ public class AE2Logistics {
         modBus.addListener((RegisterEvent event) -> {
             if (event.getRegistryKey().equals(Registries.BLOCK)) {
                 AEKeyTypes.register(SignalKeyType.TYPE);
+            } else if (event.getRegistryKey().equals(Registries.TEST_INSTANCE_TYPE)) {
+                event.register(Registries.TEST_INSTANCE_TYPE, id("logistics_test"),
+                        () -> io.github.johnhamilto.ae2logistics.gametest.LogisticsTestInstance.CODEC);
             }
         });
+        modBus.addListener((net.neoforged.neoforge.event.RegisterGameTestsEvent event) ->
+                io.github.johnhamilto.ae2logistics.gametest.LogisticsTestInstance.registerAll(event));
 
         modBus.addListener((RegisterCapabilitiesEvent event) -> {
             event.registerBlockEntity(

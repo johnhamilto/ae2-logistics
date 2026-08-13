@@ -4,9 +4,9 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
@@ -110,15 +110,15 @@ public class RedstoneIOPart extends LogicPart {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         data.putInt("emitted", emitted);
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
-        emitted = data.getInt("emitted");
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
+        emitted = data.getIntOr("emitted", 0);
     }
 
     @Override

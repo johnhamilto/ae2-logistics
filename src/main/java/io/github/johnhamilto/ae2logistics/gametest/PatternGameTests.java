@@ -8,15 +8,11 @@ import java.util.concurrent.TimeoutException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
-import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.networking.crafting.CalculationStrategy;
@@ -33,12 +29,22 @@ import io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec;
 import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class PatternGameTests {
 
-    @GameTest(template = "empty5")
-    public void tagSpecExpandsAndMatches(GameTestHelper helper) {
+    static void register() {
+        LogisticsTestInstance.add("tagSpecExpandsAndMatches", "empty5", PatternGameTests::tagSpecExpandsAndMatches);
+        LogisticsTestInstance.add("autocraftConsumesTagSubstitute", "empty5", 400, PatternGameTests::autocraftConsumesTagSubstitute);
+        LogisticsTestInstance.add("anyOfMatchesOnlyListedAlternatives", "empty5", PatternGameTests::anyOfMatchesOnlyListedAlternatives);
+        LogisticsTestInstance.add("damageBandDistinguishesDamagedFromPristine", "empty5", PatternGameTests::damageBandDistinguishesDamagedFromPristine);
+        LogisticsTestInstance.add("damageBandsIgnoreOtherComponents", "empty5", PatternGameTests::damageBandsIgnoreOtherComponents);
+        LogisticsTestInstance.add("fuzzyPlansFromDamagedOnlyStorage", "empty5", 400, PatternGameTests::fuzzyPlansFromDamagedOnlyStorage);
+        LogisticsTestInstance.add("tagSubstitutionResolvesAtTreeDepth", "empty5", 400, PatternGameTests::tagSubstitutionResolvesAtTreeDepth);
+        LogisticsTestInstance.add("catalystAllowsReuseAcrossCrafts", "empty5", 400, PatternGameTests::catalystAllowsReuseAcrossCrafts);
+        LogisticsTestInstance.add("nonCatalystConsumesPerCraft", "empty5", 400, PatternGameTests::nonCatalystConsumesPerCraft);
+        LogisticsTestInstance.add("fuzzySpecIgnoresComponentsAndExactDoesNot", "empty5", PatternGameTests::fuzzySpecIgnoresComponentsAndExactDoesNot);
+    }
+
+    public static void tagSpecExpandsAndMatches(GameTestHelper helper) {
         var level = helper.getLevel();
         var stack = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
         var input = new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4);
@@ -69,8 +75,7 @@ public class PatternGameTests {
      * "#minecraft:planks" (primary oak) to make a crafting table. The planner must accept
      * birch as a substitute and the provider must push exactly those planks.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void autocraftConsumesTagSubstitute(GameTestHelper helper) {
+    public static void autocraftConsumesTagSubstitute(GameTestHelper helper) {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(1, 1, 1),
@@ -137,7 +142,7 @@ public class PatternGameTests {
                         try {
                             job.plan = job.future.get(0, TimeUnit.MILLISECONDS);
                         } catch (TimeoutException e) {
-                            throw new GameTestAssertException("still planning");
+                            throw helper.assertionException("still planning");
                         } catch (Exception e) {
                             throw new RuntimeException("planning failed", e);
                         }
@@ -147,7 +152,7 @@ public class PatternGameTests {
                         for (var entry : job.plan.missingItems()) {
                             missing.append(entry.getKey()).append('=').append(entry.getLongValue()).append(' ');
                         }
-                        throw new GameTestAssertException("plan incomplete; missing: [" + missing + "]");
+                        throw helper.assertionException("plan incomplete; missing: [" + missing + "]");
                     }
                     if (!job.submitted) {
                         var grid = gridHandle.getMainNode().getGrid();
@@ -178,8 +183,7 @@ public class PatternGameTests {
                 .thenSucceed();
     }
 
-    @GameTest(template = "empty5")
-    public void anyOfMatchesOnlyListedAlternatives(GameTestHelper helper) {
+    public static void anyOfMatchesOnlyListedAlternatives(GameTestHelper helper) {
         var level = helper.getLevel();
         var stack = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
         var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
@@ -199,8 +203,7 @@ public class PatternGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty5")
-    public void damageBandDistinguishesDamagedFromPristine(GameTestHelper helper) {
+    public static void damageBandDistinguishesDamagedFromPristine(GameTestHelper helper) {
         var level = helper.getLevel();
         var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
 
@@ -221,8 +224,7 @@ public class PatternGameTests {
     }
 
     /** Damage bands must bucket by damage only - names, enchantments, and other components are ignored. */
-    @GameTest(template = "empty5")
-    public void damageBandsIgnoreOtherComponents(GameTestHelper helper) {
+    public static void damageBandsIgnoreOtherComponents(GameTestHelper helper) {
         var level = helper.getLevel();
         var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
 
@@ -253,8 +255,7 @@ public class PatternGameTests {
      * fuzzy spec is just the pristine primary, so this only plans if the calculation
      * fuzzy-searches the inventory and filters through isValid (it does - this pins it).
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void fuzzyPlansFromDamagedOnlyStorage(GameTestHelper helper) {
+    public static void fuzzyPlansFromDamagedOnlyStorage(GameTestHelper helper) {
         var damaged = new ItemStack(Items.IRON_PICKAXE);
         damaged.setDamageValue(damaged.getMaxDamage() / 2);
         damaged.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
@@ -278,8 +279,7 @@ public class PatternGameTests {
      * a second pattern whose #logs input is satisfied only by spruce logs - a non-primary
      * tag member - proving spec resolution works at depth, not just at the root.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void tagSubstitutionResolvesAtTreeDepth(GameTestHelper helper) {
+    public static void tagSubstitutionResolvesAtTreeDepth(GameTestHelper helper) {
         var tablePattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
         AdaptivePattern.encode(tablePattern,
                 List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
@@ -342,7 +342,7 @@ public class PatternGameTests {
                     try {
                         plan = job.future.get(0, TimeUnit.MILLISECONDS);
                     } catch (TimeoutException e) {
-                        throw new GameTestAssertException("still planning");
+                        throw helper.assertionException("still planning");
                     } catch (Exception e) {
                         throw new RuntimeException("planning failed", e);
                     }
@@ -361,14 +361,12 @@ public class PatternGameTests {
     }
 
     /** With one pickaxe in storage, a catalyst pattern can plan two crafts; without the flag it cannot. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void catalystAllowsReuseAcrossCrafts(GameTestHelper helper) {
+    public static void catalystAllowsReuseAcrossCrafts(GameTestHelper helper) {
         var catalystSpec = AdaptiveInputSpec.EXACT.withCatalyst(true);
         runCatalystPlanTest(helper, catalystSpec, true);
     }
 
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void nonCatalystConsumesPerCraft(GameTestHelper helper) {
+    public static void nonCatalystConsumesPerCraft(GameTestHelper helper) {
         runCatalystPlanTest(helper, AdaptiveInputSpec.EXACT, false);
     }
 
@@ -421,7 +419,7 @@ public class PatternGameTests {
                     try {
                         plan = job.future.get(0, TimeUnit.MILLISECONDS);
                     } catch (TimeoutException e) {
-                        throw new GameTestAssertException("still planning");
+                        throw helper.assertionException("still planning");
                     } catch (Exception e) {
                         throw new RuntimeException("planning failed", e);
                     }
@@ -435,8 +433,7 @@ public class PatternGameTests {
                 .thenSucceed();
     }
 
-    @GameTest(template = "empty5")
-    public void fuzzySpecIgnoresComponentsAndExactDoesNot(GameTestHelper helper) {
+    public static void fuzzySpecIgnoresComponentsAndExactDoesNot(GameTestHelper helper) {
         var level = helper.getLevel();
         var output = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
 

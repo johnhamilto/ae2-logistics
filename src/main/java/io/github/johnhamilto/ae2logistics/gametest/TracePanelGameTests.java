@@ -3,11 +3,8 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -16,9 +13,12 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.TracePanelBlock;
 import io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class TracePanelGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("panelsFormRectanglesByPlacement", "empty5", 200, TracePanelGameTests::panelsFormRectanglesByPlacement);
+        LogisticsTestInstance.add("panelSamplesBoundChannel", "empty5", 300, TracePanelGameTests::panelSamplesBoundChannel);
+    }
 
     private static void placePanel(GameTestHelper helper, BlockPos pos) {
         helper.setBlock(pos, AE2Logistics.TRACE_PANEL.get().defaultBlockState()
@@ -34,8 +34,7 @@ public class TracePanelGameTests {
      * min-corner master, every member agreeing; breaking a corner drops the
      * survivors back to standalone 1x1 panels.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void panelsFormRectanglesByPlacement(GameTestHelper helper) {
+    public static void panelsFormRectanglesByPlacement(GameTestHelper helper) {
         // North-facing plane: viewer-right is counterclockwise of north = west (-X).
         placePanel(helper, new BlockPos(2, 1, 2));
         placePanel(helper, new BlockPos(1, 1, 2));
@@ -71,8 +70,7 @@ public class TracePanelGameTests {
      * Binding through any member lands on the master, and the master samples the
      * bound channel from the grid's signal store once a second.
      */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void panelSamplesBoundChannel(GameTestHelper helper) {
+    public static void panelSamplesBoundChannel(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -85,7 +83,7 @@ public class TracePanelGameTests {
         var channel = Identifier.parse("demo:panel");
         helper.runAfterDelay(20, () -> {
             var bank = (io.github.johnhamilto.ae2logistics.block.RegisterBankBlockEntity) helper
-                    .getBlockEntity(new BlockPos(1, 1, 2));
+                    .getBlockEntity(new BlockPos(1, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
             bank.setSignal(channel, 777);
             // Bind through the NON-master member: it must land on the master.
             var slave = panel(helper, new BlockPos(2, 1, 1)).isMaster()
@@ -102,7 +100,7 @@ public class TracePanelGameTests {
             var master = (TracePanelBlockEntity) helper.getLevel().getBlockEntity(any.groupOrigin());
             helper.assertTrue(master != null, "master must exist");
             var bank = (io.github.johnhamilto.ae2logistics.block.RegisterBankBlockEntity) helper
-                    .getBlockEntity(new BlockPos(1, 1, 2));
+                    .getBlockEntity(new BlockPos(1, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class);
             var panelNode = master.getGridNode(null);
             var bankNode = bank.getGridNode(null);
             helper.assertTrue(panelNode != null, "probe: panel has no grid node");

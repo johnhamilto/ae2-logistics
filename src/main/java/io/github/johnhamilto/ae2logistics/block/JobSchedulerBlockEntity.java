@@ -7,11 +7,14 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.config.CpuSelectionMode;
 import appeng.api.networking.GridHelper;
@@ -342,25 +345,25 @@ public class JobSchedulerBlockEntity extends BlockEntity
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        mainNode.saveToNBT(tag);
-        tag.put("rules", saveRules(registries));
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        mainNode.serialize(output);
+        saveRules(output, "rules");
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
-        loadRules(tag.getList("rules", net.minecraft.nbt.Tag.TAG_COMPOUND), registries);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        mainNode.deserialize(input);
+        loadRules(input, "rules");
     }
 
-    private net.minecraft.nbt.ListTag saveRules(HolderLookup.Provider registries) {
-        var list = new net.minecraft.nbt.ListTag();
+    private void saveRules(ValueOutput output, String name) {
+        var list = output.childrenList(name);
         for (var rule : rules) {
-            var ruleTag = new CompoundTag();
+            var ruleTag = list.addChild();
             if (rule.target != null) {
-                ruleTag.put("key", rule.target.what().toTagGeneric(registries));
+                rule.target.what().toTagGeneric(ruleTag.child("key"));
             }
             ruleTag.putLong("floor", rule.floor);
             ruleTag.putLong("batch", rule.batch);
@@ -370,30 +373,27 @@ public class JobSchedulerBlockEntity extends BlockEntity
             }
             ruleTag.putLong("deadline", rule.deadlineSeconds);
             ruleTag.putBoolean("preempt", rule.preempt);
-            list.add(ruleTag);
         }
-        return list;
     }
 
-    private void loadRules(net.minecraft.nbt.ListTag list, HolderLookup.Provider registries) {
-        for (int i = 0; i < RULES && i < list.size(); i++) {
-            var ruleTag = list.getCompound(i);
-            var rule = rules[i];
-            if (ruleTag.contains("key")) {
-                var key = AEKey.fromTagGeneric(registries, ruleTag.getCompound("key"));
+    private void loadRules(ValueInput input, String name) {
+        input.childrenList(name).ifPresent(list -> {
+            int i = 0;
+            for (var ruleTag : list) {
+                if (i >= RULES) {
+                    break;
+                }
+                var rule = rules[i++];
+                var key = ruleTag.child("key").map(AEKey::fromTagGeneric).orElse(null);
                 rule.target = key == null ? null : new GenericStack(key, 1);
-            } else {
-                rule.target = null;
+                rule.floor = ruleTag.getLongOr("floor", 0L);
+                rule.batch = Math.max(1, ruleTag.getLongOr("batch", 0L));
+                rule.jobClass = ruleTag.getByteOr("class", (byte) 0);
+                rule.guard = ruleTag.getString("guard").map(Identifier::tryParse).orElse(null);
+                rule.deadlineSeconds = Math.max(0, ruleTag.getLongOr("deadline", 0L));
+                rule.preempt = ruleTag.getBooleanOr("preempt", false);
             }
-            rule.floor = ruleTag.getLong("floor");
-            rule.batch = Math.max(1, ruleTag.getLong("batch"));
-            rule.jobClass = ruleTag.getByte("class");
-            rule.guard = ruleTag.contains("guard")
-                    ? Identifier.tryParse(ruleTag.getString("guard"))
-                    : null;
-            rule.deadlineSeconds = Math.max(0, ruleTag.getLong("deadline"));
-            rule.preempt = ruleTag.getBoolean("preempt");
-        }
+        });
     }
 
     @Override
@@ -402,8 +402,9 @@ public class JobSchedulerBlockEntity extends BlockEntity
         if (level == null) {
             return net.minecraft.core.component.DataComponentMap.EMPTY;
         }
-        var tag = new CompoundTag();
-        tag.put("schedulerRules", saveRules(level.registryAccess()));
+        var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+        saveRules(output, "schedulerRules");
+        var tag = output.buildResult();
         return net.minecraft.core.component.DataComponentMap.builder()
                 .set(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get(), tag)
                 .build();
@@ -419,8 +420,8 @@ public class JobSchedulerBlockEntity extends BlockEntity
         if (tag == null || !tag.contains("schedulerRules")) {
             return;
         }
-        loadRules(tag.getList("schedulerRules", net.minecraft.nbt.Tag.TAG_COMPOUND),
-                level.registryAccess());
+        loadRules(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), tag),
+                "schedulerRules");
         setChanged();
     }
 

@@ -5,11 +5,8 @@ import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -18,9 +15,12 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.config.ConfigDeviceIndex;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class ConfigTerminalGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("configIndexEnumeratesAndEdits", "empty5", 300, ConfigTerminalGameTests::configIndexEnumeratesAndEdits);
+        LogisticsTestInstance.add("configCopyPasteAllPropagates", "empty5", 300, ConfigTerminalGameTests::configCopyPasteAllPropagates);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -44,8 +44,7 @@ public class ConfigTerminalGameTests {
     }
 
     /** The index finds AE2 devices and ours, cycles generic settings, and sets priorities. */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void configIndexEnumeratesAndEdits(GameTestHelper helper) {
+    public static void configIndexEnumeratesAndEdits(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -89,8 +88,7 @@ public class ConfigTerminalGameTests {
     }
 
     /** Copy one device's memory-card settings and fan them out to every same-type device. */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void configCopyPasteAllPropagates(GameTestHelper helper) {
+    public static void configCopyPasteAllPropagates(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));

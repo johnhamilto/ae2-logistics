@@ -3,7 +3,6 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -11,8 +10,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -29,9 +26,14 @@ import io.github.johnhamilto.ae2logistics.query.QueryContext;
 import io.github.johnhamilto.ae2logistics.query.QueryParser;
 import io.github.johnhamilto.ae2logistics.query.QueryService;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class QueryGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("parserEvaluatesCoreGrammar", "empty5", 100, QueryGameTests::parserEvaluatesCoreGrammar);
+        LogisticsTestInstance.add("librariesReplicateAndSensorsResolve", "empty5", 400, QueryGameTests::librariesReplicateAndSensorsResolve);
+        LogisticsTestInstance.add("queryExportBusMovesMatchingItems", "empty5", 400, QueryGameTests::queryExportBusMovesMatchingItems);
+        LogisticsTestInstance.add("signalTermGatesSensor", "empty5", 400, QueryGameTests::signalTermGatesSensor);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -46,8 +48,7 @@ public class QueryGameTests {
     }
 
     /** The grammar, evaluated against a hand-built context - no world machinery. */
-    @GameTest(template = "empty5", timeoutTicks = 100)
-    public void parserEvaluatesCoreGrammar(GameTestHelper helper) {
+    public static void parserEvaluatesCoreGrammar(GameTestHelper helper) {
         var iron = AEItemKey.of(Items.IRON_INGOT);
         var gold = AEItemKey.of(Items.GOLD_INGOT);
         var ironOre = AEItemKey.of(Items.IRON_ORE);
@@ -95,8 +96,7 @@ public class QueryGameTests {
      * saving the query flips the sensor from 0 to the matching total, editing it moves
      * the total, and both terminals carry the definition.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void librariesReplicateAndSensorsResolve(GameTestHelper helper) {
+    public static void librariesReplicateAndSensorsResolve(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -150,8 +150,7 @@ public class QueryGameTests {
     }
 
     /** The export bus moves only matching items into the inventory it faces. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void queryExportBusMovesMatchingItems(GameTestHelper helper) {
+    public static void queryExportBusMovesMatchingItems(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -190,8 +189,7 @@ public class QueryGameTests {
     }
 
     /** signal() terms gate a query live from the logic graph. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void signalTermGatesSensor(GameTestHelper helper) {
+    public static void signalTermGatesSensor(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));

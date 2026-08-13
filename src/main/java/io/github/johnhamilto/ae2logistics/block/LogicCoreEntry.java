@@ -5,9 +5,9 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.GridHelper;
@@ -358,48 +358,44 @@ public class LogicCoreEntry implements ILogicNode {
         }
     }
 
-    public CompoundTag save(HolderLookup.Provider registries) {
-        var tag = new CompoundTag();
+    public void save(ValueOutput output) {
         if (type != null) {
-            tag.putByte("type", (byte) type.ordinal());
+            output.putByte("type", (byte) type.ordinal());
         }
         if (outChannel != null) {
-            tag.putString("out", outChannel.toString());
+            output.putString("out", outChannel.toString());
         }
         if (inA != null) {
-            tag.putString("inA", inA.toString());
+            output.putString("inA", inA.toString());
         }
         if (inB != null) {
-            tag.putString("inB", inB.toString());
+            output.putString("inB", inB.toString());
         }
-        tag.putInt("op", op);
-        tag.putLong("valueA", valueA);
-        tag.putLong("valueB", valueB);
-        tag.putBoolean("flag", flag);
+        output.putInt("op", op);
+        output.putLong("valueA", valueA);
+        output.putLong("valueB", valueB);
+        output.putBoolean("flag", flag);
         if (watched != null) {
-            tag.put("watched", GenericStack.writeTag(registries, watched));
+            GenericStack.writeTag(output.child("watched"), watched);
         }
-        tag.putBoolean("latched", latched);
-        tag.putLong("count", count);
-        return tag;
+        output.putBoolean("latched", latched);
+        output.putLong("count", count);
     }
 
-    public void load(CompoundTag tag, HolderLookup.Provider registries) {
-        type = tag.contains("type") ? LogicPartType.byOrdinal(tag.getByte("type")) : null;
+    public void load(ValueInput input) {
+        type = input.getInt("type").map(LogicPartType::byOrdinal).orElse(null);
         if (type == LogicPartType.REDSTONE_IO) {
             type = null;
         }
-        outChannel = tag.contains("out") ? Identifier.tryParse(tag.getString("out")) : null;
-        inA = tag.contains("inA") ? Identifier.tryParse(tag.getString("inA")) : null;
-        inB = tag.contains("inB") ? Identifier.tryParse(tag.getString("inB")) : null;
-        op = tag.getInt("op");
-        valueA = tag.getLong("valueA");
-        valueB = tag.getLong("valueB");
-        flag = tag.getBoolean("flag");
-        watched = tag.contains("watched")
-                ? GenericStack.readTag(registries, tag.getCompound("watched"))
-                : null;
-        latched = tag.getBoolean("latched");
-        count = tag.getLong("count");
+        outChannel = input.getString("out").map(Identifier::tryParse).orElse(null);
+        inA = input.getString("inA").map(Identifier::tryParse).orElse(null);
+        inB = input.getString("inB").map(Identifier::tryParse).orElse(null);
+        op = input.getIntOr("op", 0);
+        valueA = input.getLongOr("valueA", 0L);
+        valueB = input.getLongOr("valueB", 0L);
+        flag = input.getBooleanOr("flag", false);
+        watched = input.child("watched").map(GenericStack::readTag).orElse(null);
+        latched = input.getBooleanOr("latched", false);
+        count = input.getLongOr("count", 0L);
     }
 }

@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -12,6 +11,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
@@ -279,8 +280,8 @@ public class MeshEndpointPart extends AEBasePart {
         }
         var tag = input.get(AE2Logistics.EXPORTED_MESH_SETTINGS.get());
         if (tag != null) {
-            applyMeshConfig(tag.getString("freq"), (byte) Math.floorMod(tag.getByte("role"), 3),
-                    tag.getInt("priority"), tag.getInt("capabilities") & MeshRegistry.TYPE_ALL);
+            applyMeshConfig(tag.getStringOr("freq", ""), (byte) Math.floorMod(tag.getByteOr("role", (byte) 0), 3),
+                    tag.getIntOr("priority", 0), tag.getIntOr("capabilities", 0) & MeshRegistry.TYPE_ALL);
         }
     }
 
@@ -726,30 +727,30 @@ public class MeshEndpointPart extends AEBasePart {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         data.putString("freq", frequency);
         data.putByte("role", role);
         data.putInt("priority", priority);
         data.putInt("capabilities", capabilities);
         if (carriedNode != null) {
-            carriedNode.saveToNBT(data);
+            carriedNode.serialize(data);
         }
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
-        frequency = data.getString("freq");
-        role = data.getByte("role");
-        priority = data.getInt("priority");
-        capabilities = data.getInt("capabilities");
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
+        frequency = data.getStringOr("freq", "");
+        role = data.getByteOr("role", (byte) 0);
+        priority = data.getIntOr("priority", 0);
+        capabilities = data.getIntOr("capabilities", 0);
         var typed = typedVariant();
         if (typed != null) {
             capabilities = typed.mask();
         }
         if ((capabilities & MeshRegistry.TYPE_ME) != 0 && !isClientSide()) {
-            carriedInstance().loadFromNBT(data);
+            carriedInstance().deserialize(data);
         }
     }
 

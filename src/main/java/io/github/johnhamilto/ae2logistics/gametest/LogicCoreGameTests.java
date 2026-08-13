@@ -3,15 +3,12 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -22,9 +19,14 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.LogicCoreBlockEntity;
 import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class LogicCoreGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("logicCoreEvaluatesChain", EMPTY, 400, LogicCoreGameTests::logicCoreEvaluatesChain);
+        LogisticsTestInstance.add("logicCoreSensorReadsStorage", EMPTY, 400, LogicCoreGameTests::logicCoreSensorReadsStorage);
+        LogisticsTestInstance.add("logicCoreEntriesConsumeChannels", EMPTY, 400, LogicCoreGameTests::logicCoreEntriesConsumeChannels);
+        LogisticsTestInstance.add("logicCoreTransfersEntries", EMPTY, 400, LogicCoreGameTests::logicCoreTransfersEntries);
+    }
 
     private static final String EMPTY = "empty5";
 
@@ -35,8 +37,7 @@ public class LogicCoreGameTests {
     }
 
     /** Entries chain through the scheduler exactly like physical parts would. */
-    @GameTest(template = EMPTY, timeoutTicks = 400)
-    public void logicCoreEvaluatesChain(GameTestHelper helper) {
+    public static void logicCoreEvaluatesChain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(1, 2, 1), AE2Logistics.LOGIC_CORE.get());
@@ -67,8 +68,7 @@ public class LogicCoreGameTests {
     }
 
     /** A sensor entry reads network storage through its own virtual node. */
-    @GameTest(template = EMPTY, timeoutTicks = 400)
-    public void logicCoreSensorReadsStorage(GameTestHelper helper) {
+    public static void logicCoreSensorReadsStorage(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var busPos = helper.absolutePos(new BlockPos(2, 1, 1));
@@ -102,8 +102,7 @@ public class LogicCoreGameTests {
      * behind an eight-channel glass segment something must starve, while a core on a
      * controller face (dense carrier, 32 channels) runs everything.
      */
-    @GameTest(template = EMPTY, timeoutTicks = 400)
-    public void logicCoreEntriesConsumeChannels(GameTestHelper helper) {
+    public static void logicCoreEntriesConsumeChannels(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(0, 1, 1),
@@ -137,8 +136,7 @@ public class LogicCoreGameTests {
     }
 
     /** Entry configuration rides TransferableSettings, so blueprints can clone cores. */
-    @GameTest(template = EMPTY, timeoutTicks = 400)
-    public void logicCoreTransfersEntries(GameTestHelper helper) {
+    public static void logicCoreTransfersEntries(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(1, 2, 1), AE2Logistics.LOGIC_CORE.get());

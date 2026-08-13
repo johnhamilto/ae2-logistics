@@ -7,16 +7,20 @@ import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.mojang.serialization.Codec;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGridNode;
@@ -332,9 +336,9 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        var tag = super.getUpdateTag(registries);
-        saveShared(tag);
-        return tag;
+        var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+        saveShared(output);
+        return output.buildResult();
     }
 
     @Nullable
@@ -343,52 +347,55 @@ public class TracePanelBlockEntity extends BlockEntity implements IInWorldGridNo
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
-    private void saveShared(CompoundTag tag) {
-        tag.putLong("origin", groupOrigin.asLong());
-        tag.putInt("width", groupWidth);
-        tag.putInt("height", groupHeight);
-        tag.putInt("cursor", sampleCursor);
-        tag.putBoolean("full", buffersFull);
-        var list = new ListTag();
+    private void saveShared(ValueOutput output) {
+        output.putLong("origin", groupOrigin.asLong());
+        output.putInt("width", groupWidth);
+        output.putInt("height", groupHeight);
+        output.putInt("cursor", sampleCursor);
+        output.putBoolean("full", buffersFull);
+        var list = output.childrenList("traces");
         for (var entry : traces.entrySet()) {
-            var trace = new CompoundTag();
+            var trace = list.addChild();
             trace.putString("channel", entry.getKey().toString());
-            trace.putLongArray("samples", entry.getValue().clone());
-            list.add(trace);
+            trace.store("samples", Codec.LONG.listOf(),
+                    java.util.Arrays.stream(entry.getValue()).boxed().toList());
         }
-        tag.put("traces", list);
     }
 
-    private void loadShared(CompoundTag tag) {
-        groupOrigin = BlockPos.of(tag.getLong("origin"));
-        groupWidth = Math.max(1, tag.getInt("width"));
-        groupHeight = Math.max(1, tag.getInt("height"));
-        sampleCursor = tag.getInt("cursor");
-        buffersFull = tag.getBoolean("full");
+    private void loadShared(ValueInput input) {
+        groupOrigin = BlockPos.of(input.getLongOr("origin", 0L));
+        groupWidth = Math.max(1, input.getIntOr("width", 0));
+        groupHeight = Math.max(1, input.getIntOr("height", 0));
+        sampleCursor = input.getIntOr("cursor", 0);
+        buffersFull = input.getBooleanOr("full", false);
         traces.clear();
-        for (Tag element : tag.getList("traces", Tag.TAG_COMPOUND)) {
-            if (element instanceof CompoundTag trace) {
-                var channel = Identifier.tryParse(trace.getString("channel"));
+        input.childrenList("traces").ifPresent(list -> {
+            for (var trace : list) {
+                var channel = trace.getString("channel").map(Identifier::tryParse).orElse(null);
                 if (channel != null) {
-                    var samples = trace.getLongArray("samples");
-                    traces.put(channel, java.util.Arrays.copyOf(samples, SAMPLES));
+                    var samples = trace.read("samples", Codec.LONG.listOf()).orElse(List.of());
+                    var buffer = new long[SAMPLES];
+                    for (int i = 0; i < samples.size() && i < SAMPLES; i++) {
+                        buffer[i] = samples.get(i);
+                    }
+                    traces.put(channel, buffer);
                 }
             }
-        }
+        });
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        mainNode.saveToNBT(tag);
-        saveShared(tag);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        mainNode.serialize(output);
+        saveShared(output);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
-        loadShared(tag);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        mainNode.deserialize(input);
+        loadShared(input);
     }
 
     @Nullable

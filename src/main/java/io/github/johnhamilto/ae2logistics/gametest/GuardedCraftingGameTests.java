@@ -9,8 +9,6 @@ import java.util.concurrent.TimeoutException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
-import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -18,8 +16,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.networking.crafting.CalculationStrategy;
 import appeng.api.networking.crafting.ICraftingPlan;
@@ -36,9 +32,16 @@ import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 import io.github.johnhamilto.ae2logistics.crafting.GuardedPattern;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class GuardedCraftingGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("regulusFormsInWater", "empty5", 400, GuardedCraftingGameTests::regulusFormsInWater);
+        LogisticsTestInstance.add("guardHidesPatternsFromPlanning", "empty5", 600, GuardedCraftingGameTests::guardHidesPatternsFromPlanning);
+        LogisticsTestInstance.add("executionGateHoldsPushesUntilGuardOpens", "empty5", 600, GuardedCraftingGameTests::executionGateHoldsPushesUntilGuardOpens);
+        LogisticsTestInstance.add("perPatternGuardFiltersWithinProvider", "empty5", 600, GuardedCraftingGameTests::perPatternGuardFiltersWithinProvider);
+        LogisticsTestInstance.add("priorityChannelSteersPushes", "empty5", 600, GuardedCraftingGameTests::priorityChannelSteersPushes);
+        LogisticsTestInstance.add("wrapperIsInertInVanillaProvider", "empty5", 600, GuardedCraftingGameTests::wrapperIsInertInVanillaProvider);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -65,8 +68,7 @@ public class GuardedCraftingGameTests {
     }
 
     /** Charged certus + redstone + glowstone dropped into water become Regulus. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void regulusFormsInWater(GameTestHelper helper) {
+    public static void regulusFormsInWater(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 2), Blocks.WATER);
         var charged = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:charged_certus_quartz_crystal"));
         helper.spawnItem(charged, 2.5f, 1.5f, 2.5f);
@@ -85,7 +87,7 @@ public class GuardedCraftingGameTests {
     private record Plot(GuardedPatternProviderBlockEntity provider, LogicPart constant) {
     }
 
-    private Plot buildPlot(GameTestHelper helper, ItemStack sourceItems) {
+    private static Plot buildPlot(GameTestHelper helper, ItemStack sourceItems) {
         helper.setBlock(new BlockPos(2, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
@@ -110,19 +112,18 @@ public class GuardedCraftingGameTests {
         return new Plot((GuardedPatternProviderBlockEntity) be, constant);
     }
 
-    private static ICraftingPlan awaitPlan(Future<ICraftingPlan> future) {
+    private static ICraftingPlan awaitPlan(GameTestHelper helper, Future<ICraftingPlan> future) {
         try {
             return future.get(0, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
-            throw new GameTestAssertException("planning");
+            throw helper.assertionException("planning");
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
     /** A false guard hides patterns from the planner; flipping it true re-indexes them. */
-    @GameTest(template = "empty5", timeoutTicks = 600)
-    public void guardHidesPatternsFromPlanning(GameTestHelper helper) {
+    public static void guardHidesPatternsFromPlanning(GameTestHelper helper) {
         var plot = buildPlot(helper, new ItemStack(Items.OAK_PLANKS, 8));
         var state = new Object() {
             Future<ICraftingPlan> future;
@@ -145,9 +146,9 @@ public class GuardedCraftingGameTests {
                 })
                 .thenWaitUntil(() -> {
                     if (state.future == null) {
-                        throw new GameTestAssertException("waiting for recalculation to start");
+                        throw helper.assertionException("waiting for recalculation to start");
                     }
-                    var plan = awaitPlan(state.future);
+                    var plan = awaitPlan(helper, state.future);
                     if (!state.firstChecked) {
                         if (!plan.simulation()) {
                             helper.fail("guarded-off pattern must be invisible to the planner");
@@ -163,10 +164,10 @@ public class GuardedCraftingGameTests {
                                         () -> new MachineSource(plot.constant()),
                                         AEItemKey.of(Items.CRAFTING_TABLE), 1,
                                         CalculationStrategy.REPORT_MISSING_ITEMS));
-                        throw new GameTestAssertException("waiting for second plan");
+                        throw helper.assertionException("waiting for second plan");
                     }
                     if (plan.simulation()) {
-                        throw new GameTestAssertException("guard open, plan should succeed");
+                        throw helper.assertionException("guard open, plan should succeed");
                     }
                 })
                 .thenExecute(helper::succeed)
@@ -174,8 +175,7 @@ public class GuardedCraftingGameTests {
     }
 
     /** With execution gating on, a submitted job holds until the guard opens, then completes. */
-    @GameTest(template = "empty5", timeoutTicks = 600)
-    public void executionGateHoldsPushesUntilGuardOpens(GameTestHelper helper) {
+    public static void executionGateHoldsPushesUntilGuardOpens(GameTestHelper helper) {
         var plot = buildPlot(helper, new ItemStack(Items.OAK_PLANKS, 8));
         var state = new Object() {
             Future<ICraftingPlan> future;
@@ -196,7 +196,7 @@ public class GuardedCraftingGameTests {
                             CalculationStrategy.REPORT_MISSING_ITEMS);
                 })
                 .thenWaitUntil(() -> {
-                    var plan = awaitPlan(state.future);
+                    var plan = awaitPlan(helper, state.future);
                     if (plan.simulation()) {
                         helper.fail("plan incomplete with open guard");
                     }
@@ -230,8 +230,7 @@ public class GuardedCraftingGameTests {
     }
 
     /** A guarded pattern filters itself while its sibling in the same provider still plans. */
-    @GameTest(template = "empty5", timeoutTicks = 600)
-    public void perPatternGuardFiltersWithinProvider(GameTestHelper helper) {
+    public static void perPatternGuardFiltersWithinProvider(GameTestHelper helper) {
         var plot = buildPlot(helper, new ItemStack(Items.IRON_INGOT, 8));
         var state = new Object() {
             Future<ICraftingPlan> future;
@@ -259,9 +258,9 @@ public class GuardedCraftingGameTests {
                 })
                 .thenWaitUntil(() -> {
                     if (state.future == null) {
-                        throw new GameTestAssertException("waiting for recalculation to start");
+                        throw helper.assertionException("waiting for recalculation to start");
                     }
-                    var plan = awaitPlan(state.future);
+                    var plan = awaitPlan(helper, state.future);
                     if (!state.firstChecked) {
                         if (!plan.simulation()) {
                             helper.fail("with the per-pattern guard closed, planning must fail");
@@ -276,10 +275,10 @@ public class GuardedCraftingGameTests {
                                         () -> new MachineSource(plot.constant()),
                                         AEItemKey.of(Items.CRAFTING_TABLE), 1,
                                         CalculationStrategy.REPORT_MISSING_ITEMS));
-                        throw new GameTestAssertException("waiting for second plan");
+                        throw helper.assertionException("waiting for second plan");
                     }
                     if (plan.simulation()) {
-                        throw new GameTestAssertException("open per-pattern guard should let the plan succeed");
+                        throw helper.assertionException("open per-pattern guard should let the plan succeed");
                     }
                 })
                 .thenExecute(helper::succeed)
@@ -287,8 +286,7 @@ public class GuardedCraftingGameTests {
     }
 
     /** Priority channels reorder which provider receives the push, live. */
-    @GameTest(template = "empty5", timeoutTicks = 600)
-    public void priorityChannelSteersPushes(GameTestHelper helper) {
+    public static void priorityChannelSteersPushes(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
@@ -344,7 +342,7 @@ public class GuardedCraftingGameTests {
                             CalculationStrategy.REPORT_MISSING_ITEMS);
                 })
                 .thenWaitUntil(() -> {
-                    var plan = awaitPlan(state.future);
+                    var plan = awaitPlan(helper, state.future);
                     if (plan.simulation()) {
                         helper.fail("plan incomplete");
                     }
@@ -353,7 +351,7 @@ public class GuardedCraftingGameTests {
                         var result = grid.getCraftingService().submitJob(plan, null, null, true,
                                 new MachineSource(constant));
                         if (!result.successful()) {
-                            throw new GameTestAssertException("submit failed: " + result.errorCode());
+                            throw helper.assertionException("submit failed: " + result.errorCode());
                         }
                         state.submitted = true;
                     }
@@ -379,7 +377,7 @@ public class GuardedCraftingGameTests {
                             CalculationStrategy.REPORT_MISSING_ITEMS);
                 })
                 .thenWaitUntil(() -> {
-                    var plan = awaitPlan(state.future);
+                    var plan = awaitPlan(helper, state.future);
                     if (plan.simulation()) {
                         helper.fail("second plan incomplete");
                     }
@@ -388,7 +386,7 @@ public class GuardedCraftingGameTests {
                         var result = grid.getCraftingService().submitJob(plan, null, null, true,
                                 new MachineSource(constant));
                         if (!result.successful()) {
-                            throw new GameTestAssertException("second submit failed: " + result.errorCode());
+                            throw helper.assertionException("second submit failed: " + result.errorCode());
                         }
                         state.submitted = true;
                     }
@@ -403,8 +401,7 @@ public class GuardedCraftingGameTests {
     }
 
     /** In a vanilla pattern provider the wrapper crafts unconditionally - the guard is inert. */
-    @GameTest(template = "empty5", timeoutTicks = 600)
-    public void wrapperIsInertInVanillaProvider(GameTestHelper helper) {
+    public static void wrapperIsInertInVanillaProvider(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
@@ -448,7 +445,7 @@ public class GuardedCraftingGameTests {
                             CalculationStrategy.REPORT_MISSING_ITEMS);
                 })
                 .thenWaitUntil(() -> {
-                    var plan = awaitPlan(state.future);
+                    var plan = awaitPlan(helper, state.future);
                     if (plan.simulation()) {
                         helper.fail("vanilla provider must plan the wrapped pattern regardless of guard");
                     }
@@ -457,7 +454,7 @@ public class GuardedCraftingGameTests {
                         var result = grid.getCraftingService().submitJob(plan, null, null, true,
                                 new MachineSource(constant));
                         if (!result.successful()) {
-                            throw new GameTestAssertException("submit failed: " + result.errorCode());
+                            throw helper.assertionException("submit failed: " + result.errorCode());
                         }
                         state.submitted = true;
                     }

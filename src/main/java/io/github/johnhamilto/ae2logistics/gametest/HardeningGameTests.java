@@ -3,8 +3,6 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
-import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -15,8 +13,6 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.GridHelper;
@@ -33,9 +29,14 @@ import io.github.johnhamilto.ae2logistics.mesh.MeshRegistry;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class HardeningGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("fluidMeshFillsCauldron", "empty5", 200, HardeningGameTests::fluidMeshFillsCauldron);
+        LogisticsTestInstance.add("energyMeshPowersForeignAcceptor", "empty5", 200, HardeningGameTests::energyMeshPowersForeignAcceptor);
+        LogisticsTestInstance.add("schedulerRuleCompletesAndGoesIdle", "empty5", 900, HardeningGameTests::schedulerRuleCompletesAndGoesIdle);
+        LogisticsTestInstance.add("catalystExecutionCreditsToolBack", "empty5", 900, HardeningGameTests::catalystExecutionCreditsToolBack);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -51,8 +52,7 @@ public class HardeningGameTests {
     }
 
     /** Fluid forwarding end to end: mesh input to a cauldron behind an output endpoint. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void fluidMeshFillsCauldron(GameTestHelper helper) {
+    public static void fluidMeshFillsCauldron(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -81,8 +81,7 @@ public class HardeningGameTests {
     }
 
     /** Energy forwarding crosses to a machine on a DIFFERENT grid via its FE capability. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void energyMeshPowersForeignAcceptor(GameTestHelper helper) {
+    public static void energyMeshPowersForeignAcceptor(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -124,8 +123,7 @@ public class HardeningGameTests {
     }
 
     /** The scheduler's full loop: run, product returns through the provider, rule idles. */
-    @GameTest(template = "empty5", timeoutTicks = 900)
-    public void schedulerRuleCompletesAndGoesIdle(GameTestHelper helper) {
+    public static void schedulerRuleCompletesAndGoesIdle(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
@@ -152,7 +150,7 @@ public class HardeningGameTests {
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
                     refs.provider = (appeng.blockentity.crafting.PatternProviderBlockEntity) helper
-                            .getBlockEntity(new BlockPos(2, 1, 3));
+                            .getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class);
                     var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
                     AdaptivePattern.encode(pattern,
                             java.util.List.of(new GenericStack(AEItemKey.of(Items.OAK_PLANKS), 4)),
@@ -168,7 +166,7 @@ public class HardeningGameTests {
                 })
                 .thenWaitUntil(() -> {
                     if (refs.scheduler.ruleState(0) != JobSchedulerBlockEntity.STATE_RUNNING) {
-                        throw new GameTestAssertException(
+                        throw helper.assertionException(
                                 "waiting for the rule to run, state " + refs.scheduler.ruleState(0));
                     }
                 })
@@ -181,7 +179,7 @@ public class HardeningGameTests {
                 })
                 .thenWaitUntil(() -> {
                     if (refs.scheduler.ruleState(0) != JobSchedulerBlockEntity.STATE_IDLE) {
-                        throw new GameTestAssertException(
+                        throw helper.assertionException(
                                 "waiting for the rule to idle, state " + refs.scheduler.ruleState(0));
                     }
                 })
@@ -199,8 +197,7 @@ public class HardeningGameTests {
     }
 
     /** Catalyst execution phase: the tool ships with the batch and is credited back. */
-    @GameTest(template = "empty5", timeoutTicks = 900)
-    public void catalystExecutionCreditsToolBack(GameTestHelper helper) {
+    public static void catalystExecutionCreditsToolBack(GameTestHelper helper) {
         var level = helper.getLevel();
         helper.setBlock(new BlockPos(2, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
@@ -232,7 +229,7 @@ public class HardeningGameTests {
         helper.startSequence()
                 .thenExecuteAfter(100, () -> {
                     refs.provider = (appeng.blockentity.crafting.PatternProviderBlockEntity) helper
-                            .getBlockEntity(new BlockPos(2, 1, 3));
+                            .getBlockEntity(new BlockPos(2, 1, 3), net.minecraft.world.level.block.entity.BlockEntity.class);
                     var pattern = new ItemStack(AE2Logistics.ADAPTIVE_PATTERN.get());
                     AdaptivePattern.encode(pattern,
                             java.util.List.of(
@@ -263,12 +260,12 @@ public class HardeningGameTests {
                             var result = grid.getCraftingService().submitJob(plan, null, null, true,
                                     new appeng.me.helpers.MachineSource(constant));
                             if (!result.successful()) {
-                                throw new GameTestAssertException("submit failed: " + result.errorCode());
+                                throw helper.assertionException("submit failed: " + result.errorCode());
                             }
                             refs.link = result.link();
                         }
                     } catch (java.util.concurrent.TimeoutException e) {
-                        throw new GameTestAssertException("planning");
+                        throw helper.assertionException("planning");
                     } catch (java.util.concurrent.ExecutionException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -293,7 +290,7 @@ public class HardeningGameTests {
                     var grid = constant.getMainNode().getGrid();
                     for (var cpu : grid.getCraftingService().getCpus()) {
                         if (cpu.isBusy()) {
-                            throw new GameTestAssertException("waiting for the job to complete");
+                            throw helper.assertionException("waiting for the job to complete");
                         }
                     }
                 })

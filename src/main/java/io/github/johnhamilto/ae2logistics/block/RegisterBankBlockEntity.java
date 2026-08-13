@@ -8,13 +8,11 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGridNode;
@@ -76,32 +74,30 @@ public class RegisterBankBlockEntity extends BlockEntity implements IInWorldGrid
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        mainNode.saveToNBT(tag);
-        var list = new ListTag();
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        mainNode.serialize(output);
+        var list = output.childrenList("signals");
         for (var entry : persisted.entrySet()) {
-            var signal = new CompoundTag();
+            var signal = list.addChild();
             signal.putString("channel", entry.getKey().toString());
             signal.putLong("value", entry.getValue());
-            list.add(signal);
         }
-        tag.put("signals", list);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        mainNode.deserialize(input);
         persisted.clear();
-        for (Tag element : tag.getList("signals", Tag.TAG_COMPOUND)) {
-            if (element instanceof CompoundTag signal) {
-                var channel = Identifier.tryParse(signal.getString("channel"));
+        input.childrenList("signals").ifPresent(signals -> {
+            for (var signal : signals) {
+                var channel = signal.getString("channel").map(Identifier::tryParse).orElse(null);
                 if (channel != null) {
-                    persisted.put(channel, signal.getLong("value"));
+                    persisted.put(channel, signal.getLongOr("value", 0L));
                 }
             }
-        }
+        });
     }
 
     @Nullable

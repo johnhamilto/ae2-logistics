@@ -3,11 +3,8 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -17,12 +14,13 @@ import appeng.parts.p2p.P2PTunnelPart;
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.menu.P2PActionPayload;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class P2PGameTests {
 
-    @GameTest(template = "empty5")
-    public void retuneAppliesAndGuardsInputCollision(GameTestHelper helper) {
+    static void register() {
+        LogisticsTestInstance.add("retuneAppliesAndGuardsInputCollision", "empty5", P2PGameTests::retuneAppliesAndGuardsInputCollision);
+    }
+
+    public static void retuneAppliesAndGuardsInputCollision(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var busPos = helper.absolutePos(new BlockPos(2, 1, 1));

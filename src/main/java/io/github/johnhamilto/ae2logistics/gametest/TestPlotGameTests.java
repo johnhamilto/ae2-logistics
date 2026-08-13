@@ -2,11 +2,8 @@ package io.github.johnhamilto.ae2logistics.gametest;
 
 import java.util.List;
 
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.server.testplots.TestPlots;
 import appeng.server.testworld.Plot;
@@ -14,14 +11,16 @@ import appeng.server.testworld.Plot;
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.testplots.PlotStructures;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class TestPlotGameTests {
 
+    static void register() {
+        LogisticsTestInstance.add("plotsRegisterWithAe2Scan", "empty5", TestPlotGameTests::plotsRegisterWithAe2Scan);
+        LogisticsTestInstance.add("structureHelperSizesPlotFromTemplate", "empty5", TestPlotGameTests::structureHelperSizesPlotFromTemplate);
+    }
+
     /** AE2's cross-mod annotation scan must find our plots and build usable areas. */
-    @GameTest(template = "empty5")
-    public void plotsRegisterWithAe2Scan(GameTestHelper helper) {
-        var ids = TestPlots.getPlotIds();
+    public static void plotsRegisterWithAe2Scan(GameTestHelper helper) {
+        var ids = TestPlots.getPlots().stream().map(p -> p.id()).toList();
         for (var path : List.of("logistics_signal_chain", "logistics_mesh_hub",
                 "logistics_provider_hall", "logistics_subnet_links",
                 "logistics_compat_extendedae")) {
@@ -35,8 +34,7 @@ public class TestPlotGameTests {
     }
 
     /** The structure paste helper must size plots from the committed template. */
-    @GameTest(template = "empty5")
-    public void structureHelperSizesPlotFromTemplate(GameTestHelper helper) {
+    public static void structureHelperSizesPlotFromTemplate(GameTestHelper helper) {
         var templateId = Identifier.parse("ae2logistics:empty5");
         var template = helper.getLevel().getServer().getStructureManager().get(templateId)
                 .orElse(null);

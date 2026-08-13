@@ -1,5 +1,7 @@
 package io.github.johnhamilto.ae2logistics.parts;
 
+import com.mojang.serialization.Codec;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
@@ -27,6 +29,9 @@ public class ConfigTerminalPart extends AEBasePart {
     @PartModels
     public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/config_terminal"));
 
+    private static final Codec<java.util.Map<String, String>> SNAPSHOT_CODEC =
+            Codec.unboundedMap(Codec.STRING, Codec.STRING);
+
     /** Persistent snapshot: device key -> settings state at snapshot time. */
     private final java.util.HashMap<String, String> snapshot = new java.util.HashMap<>();
 
@@ -53,25 +58,16 @@ public class ConfigTerminalPart extends AEBasePart {
     }
 
     @Override
-    public void writeToNBT(net.minecraft.nbt.CompoundTag data,
-            net.minecraft.core.HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
-        var tag = new net.minecraft.nbt.CompoundTag();
-        for (var entry : snapshot.entrySet()) {
-            tag.putString(entry.getKey(), entry.getValue());
-        }
-        data.put("snapshot", tag);
+    public void writeToNBT(net.minecraft.world.level.storage.ValueOutput data) {
+        super.writeToNBT(data);
+        data.store("snapshot", SNAPSHOT_CODEC, snapshot);
     }
 
     @Override
-    public void readFromNBT(net.minecraft.nbt.CompoundTag data,
-            net.minecraft.core.HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
+    public void readFromNBT(net.minecraft.world.level.storage.ValueInput data) {
+        super.readFromNBT(data);
         snapshot.clear();
-        var tag = data.getCompound("snapshot");
-        for (var key : tag.getAllKeys()) {
-            snapshot.put(key, tag.getString(key));
-        }
+        data.read("snapshot", SNAPSHOT_CODEC).ifPresent(snapshot::putAll);
     }
 
     @Override

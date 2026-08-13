@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -12,8 +11,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.crafting.ICraftingProvider;
@@ -32,9 +29,21 @@ import io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec;
 import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 import io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class ProviderTunnelGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("providerTunnelDistributesBatchesAcrossMachines", "empty5", 400, ProviderTunnelGameTests::providerTunnelDistributesBatchesAcrossMachines);
+        LogisticsTestInstance.add("providerTunnelPushesWithoutBlocking", "empty5", 400, ProviderTunnelGameTests::providerTunnelPushesWithoutBlocking);
+        LogisticsTestInstance.add("providerTunnelMirrorsPatternsAndPushesFluids", "empty5", 300, ProviderTunnelGameTests::providerTunnelMirrorsPatternsAndPushesFluids);
+        LogisticsTestInstance.add("providerMeshEndpointRoutesAnyKey", "empty5", 200, ProviderTunnelGameTests::providerMeshEndpointRoutesAnyKey);
+        LogisticsTestInstance.add("providerTunnelReturnsResultsThroughOutputFace", "empty5", 200, ProviderTunnelGameTests::providerTunnelReturnsResultsThroughOutputFace);
+        LogisticsTestInstance.add("providerTunnelGenericReturnSurface", "empty5", 200, ProviderTunnelGameTests::providerTunnelGenericReturnSurface);
+        LogisticsTestInstance.add("meshProviderReturnsResultsThroughOutputFace", "empty5", 200, ProviderTunnelGameTests::meshProviderReturnsResultsThroughOutputFace);
+        LogisticsTestInstance.add("meshProviderGenericReturnSurface", "empty5", 200, ProviderTunnelGameTests::meshProviderGenericReturnSurface);
+        LogisticsTestInstance.add("meshProviderReturnsFollowInputPriority", "empty5", 200, ProviderTunnelGameTests::meshProviderReturnsFollowInputPriority);
+        LogisticsTestInstance.add("assemblerPatternsCrossTheTunnel", "empty5", 400, ProviderTunnelGameTests::assemblerPatternsCrossTheTunnel);
+        LogisticsTestInstance.add("assemblerCraftsChainThroughTheTunnel", "empty5", 600, ProviderTunnelGameTests::assemblerCraftsChainThroughTheTunnel);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -162,13 +171,13 @@ public class ProviderTunnelGameTests {
                             var result = grid.getCraftingService().submitJob(plan, null, null, true,
                                     new appeng.me.helpers.MachineSource(input));
                             if (!result.successful()) {
-                                throw new net.minecraft.gametest.framework.GameTestAssertException(
+                                throw helper.assertionException(
                                         "submit failed: " + result.errorCode());
                             }
                             job.submitted = true;
                         }
                     } catch (java.util.concurrent.TimeoutException e) {
-                        throw new net.minecraft.gametest.framework.GameTestAssertException("planning");
+                        throw helper.assertionException("planning");
                     } catch (java.util.concurrent.ExecutionException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -182,8 +191,7 @@ public class ProviderTunnelGameTests {
      * complete batch on a DIFFERENT machine: the crafting service skips the busy
      * replica whose machine still holds its batch.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void providerTunnelDistributesBatchesAcrossMachines(GameTestHelper helper) {
+    public static void providerTunnelDistributesBatchesAcrossMachines(GameTestHelper helper) {
         var tunnels = buildJobScene(helper, appeng.api.config.YesNo.YES);
         helper.runAfterDelay(30, () -> linkTunnels(helper, tunnels[0], tunnels[1], tunnels[2]));
         submitJob(helper, tunnels[0], () -> {
@@ -197,8 +205,7 @@ public class ProviderTunnelGameTests {
     }
 
     /** Without blocking mode, all batches still deliver - distribution is unconstrained. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void providerTunnelPushesWithoutBlocking(GameTestHelper helper) {
+    public static void providerTunnelPushesWithoutBlocking(GameTestHelper helper) {
         var tunnels = buildJobScene(helper, appeng.api.config.YesNo.NO);
         helper.runAfterDelay(30, () -> linkTunnels(helper, tunnels[0], tunnels[1], tunnels[2]));
         submitJob(helper, tunnels[0], () -> {
@@ -214,8 +221,7 @@ public class ProviderTunnelGameTests {
      * pattern rides the external-storage strategies into a cauldron, the same registry
      * companion mods use for chemicals.
      */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void providerTunnelMirrorsPatternsAndPushesFluids(GameTestHelper helper) {
+    public static void providerTunnelMirrorsPatternsAndPushesFluids(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -267,8 +273,7 @@ public class ProviderTunnelGameTests {
     }
 
     /** The provider mesh transport delivers any key type too, via the typed provider part. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void providerMeshEndpointRoutesAnyKey(GameTestHelper helper) {
+    public static void providerMeshEndpointRoutesAnyKey(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -309,8 +314,7 @@ public class ProviderTunnelGameTests {
      * Machines return results through their own face: an insert into the output
      * tunnel's item capability must land in whatever the input tunnel faces.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void providerTunnelReturnsResultsThroughOutputFace(GameTestHelper helper) {
+    public static void providerTunnelReturnsResultsThroughOutputFace(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -349,8 +353,7 @@ public class ProviderTunnelGameTests {
      * capability addons bridge chemicals and other custom keys through on AE2's own
      * providers and interfaces.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void providerTunnelGenericReturnSurface(GameTestHelper helper) {
+    public static void providerTunnelGenericReturnSurface(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -408,8 +411,7 @@ public class ProviderTunnelGameTests {
      * input faces must never expose the generic inventory (a provider standing there
      * would chain into the return path instead of the push router).
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meshProviderReturnsResultsThroughOutputFace(GameTestHelper helper) {
+    public static void meshProviderReturnsResultsThroughOutputFace(GameTestHelper helper) {
         meshReturnScene(helper, "mesh-ret");
 
         helper.runAfterDelay(30, () -> {
@@ -438,8 +440,7 @@ public class ProviderTunnelGameTests {
     }
 
     /** The mesh return's generic-inventory surface accepts any AE key type, like the tunnel's. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meshProviderGenericReturnSurface(GameTestHelper helper) {
+    public static void meshProviderGenericReturnSurface(GameTestHelper helper) {
         meshReturnScene(helper, "mesh-ret-gen");
 
         helper.runAfterDelay(30, () -> {
@@ -462,8 +463,7 @@ public class ProviderTunnelGameTests {
     }
 
     /** With several inputs on the frequency, returns land at the highest-priority input first. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meshProviderReturnsFollowInputPriority(GameTestHelper helper) {
+    public static void meshProviderReturnsFollowInputPriority(GameTestHelper helper) {
         var parts = meshReturnScene(helper, "mesh-ret-prio");
         parts[0].applyMeshConfig("mesh-ret-prio",
                 io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart.ROLE_IN, 5, 0);
@@ -566,8 +566,7 @@ public class ProviderTunnelGameTests {
      * inventories) reaches an assembler only through the tunnel, the assembler crafts,
      * and the result lands back in networked storage via the return path.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void assemblerPatternsCrossTheTunnel(GameTestHelper helper) {
+    public static void assemblerPatternsCrossTheTunnel(GameTestHelper helper) {
         var planks = craftingPattern(helper, "minecraft:oak_planks",
                 craftingGrid(java.util.Map.of(0, new ItemStack(Items.OAK_LOG))),
                 new ItemStack(Items.OAK_PLANKS, 4));
@@ -589,8 +588,7 @@ public class ProviderTunnelGameTests {
      * intermediate result must return through the tunnel, re-enter storage, and be
      * pushed BACK through the same tunnel for the second assembler step.
      */
-    @GameTest(template = "empty5", timeoutTicks = 600)
-    public void assemblerCraftsChainThroughTheTunnel(GameTestHelper helper) {
+    public static void assemblerCraftsChainThroughTheTunnel(GameTestHelper helper) {
         var planks = craftingPattern(helper, "minecraft:oak_planks",
                 craftingGrid(java.util.Map.of(0, new ItemStack(Items.OAK_LOG))),
                 new ItemStack(Items.OAK_PLANKS, 4));

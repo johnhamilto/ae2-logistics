@@ -4,15 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.gametest.framework.GameTestGenerator;
-import net.minecraft.gametest.framework.TestFunction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Rotation;
-import net.neoforged.neoforge.gametest.GameTestHolder;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.stacks.AEItemKey;
@@ -27,7 +23,6 @@ import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
  * depth, with negative controls. Every case builds a real network, plans a real job, and
  * asserts whether the plan completes.
  */
-@GameTestHolder(AE2Logistics.MOD_ID)
 public class TreeMatrixGameTests {
 
     private static final Identifier PLANKS = Identifier.parse("minecraft:planks");
@@ -38,26 +33,12 @@ public class TreeMatrixGameTests {
             AEItemKey request, long amount, boolean expect) {
     }
 
-    @GameTestGenerator
-    public List<TestFunction> adaptiveTreeMatrix() {
-        var result = new ArrayList<TestFunction>();
+    static void register() {
         for (var testCase : cases()) {
-            result.add(new TestFunction(
-                    "ae2logistics",
-                    "ae2logistics.matrix." + testCase.name(),
-                    "ae2logistics:empty5",
-                    Rotation.NONE,
-                    400,
-                    0,
-                    true,
-                    false,
-                    1,
-                    1,
-                    false,
+            LogisticsTestInstance.add("matrix_" + testCase.name(), "empty5", 400,
                     helper -> PatternGameTests.planPlot(helper, testCase.patterns(), testCase.storage(),
-                            testCase.request(), testCase.amount(), testCase.expect(), testCase.name())));
+                            testCase.request(), testCase.amount(), testCase.expect(), testCase.name()));
         }
-        return result;
     }
 
     private static List<Case> cases() {

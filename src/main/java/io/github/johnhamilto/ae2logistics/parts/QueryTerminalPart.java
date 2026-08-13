@@ -4,13 +4,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
@@ -86,26 +85,22 @@ public class QueryTerminalPart extends AEBasePart {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
-        var list = new net.minecraft.nbt.ListTag();
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
+        var list = data.childrenList("queries");
         for (var entry : savedQueries.entrySet()) {
-            var tag = new CompoundTag();
+            var tag = list.addChild();
             tag.putString("name", entry.getKey());
             tag.putString("source", entry.getValue());
-            list.add(tag);
         }
-        data.put("queries", list);
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
         savedQueries.clear();
-        for (Tag element : data.getList("queries", Tag.TAG_COMPOUND)) {
-            if (element instanceof CompoundTag tag) {
-                savedQueries.put(tag.getString("name"), tag.getString("source"));
-            }
+        for (var tag : data.childrenListOrEmpty("queries")) {
+            savedQueries.put(tag.getStringOr("name", ""), tag.getStringOr("source", ""));
         }
     }
 

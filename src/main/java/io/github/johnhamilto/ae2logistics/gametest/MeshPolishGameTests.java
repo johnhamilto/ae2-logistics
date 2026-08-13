@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -14,8 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -32,9 +29,20 @@ import io.github.johnhamilto.ae2logistics.parts.MeshEndpointPart;
 import io.github.johnhamilto.ae2logistics.parts.P2PFrequencyTerminalPart;
 import io.github.johnhamilto.ae2logistics.parts.P2PNames;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class MeshPolishGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("p2pNamesLiveOnTunnels", "empty5", 200, MeshPolishGameTests::p2pNamesLiveOnTunnels);
+        LogisticsTestInstance.add("p2pLegacyNamesMigrateToTunnels", "empty5", 200, MeshPolishGameTests::p2pLegacyNamesMigrateToTunnels);
+        LogisticsTestInstance.add("providerBatchMovesWholeToAcceptingMachine", "empty5", 400, MeshPolishGameTests::providerBatchMovesWholeToAcceptingMachine);
+        LogisticsTestInstance.add("meshRenameRetagsEveryEndpoint", "empty5", 200, MeshPolishGameTests::meshRenameRetagsEveryEndpoint);
+        LogisticsTestInstance.add("cabledLoopIsFlagged", "empty5", 200, MeshPolishGameTests::cabledLoopIsFlagged);
+        LogisticsTestInstance.add("rosterListsCarrierFrequencyWithSelf", "empty5", 200, MeshPolishGameTests::rosterListsCarrierFrequencyWithSelf);
+        LogisticsTestInstance.add("rosterScopesToCarrierNetwork", "empty5", 200, MeshPolishGameTests::rosterScopesToCarrierNetwork);
+        LogisticsTestInstance.add("universalPlacesOpenAndUnlocked", "empty5", 100, MeshPolishGameTests::universalPlacesOpenAndUnlocked);
+        LogisticsTestInstance.add("endpointRecipesRideTheTunnelTag", "empty5", 100, MeshPolishGameTests::endpointRecipesRideTheTunnelTag);
+        LogisticsTestInstance.add("meshEndpointRetunesAcrossFrequencies", "empty5", 200, MeshPolishGameTests::meshEndpointRetunesAcrossFrequencies);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -82,8 +90,7 @@ public class MeshPolishGameTests {
      * the frequency keeps its name as long as one named tunnel remains. No terminal part
      * is ever placed here.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void p2pNamesLiveOnTunnels(GameTestHelper helper) {
+    public static void p2pNamesLiveOnTunnels(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
@@ -125,8 +132,7 @@ public class MeshPolishGameTests {
     }
 
     /** Pre-0.6 per-terminal names must migrate onto the tunnels once the grid is up. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void p2pLegacyNamesMigrateToTunnels(GameTestHelper helper) {
+    public static void p2pLegacyNamesMigrateToTunnels(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
@@ -145,15 +151,18 @@ public class MeshPolishGameTests {
             service.updateFreq(tunnel, frequency);
 
             var registries = helper.getLevel().registryAccess();
-            var tag = new CompoundTag();
-            terminal.writeToNBT(tag, registries);
+            var out = net.minecraft.world.level.storage.TagValueOutput.createWithContext(
+                    net.minecraft.util.ProblemReporter.DISCARDING, registries);
+            terminal.writeToNBT(out);
+            var tag = out.buildResult();
             var list = new ListTag();
             var entry = new CompoundTag();
             entry.putShort("freq", frequency);
             entry.putString("name", "from-the-old-world");
             list.add(entry);
             tag.put("frequencyNames", list);
-            terminal.readFromNBT(tag, registries);
+            terminal.readFromNBT(net.minecraft.world.level.storage.TagValueInput.create(
+                    net.minecraft.util.ProblemReporter.DISCARDING, registries, tag));
 
             terminal.migrateLegacyNames();
             helper.assertTrue(P2PNames.nameOn(tunnel).equals("from-the-old-world"),
@@ -167,8 +176,7 @@ public class MeshPolishGameTests {
      * A provider batch whose later ingredient cannot fit in the first machine must move
      * WHOLE to a machine that accepts everything - never split across machines.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void providerBatchMovesWholeToAcceptingMachine(GameTestHelper helper) {
+    public static void providerBatchMovesWholeToAcceptingMachine(GameTestHelper helper) {
         var level = helper.getLevel();
 
         helper.setBlock(new BlockPos(2, 1, 0),
@@ -247,13 +255,13 @@ public class MeshPolishGameTests {
                             var result = grid.getCraftingService().submitJob(plan, null, null, true,
                                     new appeng.me.helpers.MachineSource(input));
                             if (!result.successful()) {
-                                throw new net.minecraft.gametest.framework.GameTestAssertException(
+                                throw helper.assertionException(
                                         "submit failed: " + result.errorCode());
                             }
                             job.submitted = true;
                         }
                     } catch (java.util.concurrent.TimeoutException e) {
-                        throw new net.minecraft.gametest.framework.GameTestAssertException("planning");
+                        throw helper.assertionException("planning");
                     } catch (java.util.concurrent.ExecutionException | InterruptedException e) {
                         throw new RuntimeException(e);
                     }
@@ -283,8 +291,7 @@ public class MeshPolishGameTests {
     }
 
     /** Renaming a mesh frequency retags every endpoint and rebuilds registry membership. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meshRenameRetagsEveryEndpoint(GameTestHelper helper) {
+    public static void meshRenameRetagsEveryEndpoint(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -308,8 +315,7 @@ public class MeshPolishGameTests {
     }
 
     /** Two ME endpoints whose FED networks already touch must be flagged as a cabled loop. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void cabledLoopIsFlagged(GameTestHelper helper) {
+    public static void cabledLoopIsFlagged(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -351,8 +357,7 @@ public class MeshPolishGameTests {
      * exactly one row marks itself, rows carry live role and priority, and other
      * frequencies never leak in.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void rosterListsCarrierFrequencyWithSelf(GameTestHelper helper) {
+    public static void rosterListsCarrierFrequencyWithSelf(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -404,8 +409,7 @@ public class MeshPolishGameTests {
     }
 
     /** Same frequency on two ISOLATED networks: each roster sees only its own carrier. */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void rosterScopesToCarrierNetwork(GameTestHelper helper) {
+    public static void rosterScopesToCarrierNetwork(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 0));
@@ -433,8 +437,7 @@ public class MeshPolishGameTests {
     }
 
     /** A raw-placed universal endpoint starts open: every transport, unlocked, no frequency. */
-    @GameTest(template = "empty5", timeoutTicks = 100)
-    public void universalPlacesOpenAndUnlocked(GameTestHelper helper) {
+    public static void universalPlacesOpenAndUnlocked(GameTestHelper helper) {
         placeCable(helper, new BlockPos(1, 1, 1));
         var part = PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
                 Direction.UP, null, AE2Logistics.MESH_ENDPOINT_PART.get());
@@ -452,8 +455,7 @@ public class MeshPolishGameTests {
      * against live AE2 ids (upstream id drift would silently break every recipe), and
      * the endpoint recipes actually accept a tag member as their tunnel ingredient.
      */
-    @GameTest(template = "empty5", timeoutTicks = 100)
-    public void endpointRecipesRideTheTunnelTag(GameTestHelper helper) {
+    public static void endpointRecipesRideTheTunnelTag(GameTestHelper helper) {
         var tag = TagKey.create(Registries.ITEM,
                 Identifier.fromNamespaceAndPath(AE2Logistics.MOD_ID, "p2p_tunnels"));
         var ae2Tunnel = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:redstone_p2p_tunnel"));
@@ -462,9 +464,11 @@ public class MeshPolishGameTests {
         helper.assertTrue(new ItemStack(AE2Logistics.PROVIDER_P2P_TUNNEL_PART.get()).is(tag),
                 "the provider tunnel must sit in the recipe tag");
 
-        var manager = helper.getLevel().getRecipeManager();
+        var manager = helper.getLevel().getServer().getRecipeManager();
         for (var id : new String[] {"mesh_endpoint", "mesh_endpoint_item", "mesh_endpoint_provider"}) {
-            var recipe = manager.byKey(Identifier.fromNamespaceAndPath(AE2Logistics.MOD_ID, id));
+            var recipe = manager.byKey(net.minecraft.resources.ResourceKey.create(
+                    net.minecraft.core.registries.Registries.RECIPE,
+                    Identifier.fromNamespaceAndPath(AE2Logistics.MOD_ID, id)));
             helper.assertTrue(recipe.isPresent(), id + " recipe must exist");
             boolean tunnelSlot = false;
             for (var ingredient : recipe.get().value().getIngredients()) {
@@ -480,8 +484,7 @@ public class MeshPolishGameTests {
      * target frequency with role, priority, and transports intact; a stale identity
      * (already moved) and a blank or same-frequency target are refused.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void meshEndpointRetunesAcrossFrequencies(GameTestHelper helper) {
+    public static void meshEndpointRetunesAcrossFrequencies(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));

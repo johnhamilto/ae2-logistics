@@ -3,11 +3,8 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.stacks.AEKeyTypes;
 
@@ -20,16 +17,18 @@ import io.github.johnhamilto.ae2logistics.provider.ProviderTargets;
  * an absent mod as a skip (succeed immediately), so the suite stays green in a bare
  * environment and gains assertions in the modded one.
  */
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class CompatGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("extendedAeProviderResolvesForVirtualization", "empty5", CompatGameTests::extendedAeProviderResolvesForVirtualization);
+        LogisticsTestInstance.add("appliedMekanisticsChemicalKeyTypeRegisters", "empty5", CompatGameTests::appliedMekanisticsChemicalKeyTypeRegisters);
+    }
 
     /**
      * ExtendedAE's providers subclass AE2's provider host, so the virtual-provider
      * tunnel path must resolve them and map their blocking mode like AE2's own.
      */
-    @GameTest(template = "empty5")
-    public void extendedAeProviderResolvesForVirtualization(GameTestHelper helper) {
+    public static void extendedAeProviderResolvesForVirtualization(GameTestHelper helper) {
         if (!CompatMods.loaded(CompatMods.EXTENDED_AE)) {
             helper.succeed();
             return;
@@ -56,8 +55,7 @@ public class CompatGameTests {
      * and return surfaces accept it by construction (they are key-type generic), so
      * registration is the wiring that matters.
      */
-    @GameTest(template = "empty5")
-    public void appliedMekanisticsChemicalKeyTypeRegisters(GameTestHelper helper) {
+    public static void appliedMekanisticsChemicalKeyTypeRegisters(GameTestHelper helper) {
         if (!CompatMods.loaded(CompatMods.APPLIED_MEKANISTICS)) {
             helper.succeed();
             return;

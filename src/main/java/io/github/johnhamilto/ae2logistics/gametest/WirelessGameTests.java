@@ -4,15 +4,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.implementations.blockentities.IWirelessAccessPoint;
 import appeng.api.parts.IPartItem;
@@ -23,9 +20,14 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.block.DenseWapBlockEntity;
 import io.github.johnhamilto.ae2logistics.block.WirelessBridgeBlockEntity;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class WirelessGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("bridgeCarriesStorageThroughCoverage", EMPTY, 400, WirelessGameTests::bridgeCarriesStorageThroughCoverage);
+        LogisticsTestInstance.add("bridgeRespectsRangeBinary", EMPTY, 400, WirelessGameTests::bridgeRespectsRangeBinary);
+        LogisticsTestInstance.add("bridgeHandsOverBetweenAccessPoints", EMPTY, 400, WirelessGameTests::bridgeHandsOverBetweenAccessPoints);
+        LogisticsTestInstance.add("ae2AccessPointServesBridge", EMPTY, 400, WirelessGameTests::ae2AccessPointServesBridge);
+    }
 
     private static final String EMPTY = "empty5";
 
@@ -51,8 +53,7 @@ public class WirelessGameTests {
      * with no cable path to the main network, becomes part of the main network's
      * storage purely through WAP coverage.
      */
-    @GameTest(template = EMPTY, timeoutTicks = 400)
-    public void bridgeCarriesStorageThroughCoverage(GameTestHelper helper) {
+    public static void bridgeCarriesStorageThroughCoverage(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(0, 1, 1), AE2Logistics.DENSE_WAP.get());
@@ -85,8 +86,7 @@ public class WirelessGameTests {
     }
 
     /** Coverage is binary: out of range is dark, and range changes take effect live. */
-    @GameTest(template = EMPTY, timeoutTicks = 400)
-    public void bridgeRespectsRangeBinary(GameTestHelper helper) {
+    public static void bridgeRespectsRangeBinary(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(0, 1, 1), AE2Logistics.DENSE_WAP.get());
@@ -119,8 +119,7 @@ public class WirelessGameTests {
     }
 
     /** Losing the serving access point re-associates the bridge to another in range. */
-    @GameTest(template = EMPTY, timeoutTicks = 400)
-    public void bridgeHandsOverBetweenAccessPoints(GameTestHelper helper) {
+    public static void bridgeHandsOverBetweenAccessPoints(GameTestHelper helper) {
         var cablePos = helper.absolutePos(new BlockPos(0, 1, 2));
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
         PartHelper.setPart(helper.getLevel(), cablePos, null, null, (IPartItem<?>) cable);
@@ -151,8 +150,7 @@ public class WirelessGameTests {
     }
 
     /** AE2's own Wireless Access Point serves bridges - existing towers become logistics. */
-    @GameTest(template = EMPTY, timeoutTicks = 400)
-    public void ae2AccessPointServesBridge(GameTestHelper helper) {
+    public static void ae2AccessPointServesBridge(GameTestHelper helper) {
         // Surround the WAP with energy cells so its orientation-dependent back face
         // always touches a grid; the bridge follows whichever grid it joined.
         var wapPos = new BlockPos(1, 2, 1);

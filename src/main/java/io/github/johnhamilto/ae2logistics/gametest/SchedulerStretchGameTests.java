@@ -3,15 +3,12 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -23,9 +20,13 @@ import io.github.johnhamilto.ae2logistics.block.JobSchedulerBlockEntity;
 import io.github.johnhamilto.ae2logistics.crafting.AdaptiveInputSpec;
 import io.github.johnhamilto.ae2logistics.crafting.AdaptivePattern;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class SchedulerStretchGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("schedulerDeadlineEvictsStalledJob", "empty5", 900, SchedulerStretchGameTests::schedulerDeadlineEvictsStalledJob);
+        LogisticsTestInstance.add("schedulerPreemptsYoungerSameClass", "empty5", 900, SchedulerStretchGameTests::schedulerPreemptsYoungerSameClass);
+        LogisticsTestInstance.add("schedulerRulesTransferViaSettings", "empty5", 400, SchedulerStretchGameTests::schedulerRulesTransferViaSettings);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -80,8 +81,7 @@ public class SchedulerStretchGameTests {
     }
 
     /** The watchdog evicts a job that overruns its deadline, freeing the CPU. */
-    @GameTest(template = "empty5", timeoutTicks = 900)
-    public void schedulerDeadlineEvictsStalledJob(GameTestHelper helper) {
+    public static void schedulerDeadlineEvictsStalledJob(GameTestHelper helper) {
         buildStallPlot(helper);
 
         var table = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
@@ -112,8 +112,7 @@ public class SchedulerStretchGameTests {
      * A high-priority rule with preemption bumps the youngest same-class job of a
      * lower-priority rule off the only CPU.
      */
-    @GameTest(template = "empty5", timeoutTicks = 900)
-    public void schedulerPreemptsYoungerSameClass(GameTestHelper helper) {
+    public static void schedulerPreemptsYoungerSameClass(GameTestHelper helper) {
         buildStallPlot(helper);
 
         var table = new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1);
@@ -144,8 +143,7 @@ public class SchedulerStretchGameTests {
     }
 
     /** Rules ride TransferableSettings: Config Terminal copy/paste and blueprints. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void schedulerRulesTransferViaSettings(GameTestHelper helper) {
+    public static void schedulerRulesTransferViaSettings(GameTestHelper helper) {
         helper.setBlock(new BlockPos(1, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         helper.setBlock(new BlockPos(1, 2, 1), AE2Logistics.JOB_SCHEDULER.get());

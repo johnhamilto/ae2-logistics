@@ -3,12 +3,9 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -19,9 +16,15 @@ import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.WirelessConnectorPart;
 import io.github.johnhamilto.ae2logistics.wireless.WirelessLinkRegistry;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class WirelessConnectorGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("connectorColorsGateLinking", "empty5", 200, WirelessConnectorGameTests::connectorColorsGateLinking);
+        LogisticsTestInstance.add("parallelTrunkLeavesWirelessIdle", "empty12", 400, WirelessConnectorGameTests::parallelTrunkLeavesWirelessIdle);
+        LogisticsTestInstance.add("wirelessOnlyIslandCarriesChannels", "empty12", 400, WirelessConnectorGameTests::wirelessOnlyIslandCarriesChannels);
+        LogisticsTestInstance.add("rangeIsMutualReach", "empty20", 400, WirelessConnectorGameTests::rangeIsMutualReach);
+        LogisticsTestInstance.add("connectorStateSurvivesNbtRoundTrip", "empty5", WirelessConnectorGameTests::connectorStateSurvivesNbtRoundTrip);
+    }
 
     private static void place(GameTestHelper helper, BlockPos pos, String blockId) {
         helper.setBlock(pos, BuiltInRegistries.BLOCK.getValue(Identifier.parse(blockId)));
@@ -48,8 +51,7 @@ public class WirelessConnectorGameTests {
      * own color (and fluix). Recoloring in place relinks and unlinks live - teardown
      * splits the grids, so identity flips are observable a tick later.
      */
-    @GameTest(template = "empty5", timeoutTicks = 200)
-    public void connectorColorsGateLinking(GameTestHelper helper) {
+    public static void connectorColorsGateLinking(GameTestHelper helper) {
         helper.assertTrue(WirelessLinkRegistry.colorsCompatible(AEColor.TRANSPARENT, AEColor.RED),
                 "fluix must pair with any color");
         helper.assertTrue(WirelessLinkRegistry.colorsCompatible(AEColor.RED, AEColor.RED),
@@ -82,8 +84,7 @@ public class WirelessConnectorGameTests {
      * trunk carries nothing, because plain nodes ride the third strict BFS tier and
      * every island the trunk can reach is claimed by the trunk first.
      */
-    @GameTest(template = "empty12", timeoutTicks = 400)
-    public void parallelTrunkLeavesWirelessIdle(GameTestHelper helper) {
+    public static void parallelTrunkLeavesWirelessIdle(GameTestHelper helper) {
         place(helper, new BlockPos(0, 1, 0), "ae2:controller");
         place(helper, new BlockPos(0, 2, 0), "ae2:creative_energy_cell");
         for (int x = 1; x <= 8; x++) {
@@ -117,8 +118,7 @@ public class WirelessConnectorGameTests {
     }
 
     /** The other half of the bet: an island only wireless can reach rides the link. */
-    @GameTest(template = "empty12", timeoutTicks = 400)
-    public void wirelessOnlyIslandCarriesChannels(GameTestHelper helper) {
+    public static void wirelessOnlyIslandCarriesChannels(GameTestHelper helper) {
         place(helper, new BlockPos(0, 1, 0), "ae2:controller");
         place(helper, new BlockPos(0, 2, 0), "ae2:creative_energy_cell");
         var a = placeConnector(helper, new BlockPos(0, 1, 1));
@@ -149,8 +149,7 @@ public class WirelessConnectorGameTests {
      * AE2's booster curve (16 + boosters^1.5). Nobody links at 0 boosters; boosting ONE
      * side to 18.8 still fails the mutual rule; boosting both links.
      */
-    @GameTest(template = "empty20", timeoutTicks = 400)
-    public void rangeIsMutualReach(GameTestHelper helper) {
+    public static void rangeIsMutualReach(GameTestHelper helper) {
         place(helper, new BlockPos(0, 1, 0), "ae2:creative_energy_cell");
         var a = placeConnector(helper, new BlockPos(0, 1, 1));
         place(helper, new BlockPos(18, 1, 0), "ae2:creative_energy_cell");
@@ -172,16 +171,17 @@ public class WirelessConnectorGameTests {
     }
 
     /** Color and boosters survive the part NBT round-trip (cable-bus save path). */
-    @GameTest(template = "empty5")
-    public void connectorStateSurvivesNbtRoundTrip(GameTestHelper helper) {
+    public static void connectorStateSurvivesNbtRoundTrip(GameTestHelper helper) {
         var part = placeConnector(helper, new BlockPos(1, 1, 1));
         part.applyWirelessConfig(AEColor.MAGENTA, 3);
 
-        var tag = new CompoundTag();
         var registries = helper.getLevel().registryAccess();
-        part.writeToNBT(tag, registries);
+        var out = net.minecraft.world.level.storage.TagValueOutput.createWithContext(
+                net.minecraft.util.ProblemReporter.DISCARDING, registries);
+        part.writeToNBT(out);
         var fresh = new WirelessConnectorPart(AE2Logistics.WIRELESS_CONNECTOR_PART.get());
-        fresh.readFromNBT(tag, registries);
+        fresh.readFromNBT(net.minecraft.world.level.storage.TagValueInput.create(
+                net.minecraft.util.ProblemReporter.DISCARDING, registries, out.buildResult()));
 
         helper.assertTrue(fresh.color() == AEColor.MAGENTA, "color must survive NBT");
         helper.assertTrue(fresh.boosters() == 3, "boosters must survive NBT");

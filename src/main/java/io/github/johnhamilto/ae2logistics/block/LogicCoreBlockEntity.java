@@ -4,15 +4,16 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.GridHelper;
@@ -161,31 +162,36 @@ public class LogicCoreBlockEntity extends BlockEntity implements IInWorldGridNod
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        mainNode.saveToNBT(tag);
-        tag.put("entries", saveEntries(registries));
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        mainNode.serialize(output);
+        saveEntries(output, "entries");
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
-        loadEntries(tag.getList("entries", Tag.TAG_COMPOUND), registries);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        mainNode.deserialize(input);
+        loadEntries(input, "entries");
     }
 
-    private ListTag saveEntries(HolderLookup.Provider registries) {
-        var list = new ListTag();
+    private void saveEntries(ValueOutput output, String name) {
+        var list = output.childrenList(name);
         for (var entry : entries) {
-            list.add(entry.save(registries));
+            entry.save(list.addChild());
         }
-        return list;
     }
 
-    private void loadEntries(ListTag list, HolderLookup.Provider registries) {
-        for (int i = 0; i < ENTRIES && i < list.size(); i++) {
-            entries[i].load(list.getCompound(i), registries);
-        }
+    private void loadEntries(ValueInput input, String name) {
+        input.childrenList(name).ifPresent(list -> {
+            int i = 0;
+            for (var entryInput : list) {
+                if (i >= ENTRIES) {
+                    break;
+                }
+                entries[i++].load(entryInput);
+            }
+        });
     }
 
     @Override
@@ -193,8 +199,9 @@ public class LogicCoreBlockEntity extends BlockEntity implements IInWorldGridNod
         if (level == null) {
             return DataComponentMap.EMPTY;
         }
-        var tag = new CompoundTag();
-        tag.put("coreEntries", saveEntries(level.registryAccess()));
+        var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+        saveEntries(output, "coreEntries");
+        var tag = output.buildResult();
         return DataComponentMap.builder()
                 .set(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get(), tag)
                 .build();
@@ -209,7 +216,8 @@ public class LogicCoreBlockEntity extends BlockEntity implements IInWorldGridNod
         if (tag == null || !tag.contains("coreEntries")) {
             return;
         }
-        loadEntries(tag.getList("coreEntries", Tag.TAG_COMPOUND), level.registryAccess());
+        loadEntries(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), tag),
+                "coreEntries");
         for (var entry : entries) {
             if (entry.type() == null) {
                 entry.disable();

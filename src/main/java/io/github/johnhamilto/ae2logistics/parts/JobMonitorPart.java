@@ -10,13 +10,14 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
@@ -263,26 +264,22 @@ public class JobMonitorPart extends AEBasePart implements ILogicNode {
         }
         var tag = input.get(AE2Logistics.EXPORTED_LOGIC_SETTINGS.get());
         if (tag != null && tag.contains("prefix")) {
-            applyMonitorConfig(tag.getString("prefix"), tag.getInt("stallSeconds"));
+            applyMonitorConfig(tag.getStringOr("prefix", ""), tag.getIntOr("stallSeconds", 0));
         }
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         data.putString("prefix", prefix);
         data.putInt("stallSeconds", stallSeconds);
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
-        if (data.contains("prefix")) {
-            prefix = data.getString("prefix");
-        }
-        if (data.contains("stallSeconds")) {
-            stallSeconds = data.getInt("stallSeconds");
-        }
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
+        data.getString("prefix").ifPresent(value -> prefix = value);
+        data.getInt("stallSeconds").ifPresent(value -> stallSeconds = value);
     }
 
     @Override

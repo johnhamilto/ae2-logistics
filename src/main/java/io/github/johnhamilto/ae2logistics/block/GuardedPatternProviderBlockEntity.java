@@ -6,12 +6,13 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGrid;
@@ -194,35 +195,31 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        mainNode.saveToNBT(tag);
-        logic.writeToNBT(tag, registries);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        mainNode.serialize(output);
+        logic.writeToNBT(output);
         if (guardChannel != null) {
-            tag.putString("guardChannel", guardChannel.toString());
+            output.putString("guardChannel", guardChannel.toString());
         }
-        tag.putInt("guardOp", guardOp);
-        tag.putLong("guardValue", guardValue);
-        tag.putBoolean("gateExecution", gateExecution);
+        output.putInt("guardOp", guardOp);
+        output.putLong("guardValue", guardValue);
+        output.putBoolean("gateExecution", gateExecution);
         if (priorityChannel != null) {
-            tag.putString("priorityChannel", priorityChannel.toString());
+            output.putString("priorityChannel", priorityChannel.toString());
         }
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
-        logic.readFromNBT(tag, registries);
-        guardChannel = tag.contains("guardChannel")
-                ? Identifier.tryParse(tag.getString("guardChannel"))
-                : null;
-        guardOp = tag.getInt("guardOp");
-        guardValue = tag.getLong("guardValue");
-        gateExecution = !tag.contains("gateExecution") || tag.getBoolean("gateExecution");
-        priorityChannel = tag.contains("priorityChannel")
-                ? Identifier.tryParse(tag.getString("priorityChannel"))
-                : null;
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        mainNode.deserialize(input);
+        logic.readFromNBT(input);
+        guardChannel = input.getString("guardChannel").map(Identifier::tryParse).orElse(null);
+        guardOp = input.getIntOr("guardOp", 0);
+        guardValue = input.getLongOr("guardValue", 0L);
+        gateExecution = input.getBooleanOr("gateExecution", true);
+        priorityChannel = input.getString("priorityChannel").map(Identifier::tryParse).orElse(null);
     }
 
     @Override
@@ -252,13 +249,13 @@ public class GuardedPatternProviderBlockEntity extends BlockEntity
         if (tag != null) {
             applyGuardConfig(
                     tag.contains("guardChannel")
-                            ? Identifier.tryParse(tag.getString("guardChannel"))
+                            ? Identifier.tryParse(tag.getStringOr("guardChannel", ""))
                             : null,
-                    tag.getInt("guardOp"),
-                    tag.getLong("guardValue"),
-                    !tag.contains("gateExecution") || tag.getBoolean("gateExecution"),
+                    tag.getIntOr("guardOp", 0),
+                    tag.getLongOr("guardValue", 0L),
+                    !tag.contains("gateExecution") || tag.getBooleanOr("gateExecution", false),
                     tag.contains("priorityChannel")
-                            ? Identifier.tryParse(tag.getString("priorityChannel"))
+                            ? Identifier.tryParse(tag.getStringOr("priorityChannel", ""))
                             : null,
                     logic.getPriority());
         }

@@ -73,11 +73,18 @@ Everything here was read from the AE2 v26.1.10-beta clone or the NeoForge
   AE2's client classes moved to a separate `src/client/java` source set (client
   jar split). Decide whether we adopt the same split (see decisions).
 - Part models: `IPartModel`/`PartModels`/`PartModelsHelper`/`@PartModels` are
-  gone from `appeng.api.parts`. Client-side model classes + a loader replace
-  them (`appeng.client.model.PartModels`, per-part model classes like
-  `PlanePartModel`, `PartModelLoaderMixin`). Port each part family against the
-  closest AE2 part model class; expect our `part(...)` registration helper to
-  lose its `PartModels.registerModels` call entirely.
+  gone from `appeng.api.parts`; `part(...)` already dropped its registerModels
+  call. The 26.1 system is DATA-DRIVEN: the client `appeng.client.model.PartModels`
+  reloader scans `assets/<ns>/ae2/parts/<part_item_id>.json`, each declaring a
+  model tree - `{"model": {"type": "ae2:model", "model": "<ns>:part/x"}}` for a
+  static model, `ae2:composite` to layer, `ae2:status_indicator` for
+  active/powered/unpowered variants (see AE2's generated me_p2p_tunnel.json /
+  cable_anchor.json). Custom model types register a MapCodec via the client-side
+  `RegisterPartModelsEvent`. Port plan: one JSON per part item (generatable from
+  the old MODEL statics), delete the `@PartModels` statics + `getStaticModels()`
+  overrides, and write ONE custom part-model type for the wireless connector's
+  17 colors (color exposed through `IPart.collectModelData`, model picked like
+  AE2's PlanePartModel does).
 - `Player.displayClientMessage(msg, false)` -> `sendSystemMessage(msg)`;
   `displayClientMessage(msg, true)` -> `sendOverlayMessage(msg)` (Player.java:1399,1402).
 - `ResourceKey.location()` -> `identifier()` (ResourceKey.java:55).
@@ -148,6 +155,24 @@ Everything here was read from the AE2 v26.1.10-beta clone or the NeoForge
   `GameTestAssertException(Component, int)` ctors), part models (~330),
   ValueInput/ValueOutput serialization (~250), GUI/client (~150), transfer-API
   handler types on the mesh, JEI, misc signatures.
+- 2026-08-13 session, 1812 -> 804: merged main 0.35.0 (wireless connector +
+  dev-gate) and re-swept; CompoundTag getters onto the *Or forms; ENTIRE gametest
+  framework ported - LogisticsTestInstance registry adapter (GameTestPlotAdapter
+  pattern, one instance type + per-class register() lists, TreeMatrix generator
+  folded in), assertionException swaps, recipe lookups via
+  ResourceKey.create(Registries.RECIPE, ...), BE/part NBT round-trips bridged
+  through TagValueOutput/TagValueInput; ALL serialization on
+  ValueInput/ValueOutput (14 part files + 9 BEs + LogicCoreEntry - managed nodes
+  serialize/deserialize, GenericStack/ItemStack/GlobalPos codecs, childrenList
+  for compound lists, ConfigTerminal snapshot as an unboundedMap codec since
+  ValueInput cannot enumerate keys, TracePanel long[] ring buffers as
+  Codec.LONG.listOf, update tags built with TagValueOutput); InitScreens moved
+  to appeng.client (AE2's jar ships client classes); attachment codec fieldOf,
+  pattern-item builders take Item.Properties; JEI restored at 29.22.0.73 (26.1
+  builds exist since 2026-08-10). Remaining 804: part-model JSONs + the
+  connector's custom color model type (~350), renderers/screens on the new
+  render-state model (~200), transfer-API mesh/tunnel handlers incl. their
+  gametest insertItem sites, JeiIntegration against JEI 29, misc signatures.
 - Signature lookup of record while porting:
   `build/moddev/artifacts/minecraft-patched-26.1.2.95-sources.jar` (the patched
   vanilla sources MDG builds locally) - grep it before guessing any vanilla API.

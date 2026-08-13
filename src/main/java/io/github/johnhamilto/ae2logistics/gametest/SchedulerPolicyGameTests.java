@@ -3,15 +3,12 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -28,9 +25,13 @@ import io.github.johnhamilto.ae2logistics.item.ConfigBlueprintItem;
 import io.github.johnhamilto.ae2logistics.parts.ConfigTerminalPart;
 import io.github.johnhamilto.ae2logistics.parts.LogicPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class SchedulerPolicyGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("schedulerAdmissionClassPoolsAndGuard", "empty5", 900, SchedulerPolicyGameTests::schedulerAdmissionClassPoolsAndGuard);
+        LogisticsTestInstance.add("blueprintRoundTripsRegionConfig", "empty5", 400, SchedulerPolicyGameTests::blueprintRoundTripsRegionConfig);
+        LogisticsTestInstance.add("snapshotDiffFlagsChanges", "empty5", 300, SchedulerPolicyGameTests::snapshotDiffFlagsChanges);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -51,8 +52,7 @@ public class SchedulerPolicyGameTests {
      * submitted; when a CPU appears the bulk rule runs on it, while the maintenance
      * rule stays deferred because no "maint" CPU exists, and a guarded rule holds.
      */
-    @GameTest(template = "empty5", timeoutTicks = 900)
-    public void schedulerAdmissionClassPoolsAndGuard(GameTestHelper helper) {
+    public static void schedulerAdmissionClassPoolsAndGuard(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(2, 1, 1));
@@ -112,7 +112,7 @@ public class SchedulerPolicyGameTests {
                 })
                 .thenWaitUntil(() -> {
                     if (scheduler.be.ruleState(0) != JobSchedulerBlockEntity.STATE_RUNNING) {
-                        throw new net.minecraft.gametest.framework.GameTestAssertException(
+                        throw helper.assertionException(
                                 "waiting for bulk rule to run, state " + scheduler.be.ruleState(0));
                     }
                 })
@@ -135,8 +135,7 @@ public class SchedulerPolicyGameTests {
     }
 
     /** The blueprint captures a region's device settings and reapplies them elsewhere. */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void blueprintRoundTripsRegionConfig(GameTestHelper helper) {
+    public static void blueprintRoundTripsRegionConfig(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -211,8 +210,7 @@ public class SchedulerPolicyGameTests {
     }
 
     /** Snapshots flag changed devices; untouched devices stay clean. */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void snapshotDiffFlagsChanges(GameTestHelper helper) {
+    public static void snapshotDiffFlagsChanges(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));

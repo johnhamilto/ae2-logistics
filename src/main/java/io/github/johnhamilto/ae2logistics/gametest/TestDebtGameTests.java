@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -12,8 +11,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -30,9 +27,12 @@ import io.github.johnhamilto.ae2logistics.parts.JobMonitorPart;
 import io.github.johnhamilto.ae2logistics.parts.LogicPartType;
 import io.github.johnhamilto.ae2logistics.signal.SignalService;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class TestDebtGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("namedCpuPoolsAndMonitorChannels", "empty5", 900, TestDebtGameTests::namedCpuPoolsAndMonitorChannels);
+        LogisticsTestInstance.add("blockEntitiesRoundTripNbt", "empty5", 400, TestDebtGameTests::blockEntitiesRoundTripNbt);
+    }
 
     /**
      * Names a crafting cluster the way an anvil rename would: the private customName on
@@ -54,8 +54,7 @@ public class TestDebtGameTests {
      * "maint" CPU (only the deferral half was testable before there was a way to name
      * a cluster), and the Job Monitor publishes per-named-CPU channels.
      */
-    @GameTest(template = "empty5", timeoutTicks = 900)
-    public void namedCpuPoolsAndMonitorChannels(GameTestHelper helper) {
+    public static void namedCpuPoolsAndMonitorChannels(GameTestHelper helper) {
         helper.setBlock(new BlockPos(2, 1, 0),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -128,8 +127,7 @@ public class TestDebtGameTests {
      * BE, load the tag into a freshly placed one (before its first tick), and compare -
      * the same code path a world reload exercises.
      */
-    @GameTest(template = "empty5", timeoutTicks = 400)
-    public void blockEntitiesRoundTripNbt(GameTestHelper helper) {
+    public static void blockEntitiesRoundTripNbt(GameTestHelper helper) {
         var registries = helper.getLevel().registryAccess();
         helper.setBlock(new BlockPos(0, 1, 0), AE2Logistics.LOGIC_CORE.get());
         helper.setBlock(new BlockPos(0, 1, 2), AE2Logistics.JOB_SCHEDULER.get());
@@ -172,11 +170,11 @@ public class TestDebtGameTests {
                     helper.setBlock(new BlockPos(4, 3, 0), AE2Logistics.WIRELESS_BRIDGE.get());
                     helper.setBlock(new BlockPos(4, 3, 2), AE2Logistics.DENSE_WAP.get());
 
-                    helper.getBlockEntity(new BlockPos(4, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(coreTag, registries);
-                    helper.getBlockEntity(new BlockPos(4, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(schedulerTag, registries);
-                    helper.getBlockEntity(new BlockPos(4, 1, 4), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(bankTag, registries);
-                    helper.getBlockEntity(new BlockPos(4, 3, 0), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(bridgeTag, registries);
-                    helper.getBlockEntity(new BlockPos(4, 3, 2), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(wapTag, registries);
+                    helper.getBlockEntity(new BlockPos(4, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, registries, coreTag));
+                    helper.getBlockEntity(new BlockPos(4, 1, 2), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, registries, schedulerTag));
+                    helper.getBlockEntity(new BlockPos(4, 1, 4), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, registries, bankTag));
+                    helper.getBlockEntity(new BlockPos(4, 3, 0), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, registries, bridgeTag));
+                    helper.getBlockEntity(new BlockPos(4, 3, 2), net.minecraft.world.level.block.entity.BlockEntity.class).loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, registries, wapTag));
                 })
                 .thenExecuteAfter(20, () -> {
                     var core = (LogicCoreBlockEntity) helper.getBlockEntity(new BlockPos(4, 1, 0), net.minecraft.world.level.block.entity.BlockEntity.class);

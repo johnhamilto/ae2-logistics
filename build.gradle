@@ -38,9 +38,13 @@ dependencies {
     implementation "org.appliedenergistics:appliedenergistics2:${project.ae2_version}"
     compileOnly "org.appliedenergistics:guideme:${project.guideme_version}"
 
-    // Dev-runtime QoL (JEI, Jade) and the 1.21.1 compat suite (plus the AppMek
-    // chemical bridge and its compileOnly deps) are absent on this branch until
-    // their 26.1 ports exist - main's build.gradle lists the full set.
+    compileOnly "mezz.jei:jei-26.1.2-common-api:${project.jei_version}"
+    compileOnly "mezz.jei:jei-26.1.2-neoforge-api:${project.jei_version}"
+    runtimeOnly "mezz.jei:jei-26.1.2-neoforge:${project.jei_version}"
+
+    // Jade and the 1.21.1 compat suite (plus the AppMek chemical bridge and its
+    // compileOnly deps) are absent on this branch until their 26.1 ports exist -
+    // main's build.gradle lists the full set.
 }
 
 sourceSets {

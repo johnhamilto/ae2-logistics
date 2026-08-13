@@ -3,15 +3,12 @@ package io.github.johnhamilto.ae2logistics.gametest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
@@ -21,9 +18,12 @@ import appeng.api.stacks.KeyCounter;
 import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.parts.SubnetLinkPart;
 
-@GameTestHolder(AE2Logistics.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class SubnetLinkGameTests {
+
+    static void register() {
+        LogisticsTestInstance.add("subnetLinkCarriesRealSubnet", "empty5", 300, SubnetLinkGameTests::subnetLinkCarriesRealSubnet);
+        LogisticsTestInstance.add("subnetLinkMountsSubnetOnMain", "empty5", 300, SubnetLinkGameTests::subnetLinkMountsSubnetOnMain);
+    }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
         var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse("ae2:fluix_glass_cable"));
@@ -51,8 +51,7 @@ public class SubnetLinkGameTests {
     }
 
     /** The face carries a REAL subnet: separate grid, powered through the link. */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void subnetLinkCarriesRealSubnet(GameTestHelper helper) {
+    public static void subnetLinkCarriesRealSubnet(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));
@@ -74,8 +73,7 @@ public class SubnetLinkGameTests {
     }
 
     /** The storage-bus half: the main network mounts the subnet's storage. */
-    @GameTest(template = "empty5", timeoutTicks = 300)
-    public void subnetLinkMountsSubnetOnMain(GameTestHelper helper) {
+    public static void subnetLinkMountsSubnetOnMain(GameTestHelper helper) {
         helper.setBlock(new BlockPos(0, 1, 1),
                 BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
         placeCable(helper, new BlockPos(1, 1, 1));

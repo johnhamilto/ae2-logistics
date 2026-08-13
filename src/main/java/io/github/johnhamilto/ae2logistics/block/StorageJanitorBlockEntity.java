@@ -7,12 +7,10 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.GridHelper;
@@ -197,32 +195,30 @@ public class StorageJanitorBlockEntity extends BlockEntity implements IInWorldGr
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        mainNode.saveToNBT(tag);
-        var list = new ListTag();
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        mainNode.serialize(output);
+        var list = output.childrenList("held");
         for (var stack : held) {
-            var entry = new CompoundTag();
-            entry.put("what", stack.what().toTagGeneric(registries));
+            var entry = list.addChild();
+            stack.what().toTagGeneric(entry.child("what"));
             entry.putLong("amount", stack.amount());
-            list.add(entry);
         }
-        tag.put("held", list);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        mainNode.deserialize(input);
         held.clear();
-        for (Tag element : tag.getList("held", Tag.TAG_COMPOUND)) {
-            if (element instanceof CompoundTag entry) {
-                var what = AEKey.fromTagGeneric(registries, entry.getCompound("what"));
+        input.childrenList("held").ifPresent(entries -> {
+            for (var entry : entries) {
+                var what = entry.child("what").map(AEKey::fromTagGeneric).orElse(null);
                 if (what != null) {
-                    held.add(new GenericStack(what, entry.getLong("amount")));
+                    held.add(new GenericStack(what, entry.getLongOr("amount", 0L)));
                 }
             }
-        }
+        });
     }
 
     @Nullable

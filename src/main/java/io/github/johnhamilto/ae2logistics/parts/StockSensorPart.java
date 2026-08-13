@@ -4,9 +4,9 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
@@ -67,17 +67,15 @@ public class StockSensorPart extends LogicPart {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
-        if (watched != null) {
-            data.put("watched", GenericStack.writeTag(registries, watched));
-        }
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
+        data.storeNullable("watched", GenericStack.CODEC, watched);
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
-        watched = data.contains("watched") ? GenericStack.readTag(registries, data.getCompound("watched")) : null;
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
+        watched = data.read("watched", GenericStack.CODEC).orElse(null);
     }
 
     @Override

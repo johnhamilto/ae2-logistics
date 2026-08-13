@@ -4,13 +4,13 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
@@ -148,8 +148,8 @@ public class QuerySensorPart extends AEBasePart implements ILogicNode {
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         if (outChannel != null) {
             data.putString("out", outChannel.toString());
         }
@@ -157,10 +157,10 @@ public class QuerySensorPart extends AEBasePart implements ILogicNode {
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
-        outChannel = data.contains("out") ? Identifier.tryParse(data.getString("out")) : null;
-        source = data.getString("query");
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
+        outChannel = data.getString("out").map(Identifier::tryParse).orElse(null);
+        source = data.getStringOr("query", "");
         var compiled = io.github.johnhamilto.ae2logistics.query.CompiledQuery.compile(source);
         signalReads = compiled != null ? Set.copyOf(compiled.referencedSignals()) : Set.of();
     }

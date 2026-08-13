@@ -7,11 +7,10 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.implementations.blockentities.IWirelessAccessPoint;
 import appeng.api.networking.GridFlags;
@@ -222,22 +221,17 @@ public class WirelessBridgeBlockEntity extends BlockEntity implements IInWorldGr
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        mainNode.saveToNBT(tag);
-        if (anchor != null) {
-            GlobalPos.CODEC.encodeStart(NbtOps.INSTANCE, anchor).result()
-                    .ifPresent(encoded -> tag.put("anchor", encoded));
-        }
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        mainNode.serialize(output);
+        output.storeNullable("anchor", GlobalPos.CODEC, anchor);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
-        anchor = tag.contains("anchor")
-                ? GlobalPos.CODEC.parse(NbtOps.INSTANCE, tag.get("anchor")).result().orElse(null)
-                : null;
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        mainNode.deserialize(input);
+        anchor = input.read("anchor", GlobalPos.CODEC).orElse(null);
     }
 
     @Nullable

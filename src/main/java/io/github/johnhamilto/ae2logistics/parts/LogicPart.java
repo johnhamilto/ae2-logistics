@@ -5,13 +5,14 @@ import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 import appeng.api.parts.IPartCollisionHelper;
@@ -144,21 +145,21 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
         var tag = input.get(io.github.johnhamilto.ae2logistics.AE2Logistics.EXPORTED_LOGIC_SETTINGS.get());
         if (tag != null) {
             applyConfig(
-                    tag.contains("out") ? Identifier.tryParse(tag.getString("out")) : null,
-                    tag.contains("inA") ? Identifier.tryParse(tag.getString("inA")) : null,
-                    tag.contains("inB") ? Identifier.tryParse(tag.getString("inB")) : null,
-                    tag.getInt("op"),
-                    tag.getLong("valueA"),
-                    tag.getLong("valueB"),
-                    tag.getBoolean("flag"));
+                    tag.contains("out") ? Identifier.tryParse(tag.getStringOr("out", "")) : null,
+                    tag.contains("inA") ? Identifier.tryParse(tag.getStringOr("inA", "")) : null,
+                    tag.contains("inB") ? Identifier.tryParse(tag.getStringOr("inB", "")) : null,
+                    tag.getIntOr("op", 0),
+                    tag.getLongOr("valueA", 0L),
+                    tag.getLongOr("valueB", 0L),
+                    tag.getBooleanOr("flag", false));
             var watched = input.get(io.github.johnhamilto.ae2logistics.AE2Logistics.EXPORTED_WATCHED_KEY.get());
             setWatchedKey(watched);
         }
     }
 
     @Override
-    public void writeToNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.writeToNBT(data, registries);
+    public void writeToNBT(ValueOutput data) {
+        super.writeToNBT(data);
         if (outChannel != null) {
             data.putString("out", outChannel.toString());
         }
@@ -175,15 +176,15 @@ public abstract class LogicPart extends AEBasePart implements ILogicNode {
     }
 
     @Override
-    public void readFromNBT(CompoundTag data, HolderLookup.Provider registries) {
-        super.readFromNBT(data, registries);
-        outChannel = data.contains("out") ? Identifier.tryParse(data.getString("out")) : null;
-        inA = data.contains("inA") ? Identifier.tryParse(data.getString("inA")) : null;
-        inB = data.contains("inB") ? Identifier.tryParse(data.getString("inB")) : null;
-        op = data.getInt("op");
-        valueA = data.getLong("valueA");
-        valueB = data.getLong("valueB");
-        flag = data.getBoolean("flag");
+    public void readFromNBT(ValueInput data) {
+        super.readFromNBT(data);
+        outChannel = data.getString("out").map(Identifier::tryParse).orElse(null);
+        inA = data.getString("inA").map(Identifier::tryParse).orElse(null);
+        inB = data.getString("inB").map(Identifier::tryParse).orElse(null);
+        op = data.getIntOr("op", 0);
+        valueA = data.getLongOr("valueA", 0L);
+        valueB = data.getLongOr("valueB", 0L);
+        flag = data.getBooleanOr("flag", false);
     }
 
     @Override

@@ -4,10 +4,10 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import appeng.api.implementations.blockentities.IWirelessAccessPoint;
 import appeng.api.networking.GridFlags;
@@ -77,18 +77,18 @@ public class DenseWapBlockEntity extends BlockEntity implements IInWorldGridNode
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        mainNode.saveToNBT(tag);
-        tag.putInt("range", range);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        mainNode.serialize(output);
+        output.putInt("range", range);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        mainNode.loadFromNBT(tag);
-        range = tag.contains("range") ? Math.max(1, tag.getInt("range"))
-                : io.github.johnhamilto.ae2logistics.AE2LogisticsConfig.denseWapRange();
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        mainNode.deserialize(input);
+        range = input.getInt("range").map(saved -> Math.max(1, saved))
+                .orElseGet(io.github.johnhamilto.ae2logistics.AE2LogisticsConfig::denseWapRange);
     }
 
     @Nullable
