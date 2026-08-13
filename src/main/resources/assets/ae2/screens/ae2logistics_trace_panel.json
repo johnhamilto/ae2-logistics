@@ -1,0 +1,21 @@
+{
+  "helpTopic": "ae2logistics:trace-panels.md",
+  "includes": [
+    "common/common.json"
+  ],
+  "generatedBackground": {
+    "width": 210,
+    "height": 148
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "block.ae2logistics.trace_panel"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  }
+}

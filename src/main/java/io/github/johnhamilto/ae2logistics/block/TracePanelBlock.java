@@ -122,11 +122,14 @@ public class TracePanelBlock extends Block implements EntityBlock {
             if (player.isShiftKeyDown()) {
                 panel.clearBindings();
                 player.displayClientMessage(Component.literal("Panel cleared"), true);
-            } else {
-                var bound = panel.boundChannels();
-                player.displayClientMessage(Component.literal(bound.isEmpty()
-                        ? "No traces bound - click with a bound Signal Card"
-                        : "Traces: " + bound), true);
+            } else if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                serverPlayer.openMenu(
+                        new net.minecraft.world.SimpleMenuProvider(
+                                (id, inventory, p) -> new io.github.johnhamilto.ae2logistics.menu.TracePanelMenu(
+                                        id, inventory, panel),
+                                Component.translatable("block.ae2logistics.trace_panel")),
+                        buffer -> io.github.johnhamilto.ae2logistics.menu.TracePanelMenu
+                                .writeOpenData(buffer, panel));
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

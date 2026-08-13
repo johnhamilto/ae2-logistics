@@ -83,6 +83,14 @@ public final class AE2LogisticsClient {
                     AE2Logistics.SUBNET_LINK_MENU.get(),
                     appeng.client.gui.implementations.StorageBusScreen::new,
                     "/screens/ae2logistics_subnet_link.json");
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.GATED_STORAGE_BUS_MENU.get(),
+                    appeng.client.gui.implementations.StorageBusScreen::new,
+                    "/screens/ae2logistics_gated_storage_bus.json");
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.TRACE_PANEL_MENU.get(),
+                    TracePanelScreen::new,
+                    "/screens/ae2logistics_trace_panel.json");
         });
     }
 }

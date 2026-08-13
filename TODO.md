@@ -25,9 +25,9 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   sides). Both are dev-gated meanwhile (0.34.0): hidden from tab/JEI and recipes
   conditioned off in production; lift the DevOnlyCondition + tab gate when the art
   (and the panel management GUI) is release-ready.
-- Trace Panel follow-ups: a small management GUI (v1 binds by Signal Card click,
-  sneak-card removes, sneak-empty clears); visual pass on the in-world renderer
-  (orientation/handedness, label scale) once eyeballed in game.
+- Trace Panel follow-ups: visual pass on the in-world renderer
+  (orientation/handedness, label scale) once eyeballed in game. The management
+  GUI shipped 0.38.0; with it, only the art half of the dev-gate lift remains.
 
 ## Features
 
