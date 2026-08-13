@@ -24,7 +24,8 @@ import appeng.helpers.patternprovider.PatternProviderReturnInventory;
  * inside transfer transactions via its journal), and the owning part flushes the
  * buffer into the real return {@link MEStorage} from its tick - NEVER inside a
  * transaction, because MEStorage routing can reach AE2 storage facades that open
- * root transactions of their own. Same architecture as AE2's pattern provider.
+ * root transactions of their own. Same architecture as AE2's pattern provider;
+ * backpressure moves to the buffer edge (nine slots of elasticity, then refusal).
  */
 public final class ReturnAdapters {
 
@@ -46,6 +47,7 @@ public final class ReturnAdapters {
             this.fluidHandler = new GenericStackFluidHandler(inv);
         }
 
+        /** The surface addons bridge chemicals and other custom key types through. */
         public GenericInternalInventory genericInv() {
             return inv;
         }

@@ -45,6 +45,7 @@ public class ProviderTunnelGameTests {
         LogisticsTestInstance.add("meshProviderReturnsFollowInputPriority", "empty5", 200, ProviderTunnelGameTests::meshProviderReturnsFollowInputPriority);
         LogisticsTestInstance.add("assemblerPatternsCrossTheTunnel", "empty5", 400, ProviderTunnelGameTests::assemblerPatternsCrossTheTunnel);
         LogisticsTestInstance.add("assemblerCraftsChainThroughTheTunnel", "empty5", 600, ProviderTunnelGameTests::assemblerCraftsChainThroughTheTunnel);
+        LogisticsTestInstance.add("returnBufferHoldsFlushesAndBackpressures", "empty5", 200, ProviderTunnelGameTests::returnBufferHoldsFlushesAndBackpressures);
     }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos) {
@@ -621,5 +622,89 @@ public class ProviderTunnelGameTests {
             helper.assertTrue(crafted >= 4,
                     "4 chained sticks must return to networked storage, got " + crafted);
         });
+    }
+
+    /**
+     * The buffered return path: machine inserts land in the nine-slot buffer without
+     * touching the network mid-insert, a flush moves everything onward, a refusing
+     * destination keeps returns buffered instead of lost, a full buffer refuses
+     * (backpressure lives at the buffer edge), and buffered returns survive NBT.
+     */
+    public static void returnBufferHoldsFlushesAndBackpressures(GameTestHelper helper) {
+        var buffer = io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.buffer(() -> {
+        });
+        var items = buffer.itemHandler();
+        var iron = ItemResource.of(Items.IRON_INGOT);
+        for (int slot = 0; slot < 9; slot++) {
+            int inserted;
+            try (var tx = Transaction.openRoot()) {
+                inserted = items.insert(slot, iron, 64, tx);
+                tx.commit();
+            }
+            helper.assertTrue(inserted == 64, "buffer slot " + slot + " must accept a stack");
+        }
+        try (var tx = Transaction.openRoot()) {
+            helper.assertTrue(items.insert(0, iron, 1, tx) == 0,
+                    "a full buffer must refuse the overflow");
+        }
+
+        var received = new java.util.concurrent.atomic.AtomicLong();
+        helper.assertTrue(buffer.flush(sink(received, true)), "flush must report movement");
+        helper.assertTrue(received.get() == 9L * 64,
+                "flush must deliver all 576, delivered " + received.get());
+        helper.assertTrue(buffer.isEmpty(), "buffer must drain fully");
+
+        try (var tx = Transaction.openRoot()) {
+            items.insert(0, iron, 64, tx);
+            tx.commit();
+        }
+        buffer.flush(sink(new java.util.concurrent.atomic.AtomicLong(), false));
+        helper.assertFalse(buffer.isEmpty(), "refused returns stay buffered, never lost");
+
+        var registries = helper.getLevel().registryAccess();
+        var out = net.minecraft.world.level.storage.TagValueOutput.createWithContext(
+                net.minecraft.util.ProblemReporter.DISCARDING, registries);
+        buffer.writeToNBT(out, "buf");
+        var fresh = io.github.johnhamilto.ae2logistics.provider.ReturnAdapters.buffer(() -> {
+        });
+        fresh.readFromNBT(net.minecraft.world.level.storage.TagValueInput.create(
+                net.minecraft.util.ProblemReporter.DISCARDING, registries, out.buildResult()), "buf");
+        helper.assertFalse(fresh.isEmpty(), "buffered returns must survive NBT");
+        helper.succeed();
+    }
+
+    /** Counting sink; accepts everything or nothing. */
+    private static appeng.api.storage.MEStorage sink(
+            java.util.concurrent.atomic.AtomicLong received, boolean accept) {
+        return new appeng.api.storage.MEStorage() {
+            @Override
+            public long insert(appeng.api.stacks.AEKey what, long amount,
+                    appeng.api.config.Actionable mode,
+                    appeng.api.networking.security.IActionSource source) {
+                if (!accept) {
+                    return 0;
+                }
+                if (mode == appeng.api.config.Actionable.MODULATE) {
+                    received.addAndGet(amount);
+                }
+                return amount;
+            }
+
+            @Override
+            public long extract(appeng.api.stacks.AEKey what, long amount,
+                    appeng.api.config.Actionable mode,
+                    appeng.api.networking.security.IActionSource source) {
+                return 0;
+            }
+
+            @Override
+            public void getAvailableStacks(KeyCounter out) {
+            }
+
+            @Override
+            public net.minecraft.network.chat.Component getDescription() {
+                return net.minecraft.network.chat.Component.literal("sink");
+            }
+        };
     }
 }
