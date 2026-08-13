@@ -174,7 +174,7 @@ public class WirelessConnectorPart extends AEBasePart {
     }
 
     private static void overlay(Player player, String text) {
-        player.displayClientMessage(Component.literal(text), true);
+        player.sendOverlayMessage(Component.literal(text));
     }
 
     @org.jetbrains.annotations.Nullable

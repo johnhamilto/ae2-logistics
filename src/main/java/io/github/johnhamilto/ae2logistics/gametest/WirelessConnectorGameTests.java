@@ -6,7 +6,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -24,11 +24,11 @@ import io.github.johnhamilto.ae2logistics.wireless.WirelessLinkRegistry;
 public class WirelessConnectorGameTests {
 
     private static void place(GameTestHelper helper, BlockPos pos, String blockId) {
-        helper.setBlock(pos, BuiltInRegistries.BLOCK.get(ResourceLocation.parse(blockId)));
+        helper.setBlock(pos, BuiltInRegistries.BLOCK.getValue(Identifier.parse(blockId)));
     }
 
     private static void placeCable(GameTestHelper helper, BlockPos pos, String cableId) {
-        var cable = BuiltInRegistries.ITEM.get(ResourceLocation.parse(cableId));
+        var cable = BuiltInRegistries.ITEM.getValue(Identifier.parse(cableId));
         PartHelper.setPart(helper.getLevel(), helper.absolutePos(pos), null, null, (IPartItem<?>) cable);
     }
 
@@ -101,7 +101,7 @@ public class WirelessConnectorGameTests {
             helper.assertTrue(sameGrid(a, b), "connectors share the controller grid");
             for (var pos : new BlockPos[] { new BlockPos(10, 1, 0), new BlockPos(11, 1, 0),
                     new BlockPos(10, 1, 1) }) {
-                if (helper.getBlockEntity(pos) instanceof InterfaceBlockEntity iface) {
+                if (helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class) instanceof InterfaceBlockEntity iface) {
                     helper.assertTrue(iface.getMainNode().isOnline(),
                             "interface at " + pos + " must be online via the trunk");
                 } else {
@@ -130,7 +130,7 @@ public class WirelessConnectorGameTests {
         helper.runAfterDelay(60, () -> {
             helper.assertTrue(sameGrid(a, b), "island must join the controller grid wirelessly");
             for (var pos : new BlockPos[] { new BlockPos(8, 1, 2), new BlockPos(8, 1, 3) }) {
-                if (helper.getBlockEntity(pos) instanceof InterfaceBlockEntity iface) {
+                if (helper.getBlockEntity(pos, net.minecraft.world.level.block.entity.BlockEntity.class) instanceof InterfaceBlockEntity iface) {
                     helper.assertTrue(iface.getMainNode().isOnline(),
                             "island interface at " + pos + " must be online through the link");
                 } else {
