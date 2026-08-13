@@ -19,7 +19,9 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   permutation (ME nub stays purple; non-tunnel members use the opaque generated
   mesh_back2 because ae2's has frequency windows only real tunnels fill). Placeholder block art to replace: Storage
   Janitor (reuses the register bank cube), Trace Panel (generated front, bank
-  sides).
+  sides). Both are dev-gated meanwhile (0.34.0): hidden from tab/JEI and recipes
+  conditioned off in production; lift the DevOnlyCondition + tab gate when the art
+  (and the panel management GUI) is release-ready.
 - Trace Panel follow-ups: a small management GUI (v1 binds by Signal Card click,
   sneak-card removes, sneak-empty clears); visual pass on the in-world renderer
   (orientation/handedness, label scale) once eyeballed in game.

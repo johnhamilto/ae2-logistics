@@ -100,6 +100,11 @@ public class AE2Logistics {
             .create(Registries.MENU, MOD_ID);
     public static final DeferredRegister<net.neoforged.neoforge.attachment.AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(net.neoforged.neoforge.registries.NeoForgeRegistries.ATTACHMENT_TYPES, MOD_ID);
+    public static final DeferredRegister<com.mojang.serialization.MapCodec<? extends net.neoforged.neoforge.common.conditions.ICondition>> CONDITION_CODECS =
+            DeferredRegister.create(net.neoforged.neoforge.registries.NeoForgeRegistries.Keys.CONDITION_CODECS, MOD_ID);
+
+    public static final Supplier<com.mojang.serialization.MapCodec<DevOnlyCondition>> DEV_ONLY_CONDITION =
+            CONDITION_CODECS.register("dev_only", () -> DevOnlyCondition.CODEC);
 
     /** Per cable-bus block entity: part side name -> P2P frequency name. See {@code P2PNames}. */
     public static final Supplier<net.neoforged.neoforge.attachment.AttachmentType<java.util.Map<String, String>>> P2P_NAMES =
@@ -401,8 +406,10 @@ public class AE2Logistics {
                     .icon(() -> REGISTER_BANK_ITEM.get().getDefaultInstance())
                     .displayItems((params, output) -> {
                         output.accept(REGISTER_BANK_ITEM.get());
-                        output.accept(STORAGE_JANITOR_ITEM.get());
-                        output.accept(TRACE_PANEL_ITEM.get());
+                        if (!FMLEnvironment.production) {
+                            output.accept(STORAGE_JANITOR_ITEM.get());
+                            output.accept(TRACE_PANEL_ITEM.get());
+                        }
                         output.accept(PATTERN_WORKBENCH_ITEM.get());
                         output.accept(GUARDED_PROVIDER_ITEM.get());
                         output.accept(JOB_SCHEDULER_ITEM.get());
@@ -462,6 +469,7 @@ public class AE2Logistics {
         CREATIVE_TABS.register(modBus);
         MENUS.register(modBus);
         ATTACHMENTS.register(modBus);
+        CONDITION_CODECS.register(modBus);
 
         modBus.addListener((RegisterEvent event) -> {
             if (event.getRegistryKey().equals(Registries.BLOCK)) {
