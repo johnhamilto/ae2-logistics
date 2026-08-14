@@ -17,13 +17,14 @@ import appeng.menu.SlotSemantics;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.encoding.PatternEncodingTerminalPart;
 
-import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.item.PatternImportCard;
 
 /**
- * Pattern Import Card: with the card in the player's inventory and an encoding
- * window open, the blank-pattern slot restocks from network storage. The test
- * drives the same {@code topUp} the player-tick hook calls.
+ * Pattern Import Card: installed PER TERMINAL, not carried. The cable part takes
+ * the card via the sneak-click install (stored on the cable side, exercised here
+ * through the same install/uninstall seam the click handler calls); with it
+ * installed, the open encoding window's blank-pattern slot restocks from network
+ * storage. Without it - even with cards in the player's pockets - nothing moves.
  */
 public class PatternImportGameTests {
 
@@ -56,28 +57,34 @@ public class PatternImportGameTests {
             player.containerMenu = menu;
             var blankSlot = menu.getSlots(SlotSemantics.BLANK_PATTERN).get(0);
 
-            // No card: nothing happens.
+            // A card in the player's pockets is NOT an install.
+            player.getInventory().setItem(0, new ItemStack(
+                    io.github.johnhamilto.ae2logistics.AE2Logistics.PATTERN_IMPORT_CARD.get()));
             helper.assertTrue(PatternImportCard.topUp(player) == 0,
-                    "without the card the slot must stay empty");
+                    "a pocketed card must not feed the terminal");
             helper.assertTrue(blankSlot.getItem().isEmpty(), "slot must still be empty");
 
-            player.getInventory().setItem(0, new ItemStack(AE2Logistics.PATTERN_IMPORT_CARD.get()));
+            // Installed on the part (the sneak-click seam), the terminal feeds itself.
+            helper.assertTrue(!PatternImportCard.installedOnPart(terminal),
+                    "terminal must start uninstalled");
+            PatternImportCard.installOnPart(terminal);
+            helper.assertTrue(PatternImportCard.installedOnPart(terminal),
+                    "install must stick on the cable side");
             int delivered = PatternImportCard.topUp(player);
             helper.assertTrue(delivered == 8, "the card must pull a batch of 8, got " + delivered);
             helper.assertTrue(AEItems.BLANK_PATTERN.is(blankSlot.getItem())
                     && blankSlot.getItem().getCount() == 8,
                     "the blank slot must hold the pulled batch");
 
-            // A stocked slot is left alone - no topping up past the batch.
+            // A stocked slot is left alone.
             helper.assertTrue(PatternImportCard.topUp(player) == 0,
                     "a stocked slot must not be topped up");
 
-            // Drain the network: the card can only deliver what storage holds.
-            var chest = (ChestBlockEntity) helper.getBlockEntity(new BlockPos(2, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
-            chest.setItem(0, new ItemStack(net.minecraft.world.item.Items.STICK));
+            // Uninstall closes the tap even with an empty slot and a stocked network.
             blankSlot.set(ItemStack.EMPTY);
+            PatternImportCard.uninstallFromPart(terminal);
             helper.assertTrue(PatternImportCard.topUp(player) == 0,
-                    "an empty network must deliver nothing");
+                    "an uninstalled terminal must not restock");
             helper.succeed();
         });
     }
