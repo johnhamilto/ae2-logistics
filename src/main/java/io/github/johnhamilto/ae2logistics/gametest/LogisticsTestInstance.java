@@ -83,6 +83,7 @@ public class LogisticsTestInstance extends GameTestInstance {
         MemoryCardGameTests.register();
         MeshGameTests.register();
         MeshPolishGameTests.register();
+        PatternImportGameTests.register();
         P2PGameTests.register();
         PatternGameTests.register();
         ProviderTunnelGameTests.register();
