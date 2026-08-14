@@ -36,14 +36,36 @@ public final class InputCardGate implements MEStorage {
 
     private final MEStorage delegate;
     private final StorageBusPart part;
+    /**
+     * The Variant Card swaps the wrapped handler's partition for a template-matching
+     * one (see {@link VariantMatching}). Stock code re-applies the exact partition on
+     * its own updates, so the swap is re-asserted before every delegated operation:
+     * the network only ever reaches the handler through this wrapper, making the
+     * partition state at call time ours. On card removal a remount restores stock.
+     */
+    private Boolean lastVariantState;
 
     public InputCardGate(MEStorage delegate, StorageBusPart part) {
         this.delegate = delegate;
         this.part = part;
     }
 
+    private boolean ensureVariantPartition() {
+        boolean variant = part.getUpgrades()
+                .getInstalledUpgrades(AE2Logistics.VARIANT_CARD.get()) > 0;
+        if (variant && delegate instanceof appeng.me.storage.MEInventoryHandler handler) {
+            handler.setPartitionList(VariantMatching.partition(part.getConfig()));
+        } else if (lastVariantState != null && lastVariantState && !variant) {
+            // Card just left: force a remount so stock reconfigures its own partition.
+            appeng.api.storage.IStorageProvider.requestUpdate(part.getMainNode());
+        }
+        lastVariantState = variant;
+        return variant;
+    }
+
     @Override
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
+        boolean variant = ensureVariantPartition();
         var upgrades = part.getUpgrades();
         boolean conform = upgrades.getInstalledUpgrades(AE2Logistics.CONFORM_CARD.get()) > 0;
         boolean limiter = upgrades.getInstalledUpgrades(AE2Logistics.STACK_LIMITER_CARD.get()) > 0;
@@ -55,8 +77,10 @@ public final class InputCardGate implements MEStorage {
         delegate.getAvailableStacks(contents);
 
         if (conform) {
-            boolean present = contains(contents, what, upgrades
-                    .getInstalledUpgrades(appeng.core.definitions.AEItems.FUZZY_CARD.asItem()) > 0);
+            boolean present = variant
+                    ? containsSameItem(contents, what)
+                    : contains(contents, what, upgrades
+                            .getInstalledUpgrades(appeng.core.definitions.AEItems.FUZZY_CARD.asItem()) > 0);
             boolean inverted = upgrades
                     .getInstalledUpgrades(appeng.core.definitions.AEItems.INVERTER_CARD.asItem()) > 0;
             if (inverted ? present : !present) {
@@ -91,13 +115,25 @@ public final class InputCardGate implements MEStorage {
         return false;
     }
 
+    /** Conform + Variant: accept any variant of items already present. */
+    private static boolean containsSameItem(KeyCounter contents, AEKey what) {
+        for (var entry : contents) {
+            if (entry.getLongValue() > 0 && VariantMatching.sameItem(entry.getKey(), what)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public long extract(AEKey what, long amount, Actionable mode, IActionSource source) {
+        ensureVariantPartition();
         return delegate.extract(what, amount, mode, source);
     }
 
     @Override
     public void getAvailableStacks(KeyCounter out) {
+        ensureVariantPartition();
         delegate.getAvailableStacks(out);
     }
 

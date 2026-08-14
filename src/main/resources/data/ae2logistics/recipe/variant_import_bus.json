@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "ae2:import_bus"},
+    {"item": "ae2logistics:regulus_crystal"}
+  ],
+  "result": {"count": 1, "id": "ae2logistics:variant_import_bus"}
+}

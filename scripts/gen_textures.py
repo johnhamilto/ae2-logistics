@@ -1090,3 +1090,76 @@ PATTERN_IMPORT_CARD_TEX = """
 """
 
 write_png(OUT / "item" / "pattern_import_card.png", PATTERN_IMPORT_CARD_TEX, PATTERN_CARD_PAL)
+
+
+# Variant family (F13): card + the two bus faces. Violet diamonds = "variants".
+VARIANT_CARD_PAL = dict(CARD)
+VARIANT_CARD_PAL["v"] = (196, 124, 255, 255)  # variant violet
+
+VARIANT_CARD_TEX = """
+................
+...OOOOOOOOOO...
+...OFFFFFFFSO...
+...OFFFvFFFSO...
+...OFFvvvFFSO...
+...OFFFvFFFSO...
+...OFvFFFvFSO...
+...OvvvFvvvSO...
+...OFvFFFvFSO...
+...OFFFFFFFSO...
+...OFFFFFFFSO...
+...OggFggFggO...
+...OggFggFggO...
+...OOOOOOOOOO...
+................
+................
+"""
+
+write_png(OUT / "item" / "variant_card.png", VARIANT_CARD_TEX, VARIANT_CARD_PAL)
+
+VARIANT_BUS_PAL = dict(STEEL)
+VARIANT_BUS_PAL["v"] = (196, 124, 255, 255)
+VARIANT_BUS_PAL["a"] = (230, 164, 44, 255)
+
+# Import: arrow pulls inward (down into the slot), diamonds above.
+VARIANT_IMPORT_FACE = """
+################
+#DDDDDDDDDDDDDD#
+#DLMMMMMMMMMMLD#
+#DM..........MD#
+#DM.v..v..v..MD#
+#DM..........MD#
+#DM....aa....MD#
+#DM....aa....MD#
+#DM..aaaaaa..MD#
+#DM...aaaa...MD#
+#DM....aa....MD#
+#DM..........MD#
+#DM..........MD#
+#DLMMMMMMMMMMLD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+# Export: arrow pushes outward (up and out), diamonds below.
+VARIANT_EXPORT_FACE = """
+################
+#DDDDDDDDDDDDDD#
+#DLMMMMMMMMMMLD#
+#DM..........MD#
+#DM..........MD#
+#DM....aa....MD#
+#DM...aaaa...MD#
+#DM..aaaaaa..MD#
+#DM....aa....MD#
+#DM....aa....MD#
+#DM..........MD#
+#DM.v..v..v..MD#
+#DM..........MD#
+#DLMMMMMMMMMMLD#
+#DDDDDDDDDDDDDD#
+################
+"""
+
+write_png(OUT / "part" / "variant_import_bus.png", VARIANT_IMPORT_FACE, VARIANT_BUS_PAL)
+write_png(OUT / "part" / "variant_export_bus.png", VARIANT_EXPORT_FACE, VARIANT_BUS_PAL)

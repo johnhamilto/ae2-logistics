@@ -88,6 +88,14 @@ public final class AE2LogisticsClient {
                     appeng.client.gui.implementations.StorageBusScreen::new,
                     "/screens/ae2logistics_gated_storage_bus.json");
             appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.VARIANT_IMPORT_BUS_MENU.get(),
+                    appeng.client.gui.implementations.IOBusScreen::new,
+                    "/screens/ae2logistics_variant_import_bus.json");
+            appeng.init.client.InitScreens.register(event,
+                    AE2Logistics.VARIANT_EXPORT_BUS_MENU.get(),
+                    appeng.client.gui.implementations.IOBusScreen::new,
+                    "/screens/ae2logistics_variant_export_bus.json");
+            appeng.init.client.InitScreens.register(event,
                     AE2Logistics.TRACE_PANEL_MENU.get(),
                     TracePanelScreen::new,
                     "/screens/ae2logistics_trace_panel.json");

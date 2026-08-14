@@ -80,20 +80,26 @@ thing, ever. The Stack Limiter Card feeds machines one item at a time, which
 retires an entire genre of hopper-timing contraptions. Both cards also fit the
 Subnet Link.
 
+**Items that come in flavors.** The Variant Card turns any configured item into
+a template: same item, and it must agree with every detail you deliberately set,
+nothing more. One plain enchanted book means "any enchanted book". A
+Mending-only book means exactly that. The card fits the Variant Import and
+Export Buses (one template slot moves every matching variant) and the gated
+storage buses (one template partitions a whole barrel of variants).
+
 **It plays well with others.** The test bench runs the standard AE2 suite:
 ExtendedAE, MEGA Cells, Applied Mekanistics (chemicals ride the mesh and the
 return paths), ME Requester, and AE2WTLib, where the wireless terminals take
 our cards in their upgrade slots.
 
 **And it is honest.** Everything above is server-computed and covered by an
-in-game test suite north of 130 scenarios that runs on every change. The
+in-game test suite north of 140 scenarios that runs on every change. The
 in-game guide documents every device; craft the guide tablet or press G over
 any of our items.
 
 In the workshop: the ME Storage Janitor (re-settles your whole store after you
 repartition) and in-world Trace Panel dashboards are built and tested, waiting
-on their looks. On the drawing board: variant-aware import, export, and storage
-buses for the "any enchanted book, I do not care which" problem.
+on their looks.
 
 ## Gallery shot list (capture on playtest)
 

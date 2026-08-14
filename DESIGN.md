@@ -1567,6 +1567,45 @@ gate refuses everything ("can't see it, won't conform to it").
 
 ---
 
+## 4C. F13 — Variant Card and the variant buses
+
+**Added and shipped 2026-08-13 (0.43.0).** Born as "NBT import/export/storage bus" in
+TODO; the design pass found the real gap and renamed it honestly (1.21 components, not
+NBT).
+
+**The stock-fuzzy finding that shaped it.** AE2's fuzzy search for items without
+durability "amounts to ignoring NBT" (their words, `VariantCounter.UnorderedVariantMap`)
+— so "any enchanted book" is ALREADY a stock Fuzzy Card on every stock bus. A card
+whose only mode is ignore-components would be a worse Fuzzy Card. The genuinely new
+predicate is **template matching**: a configured item matches candidates that are the
+same item AND agree on every data component the template carries; components absent
+from the template are ignored. A plain template subsumes ignore-all; a deliberate
+component pins exactly that. One rule, one sentence, no component-picker GUI. Known
+V2 gap: collection components match by equality, so a Mending template means
+"exactly {Mending}", not "contains Mending".
+
+**Shape: one card, four hosts.** `VariantMatching` holds the predicate, a live
+`IPartitionList` over config templates, and our own `StackTransferContext`
+implementation (AE2's is package-private; the public interface is marked
+non-extendable, so an AE2 update that grows it breaks us at compile time — accepted
+on a pinned version and noted in code).
+
+- **Gated Storage Bus + Subnet Link**: no new parts. `InputCardGate` re-asserts a
+  variant partition on the wrapped handler before every delegated operation — stock
+  code re-applies its exact partition on its own schedule, but the network only
+  reaches the handler through the gate, so partition state at call time is ours; a
+  remount restores stock when the card leaves. Conform + Variant composes: the
+  contains-check widens to item identity.
+- **Variant Import Bus / Variant Export Bus**: `ImportBusPart`/`ExportBusPart`
+  subclasses overriding the protected `doBusWork` seam. Import mirrors the stock
+  body with the variant filter (facade rebuilt per pass; the stock strategy cache is
+  private). Export expands each template via `findFuzzy(IGNORE_ALL)` — every stored
+  variant of the item, both damageable and not — then narrows by template. Crafting
+  Card is ignored in variant mode (crafting produces exact keys). Stock card sets
+  mirrored; without the Variant Card both parts behave exactly like their parents.
+
+---
+
 ## 5. Suggested phasing
 
 > **Status (2026-07-28): every phase is complete.** Phase 0 ✓ (one day), Phase 1 ✓ (ten
