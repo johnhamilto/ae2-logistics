@@ -44,6 +44,7 @@
   "item.ae2logistics.gated_storage_bus": "ME Gated Storage Bus",
   "item.ae2logistics.conform_card": "Conform Card",
   "item.ae2logistics.stack_limiter_card": "Stack Limiter Card",
+  "item.ae2logistics.pattern_import_card": "Pattern Import Card",
   "block.ae2logistics.storage_janitor": "ME Storage Janitor",
   "block.ae2logistics.trace_panel": "Trace Panel"
 }

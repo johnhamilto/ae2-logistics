@@ -73,27 +73,37 @@ public class JanitorGameTests {
         homeBus.setPriority(10);
         homeBus.getConfig().setStack(0, new GenericStack(AEItemKey.of(Items.CRAFTING_TABLE), 1));
 
-        helper.runAfterDelay(40, () -> {
-            if (helper.getBlockEntity(new BlockPos(3, 1, 1))
-                    instanceof StorageJanitorBlockEntity janitor) {
-                janitor.toggle();
-                helper.assertTrue(janitor.running(), "janitor must start with stock present");
-            } else {
-                helper.fail("no janitor block entity");
-            }
-        });
-
-        helper.runAfterDelay(140, () -> {
-            var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1));
-            helper.assertTrue(!janitor.running(), "two-pass run must finish on its own");
-            helper.assertTrue(janitor.heldCount() == 0, "held buffer must be empty");
-            helper.assertTrue(janitor.processedTotal() > 0, "run must have processed stock");
-            int home = count(helper, new BlockPos(2, 1, 0), Items.CRAFTING_TABLE);
-            int old = count(helper, new BlockPos(1, 1, 0), Items.CRAFTING_TABLE);
-            helper.assertTrue(home == 40 && old == 0,
-                    "tables must re-settle into the partitioned home, home " + home + " old " + old);
-            helper.succeed();
-        });
+        // Wait for the REAL precondition instead of a fixed delay: the janitor's grid
+        // must be up and see the misplaced stock (batch load order varies the timing).
+        helper.startSequence()
+                .thenWaitUntil(() -> {
+                    var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1));
+                    var node = janitor.getGridNode(null);
+                    if (node == null || node.getGrid() == null) {
+                        throw new net.minecraft.gametest.framework.GameTestAssertException("no grid yet");
+                    }
+                    var counter = new appeng.api.stacks.KeyCounter();
+                    node.getGrid().getStorageService().getInventory().getAvailableStacks(counter);
+                    if (counter.get(AEItemKey.of(Items.CRAFTING_TABLE)) < 40) {
+                        throw new net.minecraft.gametest.framework.GameTestAssertException("stock not visible yet");
+                    }
+                })
+                .thenExecute(() -> {
+                    var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1));
+                    janitor.toggle();
+                    helper.assertTrue(janitor.running(), "janitor must start with stock present");
+                })
+                .thenExecuteAfter(140, () -> {
+                    var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1));
+                    helper.assertTrue(!janitor.running(), "two-pass run must finish on its own");
+                    helper.assertTrue(janitor.heldCount() == 0, "held buffer must be empty");
+                    helper.assertTrue(janitor.processedTotal() > 0, "run must have processed stock");
+                    int home = count(helper, new BlockPos(2, 1, 0), Items.CRAFTING_TABLE);
+                    int old = count(helper, new BlockPos(1, 1, 0), Items.CRAFTING_TABLE);
+                    helper.assertTrue(home == 40 && old == 0,
+                            "tables must re-settle into the partitioned home, home " + home + " old " + old);
+                })
+                .thenSucceed();
     }
 
     /** Correctly-placed stock survives a run unmoved - the janitor is idempotent. */

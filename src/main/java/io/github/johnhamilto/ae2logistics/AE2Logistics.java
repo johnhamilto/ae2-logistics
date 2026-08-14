@@ -167,6 +167,10 @@ public class AE2Logistics {
     public static final DeferredItem<Item> STACK_LIMITER_CARD = ITEMS.register("stack_limiter_card",
             () -> appeng.api.upgrades.Upgrades.createUpgradeCardItem(new Item.Properties()));
 
+    /** Inventory companion, not an upgrade card: see {@link io.github.johnhamilto.ae2logistics.item.PatternImportCard}. */
+    public static final DeferredItem<Item> PATTERN_IMPORT_CARD = ITEMS.register("pattern_import_card",
+            () -> new Item(new Item.Properties()));
+
     public static final Supplier<DataComponentType<EncodedAdaptivePattern>> ENCODED_ADAPTIVE_PATTERN = DATA_COMPONENTS
             .register("encoded_adaptive_pattern", () -> DataComponentType.<EncodedAdaptivePattern>builder()
                     .persistent(EncodedAdaptivePattern.CODEC)
@@ -469,6 +473,7 @@ public class AE2Logistics {
                         output.accept(GATED_STORAGE_BUS_PART.get());
                         output.accept(CONFORM_CARD.get());
                         output.accept(STACK_LIMITER_CARD.get());
+                        output.accept(PATTERN_IMPORT_CARD.get());
                         output.accept(REGULUS_CRYSTAL.get());
                     })
                     .build());
@@ -644,6 +649,7 @@ public class AE2Logistics {
         GridServices.register(io.github.johnhamilto.ae2logistics.query.QueryService.class,
                 io.github.johnhamilto.ae2logistics.query.QueryGridService.class);
 
+        NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.item.PatternImportCard::onPlayerTick);
         NeoForge.EVENT_BUS.addListener(SignalCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.MeshCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.QueryCommands::register);

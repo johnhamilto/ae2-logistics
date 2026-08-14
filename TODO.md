@@ -31,10 +31,6 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 
 ## Features
 
-- **Pattern Import Card**: a card item that goes into AE2's Pattern Encoding Terminal
-  (and ExtendedAE's Extended Pattern Terminal when present) and auto-imports patterns
-  into that GUI's pattern slot. Must work in both the cable-part terminals and the
-  wireless forms.
 - **Sticky Card** (from AE2UEL/GTNH): upgrade card for storage cells and storage buses
   (Subnet Link included - it IS a bus). Keys covered by a sticky device's partition are
   CLAIMED: they may only be stored on sticky-carded storages; when those are full the
