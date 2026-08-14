@@ -49,5 +49,7 @@
   "block.ae2logistics.trace_panel": "Trace Panel",
   "item.ae2logistics.variant_import_bus": "ME Variant Import Bus",
   "item.ae2logistics.variant_export_bus": "ME Variant Export Bus",
-  "item.ae2logistics.variant_card": "Variant Card"
+  "item.ae2logistics.variant_card": "Variant Card",
+  "item.ae2logistics.query_card": "Query Card",
+  "tooltip.ae2logistics.query_card.unbound": "Unbound - use /ae2logistics query card <name>"
 }

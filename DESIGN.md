@@ -1604,6 +1604,38 @@ on a pinned version and noted in code).
   Card is ignored in variant mode (crafting produces exact keys). Stock card sets
   mirrored; without the Variant Card both parts behave exactly like their parents.
 
+**V2 (shipped 0.44.0): data rules ride the query language, not a new engine.** The
+string-pattern routing ask ("a diamond sword with a specific Apothic attribute")
+landed as one query term plus one card, because the query language already IS a
+predicate engine with a GUI, per-network persistence, live preview, sensors, and a
+bus that acts on it:
+
+- **`data:` term** — `data:"<path>"` (node exists), `data:"<path>~<glob>"` (glob at
+  the located node), `data:"~<glob>"` (whole tree). The item's component PATCH — the
+  deliberate data, where modded attributes and `custom_data` live — serializes to a
+  tag tree via the item's own codecs, cached per immutable key. Rules navigate the
+  TREE by dot path (`*` wildcards a level, list indices are numeric) and only glob at
+  the named node, so matching is NOT flat-string: "mending" in a custom name can
+  never trip `data:"minecraft:stored_enchantments~*mending*"` (a gametest pins both
+  directions, including that the whole-tree form DOES see the name — which is why
+  paths exist). Non-item keys and missing registries degrade to false.
+- **Query Card** — binds a NAMED query the way a Signal Card binds a channel
+  (`/ae2logistics query card <name>`); installed in a gated-bus-family part, the
+  partition becomes live query membership, resolved against the network's Query
+  Terminal library per insert (no terminal on the grid = nothing resolves, the same
+  rule @refs already have). Precedence in the gate: Query Card > Variant Card >
+  stock partition. This incidentally gives storage buses tag/mod/craftable/signal
+  partitions, not just data rules.
+
+**V3 (designed, deferred): the click-to-filter tree editor.** Insert a template
+item, render its component tree, tri-state every node (require / forbid / ignore),
+and COMPILE the clicks to the same path rules the `data:` term evaluates — an editor
+over the shipped engine, never a second matcher. Deferred until an in-game GUI
+iteration loop is available: a tree widget's look and feel (expand/collapse, deep
+modded trees running hundreds of nodes, sane "ignore" defaults so a fresh template
+does not mean "exactly this sword") cannot be tuned against a headless server.
+Revisit after real use shows whether patterns cover the need.
+
 ---
 
 ## 5. Suggested phasing

@@ -25,7 +25,7 @@ Monitor, adaptive patterns, queries, the Config Terminal, mesh endpoints and
 the wireless family, and the Gated Storage Bus with its input cards.
 
 Commands (permission 2): `/ae2logistics signal ...`, `/ae2logistics mesh ...`,
-`/ae2logistics query <expression>`, `/ae2logistics wireless status`,
+`/ae2logistics query ...`, `/ae2logistics wireless status`,
 `/ae2logistics janitor ...`, `/ae2logistics testworld`.
 
 ## Building

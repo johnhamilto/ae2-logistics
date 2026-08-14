@@ -51,16 +51,70 @@ public final class InputCardGate implements MEStorage {
     }
 
     private boolean ensureVariantPartition() {
-        boolean variant = part.getUpgrades()
-                .getInstalledUpgrades(AE2Logistics.VARIANT_CARD.get()) > 0;
-        if (variant && delegate instanceof appeng.me.storage.MEInventoryHandler handler) {
-            handler.setPartitionList(VariantMatching.partition(part.getConfig()));
-        } else if (lastVariantState != null && lastVariantState && !variant) {
-            // Card just left: force a remount so stock reconfigures its own partition.
+        var upgrades = part.getUpgrades();
+        // Precedence: a bound Query Card owns the partition outright; the Variant
+        // Card templates the config slots; else stock's own exact partition stands.
+        String queryName = null;
+        if (upgrades.getInstalledUpgrades(AE2Logistics.QUERY_CARD.get()) > 0) {
+            for (var stack : upgrades) {
+                if (stack.is(AE2Logistics.QUERY_CARD.get())) {
+                    queryName = io.github.johnhamilto.ae2logistics.item.QueryCardItem.getQueryName(stack);
+                    break;
+                }
+            }
+        }
+        boolean variant = upgrades.getInstalledUpgrades(AE2Logistics.VARIANT_CARD.get()) > 0;
+        boolean overriding = queryName != null || variant;
+        if (overriding && delegate instanceof appeng.me.storage.MEInventoryHandler handler) {
+            handler.setPartitionList(queryName != null
+                    ? queryPartition(queryName)
+                    : VariantMatching.partition(part.getConfig()));
+        } else if (lastVariantState != null && lastVariantState && !overriding) {
+            // Cards just left: force a remount so stock reconfigures its own partition.
             appeng.api.storage.IStorageProvider.requestUpdate(part.getMainNode());
         }
-        lastVariantState = variant;
+        lastVariantState = overriding;
         return variant;
+    }
+
+    /** Partition = live membership in the named query from the grid's library. */
+    private appeng.util.prioritylist.IPartitionList queryPartition(String name) {
+        return new appeng.util.prioritylist.IPartitionList() {
+            @Override
+            public boolean isListed(AEKey input) {
+                var node = part.getMainNode().getNode();
+                var grid = node == null ? null : node.getGrid();
+                if (grid == null) {
+                    return false;
+                }
+                var service = grid.getService(io.github.johnhamilto.ae2logistics.query.QueryService.class);
+                if (service == null) {
+                    return false;
+                }
+                java.util.function.Function<String, io.github.johnhamilto.ae2logistics.query.CompiledQuery> resolver =
+                        queryName -> {
+                            var source = service.library().get(queryName);
+                            return source == null ? null : service.compiled(source);
+                        };
+                var query = resolver.apply(name);
+                if (query == null
+                        || !io.github.johnhamilto.ae2logistics.query.CompiledQuery.isQueryableKey(input)) {
+                    return false;
+                }
+                return query.matches(input,
+                        io.github.johnhamilto.ae2logistics.query.QueryContext.of(grid, resolver));
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return false;
+            }
+
+            @Override
+            public Iterable<AEKey> getItems() {
+                return java.util.List.of();
+            }
+        };
     }
 
     @Override

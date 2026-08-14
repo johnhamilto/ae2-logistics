@@ -33,8 +33,20 @@ public final class QueryCommands {
         event.getDispatcher().register(Commands.literal("ae2logistics")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("query")
+                        .then(Commands.literal("card")
+                                .then(Commands.argument("name", StringArgumentType.word())
+                                        .executes(QueryCommands::giveCard)))
                         .then(Commands.argument("expression", StringArgumentType.greedyString())
                                 .executes(QueryCommands::run))));
+    }
+
+    private static int giveCard(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        var player = context.getSource().getPlayerOrException();
+        var name = StringArgumentType.getString(context, "name");
+        player.getInventory().placeItemBackInInventory(
+                io.github.johnhamilto.ae2logistics.item.QueryCardItem.bound(name));
+        context.getSource().sendSuccess(() -> Component.literal("Query Card bound to @" + name), false);
+        return 1;
     }
 
     private static int run(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {

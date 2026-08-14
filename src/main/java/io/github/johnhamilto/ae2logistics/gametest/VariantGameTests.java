@@ -203,6 +203,92 @@ public class VariantGameTests {
         });
     }
 
+    /**
+     * The data: term scopes to the component TREE: a path rule only sees the node it
+     * names, so surface text elsewhere on the item can never trip it - exactly the
+     * false-positive class flat string matching would have.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void dataTermMatchesComponentTrees(GameTestHelper helper) {
+        var registries = helper.getLevel().registryAccess();
+        var context = new io.github.johnhamilto.ae2logistics.query.QueryContext(
+                null, null, null, null, registries);
+        var mendingBook = AEItemKey.of(enchantedBook(helper, "minecraft:mending", 1));
+        var sharpnessBook = AEItemKey.of(enchantedBook(helper, "minecraft:sharpness", 5));
+        var decoyPaper = new ItemStack(Items.PAPER);
+        decoyPaper.set(DataComponents.CUSTOM_NAME, Component.literal("mending voucher"));
+        var decoy = AEItemKey.of(decoyPaper);
+
+        var hasEnchants = io.github.johnhamilto.ae2logistics.query.CompiledQuery
+                .compile("data:\"minecraft:stored_enchantments\"");
+        helper.assertTrue(hasEnchants != null, "path-exists form must parse");
+        helper.assertTrue(hasEnchants.matches(mendingBook, context),
+                "an enchanted book carries the stored_enchantments component");
+        helper.assertTrue(!hasEnchants.matches(decoy, context),
+                "a renamed paper does not");
+
+        var mendingOnly = io.github.johnhamilto.ae2logistics.query.CompiledQuery
+                .compile("data:\"minecraft:stored_enchantments~*mending*\"");
+        helper.assertTrue(mendingOnly != null, "path~glob form must parse");
+        helper.assertTrue(mendingOnly.matches(mendingBook, context),
+                "the glob applies at the located node");
+        helper.assertTrue(!mendingOnly.matches(sharpnessBook, context),
+                "a sharpness book must not match a mending glob");
+        helper.assertTrue(!mendingOnly.matches(decoy, context),
+                "TREE scoping: 'mending' in a custom name never trips an enchantment rule");
+
+        var flat = io.github.johnhamilto.ae2logistics.query.CompiledQuery
+                .compile("data:\"~*mending*\"");
+        helper.assertTrue(flat != null && flat.matches(decoy, context),
+                "the whole-tree glob DOES see the name - which is why paths exist");
+
+        helper.assertTrue(!io.github.johnhamilto.ae2logistics.query.QueryParser.parse("data:").ok(),
+                "bare data: must be a parse error");
+        helper.succeed();
+    }
+
+    /**
+     * Query Card: the gated bus's partition becomes live membership in a NAMED query
+     * from the grid library - here a data: rule, the whole V2 path end to end.
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void queryCardPartitionsGatedBus(GameTestHelper helper) {
+        var part = gatedBusOnChest(helper);
+        part.getUpgrades().addItems(
+                io.github.johnhamilto.ae2logistics.item.QueryCardItem.bound("books"));
+        // The named library LIVES on Query Terminals (the replicated-library design),
+        // so the card needs one somewhere on the network - same rule as @refs.
+        PartHelper.setPart(helper.getLevel(), helper.absolutePos(new BlockPos(1, 1, 1)),
+                Direction.UP, null, io.github.johnhamilto.ae2logistics.AE2Logistics.QUERY_TERMINAL_PART.get());
+
+        helper.runAfterDelay(40, () -> {
+            var grid = part.getMainNode().getGrid();
+            var service = grid.getService(io.github.johnhamilto.ae2logistics.query.QueryService.class);
+            helper.assertTrue(service != null, "query service must exist");
+            service.put("books", "data:\"minecraft:stored_enchantments\"");
+
+            var storage = grid.getStorageService().getInventory();
+            var book = AEItemKey.of(enchantedBook(helper, "minecraft:mending", 1));
+
+            // Bisect the chain before the in-world assert: resolution, then context.
+            var source = service.library().get("books");
+            helper.assertTrue(source != null, "probe: library must hold the query");
+            var compiled = service.compiled(source);
+            helper.assertTrue(compiled != null, "probe: the query must compile");
+            var context = io.github.johnhamilto.ae2logistics.query.QueryContext.of(grid, null);
+            helper.assertTrue(context.registries() != null,
+                    "probe: QueryContext.of must capture registries from the grid pivot");
+            helper.assertTrue(compiled.matches(book, context),
+                    "probe: the compiled query must match the book under a grid context");
+            helper.assertTrue(storage.insert(book, 1, Actionable.MODULATE, IActionSource.empty()) == 1,
+                    "an enchanted book matches the bound query");
+            helper.assertTrue(storage.insert(AEItemKey.of(Items.PAPER), 1,
+                    Actionable.MODULATE, IActionSource.empty()) == 0,
+                    "paper does not match the query, the partition must refuse it");
+            helper.succeed();
+        });
+    }
+
     /** The card sockets in all four hosts and stays out of AE2's stock buses. */
     @GameTest(template = "empty5", timeoutTicks = 200)
     public void variantCardSockets(GameTestHelper helper) {
@@ -217,6 +303,12 @@ public class VariantGameTests {
                 AE2Logistics.VARIANT_EXPORT_BUS_PART.get()) == 1, "variant export bus must take the card");
         helper.assertTrue(appeng.api.upgrades.Upgrades.getMaxInstallable(card,
                 AEItems.ITEM_CELL_1K) == 0, "the card must stay out of stock hosts");
+        var queryCard = AE2Logistics.QUERY_CARD.get();
+        helper.assertTrue(appeng.api.upgrades.Upgrades.getMaxInstallable(queryCard,
+                AE2Logistics.GATED_STORAGE_BUS_PART.get()) == 1
+                && appeng.api.upgrades.Upgrades.getMaxInstallable(queryCard,
+                        AE2Logistics.SUBNET_LINK_PART.get()) == 1,
+                "the query card must socket in the gated bus family");
         helper.succeed();
     }
 }
