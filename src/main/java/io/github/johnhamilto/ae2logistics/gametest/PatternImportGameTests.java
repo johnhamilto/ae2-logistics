@@ -6,6 +6,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
@@ -15,23 +16,144 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.PartHelper;
+import appeng.api.storage.MEStorage;
+import appeng.api.upgrades.IUpgradeInventory;
+import appeng.api.util.IConfigManager;
 import appeng.core.definitions.AEItems;
+import appeng.helpers.IPatternTerminalMenuHost;
+import appeng.menu.ISubMenu;
 import appeng.menu.SlotSemantics;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.parts.encoding.PatternEncodingLogic;
 import appeng.parts.encoding.PatternEncodingTerminalPart;
 
+import io.github.johnhamilto.ae2logistics.AE2Logistics;
 import io.github.johnhamilto.ae2logistics.item.PatternImportCard;
 
 /**
- * Pattern Import Card: installed PER TERMINAL, not carried. The cable part takes
- * the card via the sneak-click install (stored on the cable side, exercised here
- * through the same install/uninstall seam the click handler calls); with it
- * installed, the open encoding window's blank-pattern slot restocks from network
- * storage. Without it - even with cards in the player's pockets - nothing moves.
+ * Pattern Import Card: installed in a host's UPGRADE SLOTS, the only surface.
+ * The cable part has no upgrade slots upstream, so a menu on the real part never
+ * feeds (pinned below); a host WITH the card in its upgrade inventory - the shape
+ * AE2WTLib's wireless terminals provide - restocks the blank slot from storage.
+ * The upgraded host here wraps the real part (real grid, logic, and storage) and
+ * fakes only the upgrade inventory, exactly the delta a wireless terminal adds.
  */
-@GameTestHolder(io.github.johnhamilto.ae2logistics.AE2Logistics.MOD_ID)
+@GameTestHolder(AE2Logistics.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class PatternImportGameTests {
+
+    /**
+     * The real part with a one-slot upgrade inventory holding the import card.
+     * Implements IPart by delegation because AEBaseMenu requires its host to be a
+     * part, block entity, or item host.
+     */
+    private record UpgradedHost(PatternEncodingTerminalPart part, IUpgradeInventory upgrades)
+            implements IPatternTerminalMenuHost, appeng.api.parts.IPart {
+        @Override
+        public appeng.api.parts.IPartItem<?> getPartItem() {
+            return part.getPartItem();
+        }
+
+        @Override
+        public appeng.api.networking.IGridNode getGridNode() {
+            return part.getGridNode();
+        }
+
+        @Override
+        public void setPartHostInfo(Direction side, appeng.api.parts.IPartHost host,
+                net.minecraft.world.level.block.entity.BlockEntity blockEntity) {
+        }
+
+        @Override
+        public float getCableConnectionLength(appeng.api.util.AECableType cable) {
+            return part.getCableConnectionLength(cable);
+        }
+
+        @Override
+        public void getBoxes(appeng.api.parts.IPartCollisionHelper bch) {
+            part.getBoxes(bch);
+        }
+
+        @Override
+        public PatternEncodingLogic getLogic() {
+            return part.getLogic();
+        }
+
+        @Override
+        public MEStorage getInventory() {
+            return part.getInventory();
+        }
+
+        @Override
+        public IConfigManager getConfigManager() {
+            return part.getConfigManager();
+        }
+
+        @Override
+        public IUpgradeInventory getUpgrades() {
+            return upgrades;
+        }
+
+        @Override
+        public appeng.api.storage.ILinkStatus getLinkStatus() {
+            return appeng.api.storage.ILinkStatus.ofConnected();
+        }
+
+        @Override
+        public void returnToMainMenu(Player player, ISubMenu subMenu) {
+        }
+
+        @Override
+        public ItemStack getMainMenuIcon() {
+            return new ItemStack(AE2Logistics.PATTERN_IMPORT_CARD.get());
+        }
+    }
+
+    private static IUpgradeInventory cardInstalled() {
+        return new IUpgradeInventory() {
+            private ItemStack card = new ItemStack(AE2Logistics.PATTERN_IMPORT_CARD.get());
+
+            @Override
+            public net.minecraft.world.level.ItemLike getUpgradableItem() {
+                return AE2Logistics.PATTERN_IMPORT_CARD.get();
+            }
+
+            @Override
+            public int getMaxInstalled(net.minecraft.world.level.ItemLike upgradeCard) {
+                return upgradeCard.asItem() == AE2Logistics.PATTERN_IMPORT_CARD.get() ? 1 : 0;
+            }
+
+            @Override
+            public int getInstalledUpgrades(net.minecraft.world.level.ItemLike upgradeCard) {
+                return !card.isEmpty() && card.is(upgradeCard.asItem()) ? 1 : 0;
+            }
+
+            @Override
+            public int size() {
+                return 1;
+            }
+
+            @Override
+            public ItemStack getStackInSlot(int slot) {
+                return card;
+            }
+
+            @Override
+            public void setItemDirect(int slot, ItemStack stack) {
+                card = stack;
+            }
+
+            @Override
+            public void readFromNBT(net.minecraft.nbt.CompoundTag data, String subtag,
+                    net.minecraft.core.HolderLookup.Provider registries) {
+            }
+
+            @Override
+            public void writeToNBT(net.minecraft.nbt.CompoundTag data, String subtag,
+                    net.minecraft.core.HolderLookup.Provider registries) {
+            }
+        };
+    }
 
     @GameTest(template = "empty5", timeoutTicks = 300)
     public void cardRestocksBlankPatterns(GameTestHelper helper) {
@@ -55,23 +177,22 @@ public class PatternImportGameTests {
 
         helper.runAfterDelay(60, () -> {
             var player = helper.makeMockPlayer(GameType.SURVIVAL);
-            var menu = new PatternEncodingTermMenu(1, player.getInventory(), terminal);
+
+            // The real part host has NO upgrade slots: never feeds, pocketed cards or not.
+            var bareMenu = new PatternEncodingTermMenu(1, player.getInventory(), terminal);
+            player.containerMenu = bareMenu;
+            player.getInventory().setItem(0,
+                    new ItemStack(AE2Logistics.PATTERN_IMPORT_CARD.get()));
+            helper.assertTrue(PatternImportCard.topUp(player) == 0,
+                    "the cable part has no upgrade slots, it must never feed");
+            helper.assertTrue(bareMenu.getSlots(SlotSemantics.BLANK_PATTERN).get(0)
+                    .getItem().isEmpty(), "slot must still be empty");
+
+            // The same part behind a host WITH the card in its upgrade slots feeds.
+            var upgraded = new UpgradedHost(terminal, cardInstalled());
+            var menu = new PatternEncodingTermMenu(2, player.getInventory(), upgraded);
             player.containerMenu = menu;
             var blankSlot = menu.getSlots(SlotSemantics.BLANK_PATTERN).get(0);
-
-            // A card in the player's pockets is NOT an install.
-            player.getInventory().setItem(0, new ItemStack(
-                    io.github.johnhamilto.ae2logistics.AE2Logistics.PATTERN_IMPORT_CARD.get()));
-            helper.assertTrue(PatternImportCard.topUp(player) == 0,
-                    "a pocketed card must not feed the terminal");
-            helper.assertTrue(blankSlot.getItem().isEmpty(), "slot must still be empty");
-
-            // Installed on the part (the sneak-click seam), the terminal feeds itself.
-            helper.assertTrue(!PatternImportCard.installedOnPart(terminal),
-                    "terminal must start uninstalled");
-            PatternImportCard.installOnPart(terminal);
-            helper.assertTrue(PatternImportCard.installedOnPart(terminal),
-                    "install must stick on the cable side");
             int delivered = PatternImportCard.topUp(player);
             helper.assertTrue(delivered == 8, "the card must pull a batch of 8, got " + delivered);
             helper.assertTrue(AEItems.BLANK_PATTERN.is(blankSlot.getItem())
@@ -82,11 +203,12 @@ public class PatternImportGameTests {
             helper.assertTrue(PatternImportCard.topUp(player) == 0,
                     "a stocked slot must not be topped up");
 
-            // Uninstall closes the tap even with an empty slot and a stocked network.
+            // Drain the network: the card can only deliver what storage holds.
+            var chest = (ChestBlockEntity) helper.getBlockEntity(new BlockPos(2, 1, 1));
+            chest.setItem(0, new ItemStack(net.minecraft.world.item.Items.STICK));
             blankSlot.set(ItemStack.EMPTY);
-            PatternImportCard.uninstallFromPart(terminal);
             helper.assertTrue(PatternImportCard.topUp(player) == 0,
-                    "an uninstalled terminal must not restock");
+                    "an empty network must deliver nothing");
             helper.succeed();
         });
     }
