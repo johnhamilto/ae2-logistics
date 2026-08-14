@@ -42,7 +42,7 @@ import io.github.johnhamilto.ae2logistics.signal.SignalService;
  * <p>The universal part item exposes all six capabilities as GUI toggles; the typed part
  * items lock the mask to a single transport (combine all six to craft the universal).
  */
-public class MeshEndpointPart extends AEBasePart {
+public class MeshEndpointPart extends AEBasePart implements appeng.helpers.IPriorityHost {
 
     @PartModels
     public static final IPartModel MODEL = new PartModel(AE2Logistics.id("part/mesh_endpoint"));
@@ -712,14 +712,37 @@ public class MeshEndpointPart extends AEBasePart {
 
     @Override
     public boolean onUseWithoutItem(Player player, Vec3 pos) {
-        if (!isClientSide() && player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.openMenu(
-                    new SimpleMenuProvider(
-                            (id, inventory, p) -> new MeshEndpointMenu(id, inventory, this),
-                            Component.translatable(getPartItem().asItem().getDescriptionId())),
-                    buffer -> MeshEndpointMenu.writeOpenData(buffer, this));
+        if (!isClientSide()) {
+            appeng.menu.MenuOpener.open(AE2Logistics.MESH_ENDPOINT_MENU.get(), player,
+                    appeng.menu.locator.MenuLocators.forPart(this));
         }
         return true;
+    }
+
+    // --- IPriorityHost: AE2's own priority picker edits our input/return ordering ---
+
+    @Override
+    public int getPriority() {
+        return priority;
+    }
+
+    @Override
+    public void setPriority(int newValue) {
+        // The full config path, so registry membership and ME lanes stay consistent
+        // (same route the GUI's ConfigureMeshPayload takes).
+        applyMeshConfig(frequency, role, newValue, capabilities);
+        getHost().markForSave();
+    }
+
+    @Override
+    public void returnToMainMenu(Player player, appeng.menu.ISubMenu subMenu) {
+        appeng.menu.MenuOpener.open(AE2Logistics.MESH_ENDPOINT_MENU.get(), player,
+                subMenu.getLocator());
+    }
+
+    @Override
+    public net.minecraft.world.item.ItemStack getMainMenuIcon() {
+        return new net.minecraft.world.item.ItemStack(getPartItem().asItem());
     }
 
     /** Tick-time flush (from MeshRegistry): routing never runs inside a machine's insert. */

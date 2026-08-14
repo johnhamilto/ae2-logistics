@@ -37,11 +37,13 @@ public class MeshEndpointMenu extends AEBaseMenu {
 
     public final BlockPos pos;
     public final Direction side;
-    public final String frequency;
-    public final byte role;
-    public final int priority;
-    public final int capabilities;
-    public final boolean capabilitiesLocked;
+    // Mutable: the client constructs from its local part, then readInitialData
+    // overwrites with the server's authoritative snapshot.
+    public String frequency;
+    public byte role;
+    public int priority;
+    public int capabilities;
+    public boolean capabilitiesLocked;
 
     /** Same-network endpoints on this frequency; re-pushed by the server on config edits. */
     private List<EndpointInfo> roster = List.of();
@@ -92,30 +94,8 @@ public class MeshEndpointMenu extends AEBaseMenu {
         this.capabilitiesLocked = part.capabilityLocked();
     }
 
-    public MeshEndpointMenu(int containerId, Inventory inventory, RegistryFriendlyByteBuf buffer) {
-        super(AE2Logistics.MESH_ENDPOINT_MENU.get(), containerId, inventory, null);
-        this.part = null;
-        this.serverPlayer = null;
-        this.pos = buffer.readBlockPos();
-        this.side = Direction.values()[buffer.readByte()];
-        this.frequency = buffer.readUtf();
-        this.role = buffer.readByte();
-        this.priority = buffer.readVarInt();
-        this.capabilities = buffer.readVarInt();
-        this.capabilitiesLocked = buffer.readBoolean();
-        this.rosterTotal = buffer.readVarInt();
-        int sent = buffer.readVarInt();
-        var list = new ArrayList<EndpointInfo>(sent);
-        for (int i = 0; i < sent; i++) {
-            list.add(EndpointInfo.read(buffer));
-        }
-        this.roster = List.copyOf(list);
-    }
-
-    public static void writeOpenData(RegistryFriendlyByteBuf buffer, MeshEndpointPart part) {
-        var host = part.getHost().getBlockEntity();
-        buffer.writeBlockPos(host.getBlockPos());
-        buffer.writeByte(part.getSide().ordinal());
+    /** Initial-data serializer for the AE2 menu-locator flow (position rides the locator). */
+    public static void writeOpenData(MeshEndpointPart part, RegistryFriendlyByteBuf buffer) {
         buffer.writeUtf(part.frequency());
         buffer.writeByte(part.role());
         buffer.writeVarInt(part.priority());
@@ -128,6 +108,22 @@ public class MeshEndpointMenu extends AEBaseMenu {
         for (var info : built.rows()) {
             EndpointInfo.write(buffer, info);
         }
+    }
+
+    /** Client side of {@link #writeOpenData}: the server snapshot wins over local part state. */
+    public void readInitialData(RegistryFriendlyByteBuf buffer) {
+        this.frequency = buffer.readUtf();
+        this.role = buffer.readByte();
+        this.priority = buffer.readVarInt();
+        this.capabilities = buffer.readVarInt();
+        this.capabilitiesLocked = buffer.readBoolean();
+        this.rosterTotal = buffer.readVarInt();
+        int sent = buffer.readVarInt();
+        var list = new ArrayList<EndpointInfo>(sent);
+        for (int i = 0; i < sent; i++) {
+            list.add(EndpointInfo.read(buffer));
+        }
+        this.roster = List.copyOf(list);
     }
 
     /** Server-side roster snapshot for this part's frequency, capped at the wire limit. */

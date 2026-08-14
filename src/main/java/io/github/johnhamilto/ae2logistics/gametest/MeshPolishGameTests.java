@@ -522,4 +522,40 @@ public class MeshPolishGameTests {
             helper.succeed();
         });
     }
+
+    /**
+     * Priority edits ride AE2's own priority picker: the part is an IPriorityHost,
+     * AE2's PriorityMenu constructs against it, and setPriority takes the same
+     * config path the GUI takes (frequency membership intact, value persisted).
+     */
+    @GameTest(template = "empty5", timeoutTicks = 200)
+    public void priorityEditsThroughAe2PriorityHost(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        var endpoint = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "prio-host",
+                (byte) 0, MeshRegistry.TYPE_ITEM);
+
+        helper.runAfterDelay(20, () -> {
+            appeng.helpers.IPriorityHost host = endpoint;
+            var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+            // AE2's own priority menu must accept our host - this is the picker the
+            // top-right tab button opens.
+            var menu = new appeng.menu.implementations.PriorityMenu(1, player.getInventory(), host);
+            helper.assertTrue(menu != null, "AE2's PriorityMenu must construct against the part");
+
+            host.setPriority(42);
+            helper.assertTrue(endpoint.priority() == 42, "setPriority must apply");
+            helper.assertTrue(endpoint.frequency().equals("prio-host"),
+                    "priority edit must not disturb the frequency");
+
+            var registries = helper.getLevel().registryAccess();
+            var tag = new net.minecraft.nbt.CompoundTag();
+            endpoint.writeToNBT(tag, registries);
+            var fresh = new MeshEndpointPart(AE2Logistics.MESH_ENDPOINT_PART.get());
+            fresh.readFromNBT(tag, registries);
+            helper.assertTrue(fresh.priority() == 42, "priority must survive NBT");
+            helper.succeed();
+        });
+    }
 }

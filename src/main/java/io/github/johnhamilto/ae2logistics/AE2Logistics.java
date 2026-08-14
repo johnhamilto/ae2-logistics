@@ -393,8 +393,14 @@ public class AE2Logistics {
             "mesh_endpoint_me", MeshEndpointPart.class, MeshEndpointPart::new);
     public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_PROVIDER_PART = part(
             "mesh_endpoint_provider", MeshEndpointPart.class, MeshEndpointPart::new);
+    // AE2's locator-based menu plumbing, so sub-menus (the priority picker) can
+    // reopen this menu and vice versa via SwitchGuisPacket.
     public static final Supplier<MenuType<MeshEndpointMenu>> MESH_ENDPOINT_MENU = MENUS.register(
-            "mesh_endpoint", () -> IMenuTypeExtension.create(MeshEndpointMenu::new));
+            "mesh_endpoint", () -> appeng.menu.implementations.MenuTypeBuilder
+                    .create(MeshEndpointMenu::new, MeshEndpointPart.class)
+                    .withInitialData(MeshEndpointMenu::writeOpenData,
+                            (host, menu, buffer) -> menu.readInitialData(buffer))
+                    .buildUnregistered(id("mesh_endpoint")));
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart>> PROVIDER_P2P_TUNNEL_PART = part(
             "provider_p2p_tunnel", io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class,
             io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart::new);
