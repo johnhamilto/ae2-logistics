@@ -18,6 +18,7 @@ public class TracePanelGameTests {
     static void register() {
         LogisticsTestInstance.add("panelsFormRectanglesByPlacement", "empty5", 200, TracePanelGameTests::panelsFormRectanglesByPlacement);
         LogisticsTestInstance.add("panelSamplesBoundChannel", "empty5", 300, TracePanelGameTests::panelSamplesBoundChannel);
+        LogisticsTestInstance.add("guiActionsReachTheMaster", "empty5", 200, TracePanelGameTests::guiActionsReachTheMaster);
     }
 
     private static void placePanel(GameTestHelper helper, BlockPos pos) {
@@ -116,6 +117,38 @@ public class TracePanelGameTests {
             helper.assertTrue(samples[samples.length - 1] == 777,
                     "latest sample must carry the signal value, got "
                             + samples[samples.length - 1]);
+            helper.succeed();
+        });
+    }
+
+    /**
+     * The management GUI's actions, exercised at the same seam its payload uses:
+     * remove-one and clear-all through a NON-master member both land on the master.
+     */
+    public static void guiActionsReachTheMaster(GameTestHelper helper) {
+        placePanel(helper, new BlockPos(1, 1, 2));
+        placePanel(helper, new BlockPos(2, 1, 2));
+        var a = Identifier.parse("demo:a");
+        var b = Identifier.parse("demo:b");
+        var c = Identifier.parse("demo:c");
+
+        helper.runAfterDelay(20, () -> {
+            var member = panel(helper, new BlockPos(1, 1, 2)).isMaster()
+                    ? panel(helper, new BlockPos(2, 1, 2)) : panel(helper, new BlockPos(1, 1, 2));
+            helper.assertTrue(member.bind(a, false) && member.bind(b, false)
+                    && member.bind(c, false), "three bindings must apply");
+
+            // The GUI's Remove button: bind(channel, true) through whichever block was clicked.
+            helper.assertTrue(member.bind(b, true), "removing a bound channel must succeed");
+            var master = (TracePanelBlockEntity) helper.getLevel().getBlockEntity(member.groupOrigin());
+            helper.assertTrue(master != null && master.boundChannels().equals(java.util.List.of(a, c)),
+                    "the remaining channels must keep their order on the master, got "
+                            + (master == null ? "no master" : master.boundChannels()));
+            helper.assertTrue(!member.bind(b, true), "removing an unbound channel must report false");
+
+            // The GUI's Clear all.
+            member.clearBindings();
+            helper.assertTrue(master.boundChannels().isEmpty(), "clear must empty the master");
             helper.succeed();
         });
     }

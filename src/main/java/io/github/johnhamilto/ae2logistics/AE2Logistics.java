@@ -142,6 +142,9 @@ public class AE2Logistics {
     public static final Supplier<BlockEntityType<io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity>> TRACE_PANEL_BE =
             BLOCK_ENTITIES.register("trace_panel", () -> new BlockEntityType<>(io.github.johnhamilto.ae2logistics.block.TracePanelBlockEntity::new,
                             TRACE_PANEL.get()));
+    public static final Supplier<MenuType<io.github.johnhamilto.ae2logistics.menu.TracePanelMenu>> TRACE_PANEL_MENU =
+            MENUS.register("trace_panel", () -> IMenuTypeExtension
+                    .create(io.github.johnhamilto.ae2logistics.menu.TracePanelMenu::new));
 
     public static final Supplier<DataComponentType<Identifier>> SIGNAL_CHANNEL = DATA_COMPONENTS
             .register("signal_channel", () -> DataComponentType.<Identifier>builder()
@@ -523,6 +526,9 @@ public class AE2Logistics {
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.JanitorTogglePayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.JanitorTogglePayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.JanitorTogglePayload::handle);
+            registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.TracePanelActionPayload.TYPE,
+                    io.github.johnhamilto.ae2logistics.menu.TracePanelActionPayload.STREAM_CODEC,
+                    io.github.johnhamilto.ae2logistics.menu.TracePanelActionPayload::handle);
             registrar.playToServer(io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.TYPE,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload.STREAM_CODEC,
                     io.github.johnhamilto.ae2logistics.menu.ConfigureJobMonitorPayload::handle);

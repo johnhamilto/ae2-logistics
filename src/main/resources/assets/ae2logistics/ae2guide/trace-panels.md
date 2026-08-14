@@ -19,6 +19,9 @@ the [Tracer Terminal](tracer-terminal.md)'s charts, on a wall.
 - **Bind a channel** by clicking any panel of the wall with a bound
   [Signal Card](signal-card.md); sneak-click with the card removes that trace,
   sneak with an empty hand clears the panel. Up to six traces stack per panel.
+- **Manage the panel** by clicking with an empty hand: the window lists every
+  bound trace with a remove button, plus clear-all. Clicking any member of the
+  wall manages the whole panel.
 - The wall records its own two-minute history (one sample per second) - it does
   not need a Tracer Terminal anywhere.
 - The min-corner panel is the wall's master: it holds the bindings, so breaking
