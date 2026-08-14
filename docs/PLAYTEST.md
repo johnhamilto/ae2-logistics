@@ -1,6 +1,12 @@
 # AE2 Logistics — Feature Inventory & Playtest Companion
 
-**As of v0.16.0** · Minecraft 1.21.1 · NeoForge · requires AE2 (built against 19.2.17)
+**Snapshot at v0.16.0 - REGENERATE BEFORE THE PLAYTEST.** Everything shipped since
+(see ROADMAP.md: config terminal polish, janitor, trace panels, chassis art, the
+wireless connector, gated storage bus + input cards, pattern import card, and more)
+is missing below and is covered meanwhile by its guide page. Rebuild this inventory
+from ROADMAP + the guide when the pre-release playtest pass is scheduled.
+
+Minecraft 1.21.1 · NeoForge · requires AE2 (built against 19.2.17)
 
 Every feature in the mod, grouped by system, with what is SUPPOSED to happen. The
 92-test gametest suite already verifies everything marked programmatic; your session
