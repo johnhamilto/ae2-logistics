@@ -8,6 +8,14 @@
     "height": 178
   },
   "widgets": {
+    "openPriority": {
+      "left": 176,
+      "top": -5,
+      "width": 20,
+      "height": 20
+    }
+  },
+  "widgets": {
     "scrollbar": {
       "left": 188,
       "top": 83,

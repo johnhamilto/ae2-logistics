@@ -32,6 +32,7 @@ import io.github.johnhamilto.ae2logistics.parts.P2PNames;
 public class MeshPolishGameTests {
 
     static void register() {
+        LogisticsTestInstance.add("priorityEditsThroughAe2PriorityHost", "empty5", 200, MeshPolishGameTests::priorityEditsThroughAe2PriorityHost);
         LogisticsTestInstance.add("p2pNamesLiveOnTunnels", "empty5", 200, MeshPolishGameTests::p2pNamesLiveOnTunnels);
         LogisticsTestInstance.add("p2pLegacyNamesMigrateToTunnels", "empty5", 200, MeshPolishGameTests::p2pLegacyNamesMigrateToTunnels);
         LogisticsTestInstance.add("providerBatchMovesWholeToAcceptingMachine", "empty5", 400, MeshPolishGameTests::providerBatchMovesWholeToAcceptingMachine);
@@ -522,6 +523,43 @@ public class MeshPolishGameTests {
                     && moved.role() == MeshEndpointPart.ROLE_OUT && moved.priority() == 7
                     && moved.capabilityMask() == MeshRegistry.TYPE_ALL,
                     "retune must keep role, priority, and transports");
+            helper.succeed();
+        });
+    }
+
+    /**
+     * Priority edits ride AE2's own priority picker: the part is an IPriorityHost,
+     * AE2's PriorityMenu constructs against it, and setPriority takes the same
+     * config path the GUI takes (frequency membership intact, value persisted).
+     */
+    public static void priorityEditsThroughAe2PriorityHost(GameTestHelper helper) {
+        helper.setBlock(new BlockPos(0, 1, 1),
+                BuiltInRegistries.BLOCK.getValue(Identifier.parse("ae2:creative_energy_cell")));
+        placeCable(helper, new BlockPos(1, 1, 1));
+        var endpoint = placeEndpoint(helper, new BlockPos(1, 1, 1), Direction.UP, "prio-host",
+                (byte) 0, MeshRegistry.TYPE_ITEM);
+
+        helper.runAfterDelay(20, () -> {
+            appeng.helpers.IPriorityHost host = endpoint;
+            var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+            // AE2's own priority menu must accept our host - this is the picker the
+            // top-right tab button opens.
+            var menu = new appeng.menu.implementations.PriorityMenu(1, player.getInventory(), host);
+            helper.assertTrue(menu != null, "AE2's PriorityMenu must construct against the part");
+
+            host.setPriority(42);
+            helper.assertTrue(endpoint.priority() == 42, "setPriority must apply");
+            helper.assertTrue(endpoint.frequency().equals("prio-host"),
+                    "priority edit must not disturb the frequency");
+
+            var registries = helper.getLevel().registryAccess();
+            var out = net.minecraft.world.level.storage.TagValueOutput.createWithContext(
+                    net.minecraft.util.ProblemReporter.DISCARDING, registries);
+            endpoint.writeToNBT(out);
+            var fresh = new MeshEndpointPart(AE2Logistics.MESH_ENDPOINT_PART.get());
+            fresh.readFromNBT(net.minecraft.world.level.storage.TagValueInput.create(
+                    net.minecraft.util.ProblemReporter.DISCARDING, registries, out.buildResult()));
+            helper.assertTrue(fresh.priority() == 42, "priority must survive NBT");
             helper.succeed();
         });
     }

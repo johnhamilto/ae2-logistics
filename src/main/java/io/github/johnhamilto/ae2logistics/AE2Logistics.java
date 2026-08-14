@@ -164,6 +164,10 @@ public class AE2Logistics {
     /** Installed in terminal upgrade slots: see {@link io.github.johnhamilto.ae2logistics.item.PatternImportCard}. */
     public static final DeferredItem<Item> PATTERN_IMPORT_CARD = ITEMS.registerItem("pattern_import_card",
             appeng.api.upgrades.Upgrades::createUpgradeCardItem);
+
+    /** Config slots become variant templates: see {@link io.github.johnhamilto.ae2logistics.parts.VariantMatching}. */
+    public static final DeferredItem<Item> VARIANT_CARD = ITEMS.registerItem("variant_card",
+            appeng.api.upgrades.Upgrades::createUpgradeCardItem);
     public static final Supplier<DataComponentType<EncodedAdaptivePattern>> ENCODED_ADAPTIVE_PATTERN = DATA_COMPONENTS
             .register("encoded_adaptive_pattern", () -> DataComponentType.<EncodedAdaptivePattern>builder()
                     .persistent(EncodedAdaptivePattern.CODEC)
@@ -367,8 +371,14 @@ public class AE2Logistics {
             "mesh_endpoint_me", MeshEndpointPart.class, MeshEndpointPart::new);
     public static final DeferredItem<PartItem<MeshEndpointPart>> MESH_ENDPOINT_PROVIDER_PART = part(
             "mesh_endpoint_provider", MeshEndpointPart.class, MeshEndpointPart::new);
+    // AE2's locator-based menu plumbing, so sub-menus (the priority picker) can
+    // reopen this menu and vice versa via SwitchGuisPacket.
     public static final Supplier<MenuType<MeshEndpointMenu>> MESH_ENDPOINT_MENU = MENUS.register(
-            "mesh_endpoint", () -> IMenuTypeExtension.create(MeshEndpointMenu::new));
+            "mesh_endpoint", () -> appeng.menu.implementations.MenuTypeBuilder
+                    .create(MeshEndpointMenu::new, MeshEndpointPart.class)
+                    .withInitialData(MeshEndpointMenu::writeOpenData,
+                            (host, menu, buffer) -> menu.readInitialData(buffer))
+                    .buildUnregistered(id("mesh_endpoint")));
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart>> PROVIDER_P2P_TUNNEL_PART = part(
             "provider_p2p_tunnel", io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart.class,
             io.github.johnhamilto.ae2logistics.parts.ProviderP2PTunnelPart::new);
@@ -381,6 +391,12 @@ public class AE2Logistics {
     public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart>> GATED_STORAGE_BUS_PART = part(
             "gated_storage_bus", io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart.class,
             io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart::new);
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.VariantImportBusPart>> VARIANT_IMPORT_BUS_PART = part(
+            "variant_import_bus", io.github.johnhamilto.ae2logistics.parts.VariantImportBusPart.class,
+            io.github.johnhamilto.ae2logistics.parts.VariantImportBusPart::new);
+    public static final DeferredItem<PartItem<io.github.johnhamilto.ae2logistics.parts.VariantExportBusPart>> VARIANT_EXPORT_BUS_PART = part(
+            "variant_export_bus", io.github.johnhamilto.ae2logistics.parts.VariantExportBusPart.class,
+            io.github.johnhamilto.ae2logistics.parts.VariantExportBusPart::new);
     // AE2's storage bus menu under our own type, so the window titles as a Subnet Link.
     public static final Supplier<MenuType<appeng.menu.implementations.StorageBusMenu>> SUBNET_LINK_MENU =
             MENUS.register("subnet_link", () -> appeng.menu.implementations.MenuTypeBuilder
@@ -392,6 +408,17 @@ public class AE2Logistics {
                     .create(appeng.menu.implementations.StorageBusMenu::new,
                             io.github.johnhamilto.ae2logistics.parts.GatedStorageBusPart.class)
                     .buildUnregistered(id("gated_storage_bus")));
+    // AE2's IO bus menu under our own types, so the windows title as variant buses.
+    public static final Supplier<MenuType<appeng.menu.implementations.IOBusMenu>> VARIANT_IMPORT_BUS_MENU =
+            MENUS.register("variant_import_bus", () -> appeng.menu.implementations.MenuTypeBuilder
+                    .create(appeng.menu.implementations.IOBusMenu::new,
+                            io.github.johnhamilto.ae2logistics.parts.VariantImportBusPart.class)
+                    .buildUnregistered(id("variant_import_bus")));
+    public static final Supplier<MenuType<appeng.menu.implementations.IOBusMenu>> VARIANT_EXPORT_BUS_MENU =
+            MENUS.register("variant_export_bus", () -> appeng.menu.implementations.MenuTypeBuilder
+                    .create(appeng.menu.implementations.IOBusMenu::new,
+                            io.github.johnhamilto.ae2logistics.parts.VariantExportBusPart.class)
+                    .buildUnregistered(id("variant_export_bus")));
     public static final Supplier<MenuType<P2PFrequencyTerminalMenu>> P2P_TERMINAL_MENU = MENUS.register(
             "p2p_frequency_terminal", () -> IMenuTypeExtension.create(P2PFrequencyTerminalMenu::new));
 
@@ -445,8 +472,11 @@ public class AE2Logistics {
                         output.accept(MESH_ENDPOINT_PART.get());
                         output.accept(SUBNET_LINK_PART.get());
                         output.accept(GATED_STORAGE_BUS_PART.get());
+                        output.accept(VARIANT_IMPORT_BUS_PART.get());
+                        output.accept(VARIANT_EXPORT_BUS_PART.get());
                         output.accept(CONFORM_CARD.get());
                         output.accept(STACK_LIMITER_CARD.get());
+                        output.accept(VARIANT_CARD.get());
                         output.accept(PATTERN_IMPORT_CARD.get());
                         output.accept(REGULUS_CRYSTAL.get());
                     })
@@ -579,7 +609,22 @@ public class AE2Logistics {
                     appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.VOID_CARD, bus, 1);
                     appeng.api.upgrades.Upgrades.add(CONFORM_CARD, bus, 1);
                     appeng.api.upgrades.Upgrades.add(STACK_LIMITER_CARD, bus, 1);
+                    appeng.api.upgrades.Upgrades.add(VARIANT_CARD, bus, 1);
                 }
+                // The variant IO buses mirror the stock IO bus card sets, plus the
+                // Variant Card that gives them their name.
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.FUZZY_CARD, VARIANT_IMPORT_BUS_PART, 1);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.REDSTONE_CARD, VARIANT_IMPORT_BUS_PART, 1);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.CAPACITY_CARD, VARIANT_IMPORT_BUS_PART, 5);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.SPEED_CARD, VARIANT_IMPORT_BUS_PART, 4);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.INVERTER_CARD, VARIANT_IMPORT_BUS_PART, 1);
+                appeng.api.upgrades.Upgrades.add(VARIANT_CARD, VARIANT_IMPORT_BUS_PART, 1);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.FUZZY_CARD, VARIANT_EXPORT_BUS_PART, 1);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.REDSTONE_CARD, VARIANT_EXPORT_BUS_PART, 1);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.CAPACITY_CARD, VARIANT_EXPORT_BUS_PART, 5);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.SPEED_CARD, VARIANT_EXPORT_BUS_PART, 4);
+                appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.CRAFTING_CARD, VARIANT_EXPORT_BUS_PART, 1);
+                appeng.api.upgrades.Upgrades.add(VARIANT_CARD, VARIANT_EXPORT_BUS_PART, 1);
                 // AE2WTLib terminals have real upgrade slots; the import card installs
                 // there as a normal upgrade (the cable part has none - see PatternImportCard).
                 if (io.github.johnhamilto.ae2logistics.compat.CompatMods

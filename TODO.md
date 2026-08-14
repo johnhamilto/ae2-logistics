@@ -31,6 +31,11 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 
 ## Features
 
+- **Variant matching V2** (F13 follow-up, only if wanted in play): "contains"
+  semantics for collection components - a Mending template today means exactly
+  {Mending}, not "has Mending among others". Needs per-component-type deep
+  matching; scope carefully.
+
 - **Sticky Card** (from AE2UEL/GTNH): upgrade card for storage cells and storage buses
   (Subnet Link included - it IS a bus). Keys covered by a sticky device's partition are
   CLAIMED: they may only be stored on sticky-carded storages; when those are full the
@@ -69,4 +74,6 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
   - The ME Storage Janitor (shipped 0.32.0) already covers the migration half:
     a run re-settles claimed keys into their partitioned homes. What sticky still
     needs from upstream is refusal/backpressure only.
-- Pre-release modpack soak against the standard suite (see CLAUDE.md).
+- Pre-release modpack soak against the standard suite (see CLAUDE.md), and
+  regenerate docs/PLAYTEST.md from ROADMAP + the guide first (it is a v0.16.0
+  snapshot; header says so).

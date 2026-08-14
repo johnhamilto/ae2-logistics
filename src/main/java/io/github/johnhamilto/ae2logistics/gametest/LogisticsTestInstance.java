@@ -96,6 +96,7 @@ public class LogisticsTestInstance extends GameTestInstance {
         TestPlotGameTests.register();
         TracePanelGameTests.register();
         TreeMatrixGameTests.register();
+        VariantGameTests.register();
         WirelessConnectorGameTests.register();
         WirelessGameTests.register();
 

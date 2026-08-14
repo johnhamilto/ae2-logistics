@@ -16,9 +16,10 @@ One part, every transport: endpoints on one network sharing a named frequency
 form a universal point-to-point tunnel - or, with more of them, a
 [mesh](mesh.md).
 
-- Configure by right-click: frequency name, role (input/output/both), and
-  priority; the cog opens the transport toggles - any subset of redstone, items,
-  fluids, energy, signals, ME, and provider.
+- Configure by right-click: frequency name and role (input/output/both); the cog
+  opens the transport toggles - any subset of redstone, items, fluids, energy,
+  signals, ME, and provider. Priority sits behind AE2's usual wrench tab in the
+  top-right corner, same as every storage bus and interface.
 - A live roster lists every endpoint of the frequency on this network: role,
   priority, what the face touches, and status with ME lane state - streamed live,
   so status flips and edits by other players show up while the GUI is open.

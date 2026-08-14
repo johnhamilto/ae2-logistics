@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {"item": "ae2:basic_card"},
+    {"item": "minecraft:amethyst_shard"}
+  ],
+  "result": {"count": 1, "id": "ae2logistics:variant_card"}
+}

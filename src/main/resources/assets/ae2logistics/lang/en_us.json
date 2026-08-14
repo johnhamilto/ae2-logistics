@@ -46,5 +46,8 @@
   "item.ae2logistics.stack_limiter_card": "Stack Limiter Card",
   "item.ae2logistics.pattern_import_card": "Pattern Import Card",
   "block.ae2logistics.storage_janitor": "ME Storage Janitor",
-  "block.ae2logistics.trace_panel": "Trace Panel"
+  "block.ae2logistics.trace_panel": "Trace Panel",
+  "item.ae2logistics.variant_import_bus": "ME Variant Import Bus",
+  "item.ae2logistics.variant_export_bus": "ME Variant Export Bus",
+  "item.ae2logistics.variant_card": "Variant Card"
 }

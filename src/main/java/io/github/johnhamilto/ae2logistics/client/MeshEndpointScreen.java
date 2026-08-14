@@ -24,13 +24,11 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
     private final ScrollingRowList roster = new ScrollingRowList(8, 196, 82, 170, 17);
 
     private AETextField frequencyBox;
-    private AETextField priorityBox;
     byte roleValue;
     int maskValue;
     /** Screen state survives init() re-runs (returning from the transports sub-screen). */
     private boolean restored;
     private String frequencyValue;
-    private String priorityValue;
 
     public MeshEndpointScreen(MeshEndpointMenu menu, Inventory inventory, Component title,
             ScreenStyle style) {
@@ -50,6 +48,9 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         }
         roster.register(widgets, "scrollbar");
         roster.setRowCount(menu.roster().size());
+        // AE2's convention: priority lives behind the tab button in the top-right
+        // corner, opening AE2's own priority picker.
+        widgets.addOpenPriorityButton();
     }
 
     @Override
@@ -62,7 +63,6 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
             roleValue = menu.role;
             maskValue = menu.capabilities;
             frequencyValue = menu.frequency;
-            priorityValue = Integer.toString(menu.priority);
         }
 
         frequencyBox = new AETextField(style, font, leftPos + 10, topPos + 26, 104, 16);
@@ -70,12 +70,6 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         frequencyBox.setMaxLength(32);
         frequencyBox.setValue(frequencyValue);
         addRenderableWidget(frequencyBox);
-
-        priorityBox = new AETextField(style, font, leftPos + 124, topPos + 26, 66, 16);
-        priorityBox.setBordered(false);
-        priorityBox.setMaxLength(11);
-        priorityBox.setValue(priorityValue);
-        addRenderableWidget(priorityBox);
 
         addRenderableWidget(new CycleButton(leftPos + 10, topPos + 48, 88, 18,
                 Component.literal(ROLES[roleValue]), (b, dir) -> {
@@ -92,7 +86,7 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
     }
 
     private String snapshot() {
-        return frequencyBox.getValue() + '\0' + priorityBox.getValue() + '\0' + roleValue + '\0' + maskValue;
+        return frequencyBox.getValue() + '\0' + roleValue + '\0' + maskValue;
     }
 
     private final AutoApply autoApply = new AutoApply();
@@ -103,7 +97,6 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
         // The server re-pushes the roster after config edits; follow its size.
         roster.setRowCount(menu.roster().size());
         frequencyValue = frequencyBox.getValue();
-        priorityValue = priorityBox.getValue();
         var current = snapshot();
         if (autoApply.shouldSend(current,
                 getFocused() instanceof net.minecraft.client.gui.components.EditBox)) {
@@ -121,15 +114,11 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
     }
 
     private void apply() {
-        int priority;
-        try {
-            priority = Integer.parseInt(priorityBox.getValue().trim());
-        } catch (NumberFormatException e) {
-            priority = 0;
-        }
+        // Priority is edited through AE2's priority picker; re-send the open-time
+        // value unchanged so config edits never clobber it.
         ClientPacketDistributor.sendToServer(new ConfigureMeshPayload(
-                menu.pos, (byte) menu.side.ordinal(), frequencyBox.getValue(), roleValue, priority, maskValue));
-    }
+                menu.pos, (byte) menu.side.ordinal(), frequencyBox.getValue(), roleValue,
+                menu.priority, maskValue));    }
 
     private static String roleLabel(byte role) {
         return switch (role) {
@@ -232,7 +221,7 @@ public class MeshEndpointScreen extends AEBaseScreen<MeshEndpointMenu> {
     public void drawFG(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY) {
         guiGraphics.text(font, "Frequency", 10, 16, Palette.LABEL, false);
         guiGraphics.text(font, "Priority", 124, 16, Palette.LABEL, false);
-
+        guiGraphics.text(font, Integer.toString(menu.priority), 124, 30, Palette.VALUE, false);
         guiGraphics.text(font, "Linked Endpoints"
                 + (menu.rosterTotal() > 0 ? " (" + menu.rosterTotal() + ")" : ""),
                 10, 72, Palette.LABEL, false);
