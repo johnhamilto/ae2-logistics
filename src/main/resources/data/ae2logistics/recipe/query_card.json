@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {"item": "ae2:basic_card"},
+    {"item": "minecraft:writable_book"}
+  ],
+  "result": {"count": 1, "id": "ae2logistics:query_card"}
+}

@@ -25,28 +25,47 @@ public final class QueryContext {
     private final ToLongFunction<Identifier> signals;
     @Nullable
     private final Function<String, CompiledQuery> resolver;
+    @Nullable
+    private final net.minecraft.core.HolderLookup.Provider registries;
 
     public QueryContext(@Nullable KeyCounter stacks, @Nullable ICraftingService crafting,
             @Nullable ToLongFunction<Identifier> signals,
             @Nullable Function<String, CompiledQuery> resolver) {
+        this(stacks, crafting, signals, resolver, null);
+    }
+
+    public QueryContext(@Nullable KeyCounter stacks, @Nullable ICraftingService crafting,
+            @Nullable ToLongFunction<Identifier> signals,
+            @Nullable Function<String, CompiledQuery> resolver,
+            @Nullable net.minecraft.core.HolderLookup.Provider registries) {
         this.stacks = stacks;
         this.crafting = crafting;
         this.signals = signals;
         this.resolver = resolver;
+        this.registries = registries;
     }
 
     public static QueryContext of(IGrid grid, @Nullable Function<String, CompiledQuery> resolver) {
         var signalService = grid.getService(SignalService.class);
+        var pivot = grid.getPivot();
         return new QueryContext(
                 grid.getStorageService().getCachedInventory(),
                 grid.getCraftingService(),
                 signalService == null ? null : signalService::get,
-                resolver);
+                resolver,
+                pivot == null || pivot.getLevel() == null ? null : pivot.getLevel().registryAccess());
     }
 
     /** Same data, different signal lookup (e.g. the scheduler's same-tick reads). */
     public QueryContext withSignals(ToLongFunction<Identifier> signalLookup) {
-        return new QueryContext(stacks, crafting, signalLookup, resolver);
+        return new QueryContext(stacks, crafting, signalLookup, resolver, registries);
+    }
+
+    /** For the data: term's component serialization; null degrades the term to false. */
+    @Nullable
+    public net.minecraft.core.HolderLookup.Provider registries() {
+        return registries;
+
     }
 
     @Nullable

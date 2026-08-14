@@ -61,6 +61,24 @@ one part, any predicate, retargetable by editing one saved query.
 
 <RecipeFor id="query_export_bus" />
 
+## Component data rules
+
+`data:"minecraft:stored_enchantments"` matches items that carry the component;
+`data:"minecraft:stored_enchantments~*mending*"` walks to that node in the item's
+serialized data tree and glob-matches there - so a "mending" in some item's NAME
+never trips an enchantment rule. `data:"~*glob*"` matches against the whole tree
+when you do want that. Paths use dots (`*` wildcards a level); modded attributes
+and classic custom NBT all live in this tree.
+
+## Query Card
+
+Bind a card to a named query with `/ae2logistics query card <name>` and install
+it in a [Gated Storage Bus](gated-storage-bus.md) or
+[Subnet Link](subnet-link.md): the bus's partition becomes live membership in
+that query - data rules, tags, mod filters, craftability, even signal terms.
+Queries live in Query Terminals, so the network needs one for the card to
+resolve, same as @refs.
+
 ## Devices
 
 <ItemLink id="query_terminal" /> (write and save), <ItemLink id="query_sensor" /> (count to a signal), <ItemLink id="query_export_bus" /> (export by query).

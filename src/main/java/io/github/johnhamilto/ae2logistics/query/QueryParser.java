@@ -26,7 +26,7 @@ import net.minecraft.world.level.material.Fluid;
  */
 public final class QueryParser {
 
-    public sealed interface Node permits And, Or, Not, Mod, Tag, Name, Count, Craftable, Stored,
+    public sealed interface Node permits Data, And, Or, Not, Mod, Tag, Name, Count, Craftable, Stored,
             Damage, Signal, Ref {
     }
 
@@ -42,7 +42,17 @@ public final class QueryParser {
     public record Mod(String namespace) implements Node {
     }
 
+    /**
+     * Component-data term: navigate the item's serialized component tree by
+     * {@code path} (dot segments; the first is the component id, {@code *} matches
+     * any child), then glob-match the located node's text when {@code glob} is
+     * non-null, else require the node to exist. Empty path = the whole tree.
+     */
+    public record Data(String path, @Nullable String glob) implements Node {
+    }
+
     public record Tag(Identifier id, TagKey<Item> itemTag, TagKey<Fluid> fluidTag) implements Node {
+
     }
 
     public record Name(String substring) implements Node {
@@ -272,6 +282,22 @@ public final class QueryParser {
                     }
                     return new Tag(id, TagKey.create(Registries.ITEM, id),
                             TagKey.create(Registries.FLUID, id));
+                }
+                case "data" -> {
+                    var arg = rest;
+                    if (arg.isEmpty() && peek().kind() == Token.STRING) {
+                        arg = next().text();
+                    }
+                    if (arg.isEmpty()) {
+                        throw new IllegalArgumentException("data: needs a path or \"path~glob\"");
+                    }
+                    int tilde = arg.indexOf('~');
+                    var path = tilde < 0 ? arg : arg.substring(0, tilde);
+                    var glob = tilde < 0 ? null : arg.substring(tilde + 1).toLowerCase(Locale.ROOT);
+                    if (glob != null && glob.isEmpty()) {
+                        throw new IllegalArgumentException("data: has '~' but no pattern");
+                    }
+                    return new Data(path, glob);
                 }
                 case "name" -> {
                     if (rest.isEmpty() && peek().kind() == Token.STRING) {

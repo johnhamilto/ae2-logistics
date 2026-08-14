@@ -82,6 +82,7 @@ public class JanitorGameTests {
                     for (var busPos : new BlockPos[] {new BlockPos(1, 1, 1), new BlockPos(2, 1, 1)}) {
                         var abs = helper.absolutePos(busPos);
                         helper.getLevel().updateNeighborsAt(abs, helper.getLevel().getBlockState(abs).getBlock());
+
                     }
                     var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1), net.minecraft.world.level.block.entity.BlockEntity.class);
                     var node = janitor.getGridNode(null);

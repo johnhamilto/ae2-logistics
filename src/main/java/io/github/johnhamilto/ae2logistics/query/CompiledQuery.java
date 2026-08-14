@@ -65,6 +65,10 @@ public record CompiledQuery(String source, QueryParser.Node root) {
             };
             case QueryParser.Name name -> key.getDisplayName().getString()
                     .toLowerCase(Locale.ROOT).contains(name.substring());
+            case QueryParser.Data data -> key instanceof AEItemKey itemKey
+                    && context.registries() != null
+                    && ItemData.matches(ItemData.componentsTree(itemKey, context.registries()),
+                            data.path(), data.glob());
             case QueryParser.Count count -> QueryParser.compare(context.stored(key), count.op(), count.value());
             case QueryParser.Craftable ignored -> context.craftable(key);
             case QueryParser.Stored ignored -> context.stored(key) > 0;

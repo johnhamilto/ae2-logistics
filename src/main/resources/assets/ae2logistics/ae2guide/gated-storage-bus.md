@@ -21,7 +21,9 @@ memory-card support. A refused insert simply falls through to the rest of your
 storage, so the cards carve out lanes without ever trapping items.
 
 AE2's stock storage bus only consults its own cards, which is why these cards
-need this bus (the [ME Subnet Link](subnet-link.md) takes them too).
+need this bus (the [ME Subnet Link](subnet-link.md) takes them too). It also
+takes the [Variant Card](variant-card.md) and the [Query Card](queries.md),
+which replace the partition outright.
 
 <RecipeFor id="gated_storage_bus" />
 

@@ -168,6 +168,20 @@ public class AE2Logistics {
     /** Config slots become variant templates: see {@link io.github.johnhamilto.ae2logistics.parts.VariantMatching}. */
     public static final DeferredItem<Item> VARIANT_CARD = ITEMS.registerItem("variant_card",
             appeng.api.upgrades.Upgrades::createUpgradeCardItem);
+
+    /** Bound query name on a Query Card. */
+    public static final Supplier<DataComponentType<String>> QUERY_NAME = DATA_COMPONENTS
+            .register("query_name", () -> DataComponentType.<String>builder()
+                    .persistent(com.mojang.serialization.Codec.STRING)
+                    .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.STRING_UTF8)
+                    .build());
+
+    /** The bus partition as live query membership: see {@link io.github.johnhamilto.ae2logistics.item.QueryCardItem}. */
+    public static final DeferredItem<io.github.johnhamilto.ae2logistics.item.QueryCardItem> QUERY_CARD =
+            ITEMS.registerItem("query_card", properties -> new io.github.johnhamilto.ae2logistics.item.QueryCardItem(
+                    properties.stacksTo(1)));
+
+
     public static final Supplier<DataComponentType<EncodedAdaptivePattern>> ENCODED_ADAPTIVE_PATTERN = DATA_COMPONENTS
             .register("encoded_adaptive_pattern", () -> DataComponentType.<EncodedAdaptivePattern>builder()
                     .persistent(EncodedAdaptivePattern.CODEC)
@@ -477,6 +491,7 @@ public class AE2Logistics {
                         output.accept(CONFORM_CARD.get());
                         output.accept(STACK_LIMITER_CARD.get());
                         output.accept(VARIANT_CARD.get());
+                        output.accept(QUERY_CARD.get());
                         output.accept(PATTERN_IMPORT_CARD.get());
                         output.accept(REGULUS_CRYSTAL.get());
                     })
@@ -610,6 +625,7 @@ public class AE2Logistics {
                     appeng.api.upgrades.Upgrades.add(CONFORM_CARD, bus, 1);
                     appeng.api.upgrades.Upgrades.add(STACK_LIMITER_CARD, bus, 1);
                     appeng.api.upgrades.Upgrades.add(VARIANT_CARD, bus, 1);
+                    appeng.api.upgrades.Upgrades.add(QUERY_CARD, bus, 1);
                 }
                 // The variant IO buses mirror the stock IO bus card sets, plus the
                 // Variant Card that gives them their name.
