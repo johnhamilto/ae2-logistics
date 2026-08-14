@@ -95,4 +95,36 @@ public class CompatGameTests {
         }
         AppMekCompatHooks.tunnelOutputExposesChemicalReturn(helper);
     }
+
+    /**
+     * The Pattern Import Card installs as a REAL upgrade in AE2WTLib's wireless
+     * encoding terminals: the association is registered for both the dedicated
+     * terminal and the universal one, and the card passes the item's own
+     * upgrade-slot validation. The menu-side behavior needs no compat code at all -
+     * their WETMenu subclasses AE2's encoding menu, so the instanceof already holds.
+     */
+    @GameTest(template = "empty5")
+    public void wtlibWirelessEncodingTerminalSocketsImportCard(GameTestHelper helper) {
+        if (!CompatMods.loaded(CompatMods.AE2WTLIB)) {
+            helper.succeed();
+            return;
+        }
+        var card = AE2Logistics.PATTERN_IMPORT_CARD.get();
+        for (var id : new String[] {"ae2wtlib:wireless_pattern_encoding_terminal",
+                "ae2wtlib:wireless_universal_terminal"}) {
+            var terminalItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
+            helper.assertTrue(appeng.api.upgrades.Upgrades.getMaxInstallable(card, terminalItem) == 1,
+                    id + " must accept exactly one import card");
+        }
+        // Physical insertion only on the dedicated terminal: the universal one sizes
+        // its upgrade inventory by the terminals merged into it, and a bare stack has none.
+        var wet = BuiltInRegistries.ITEM
+                .get(ResourceLocation.parse("ae2wtlib:wireless_pattern_encoding_terminal"));
+        var upgrades = ((appeng.api.upgrades.IUpgradeableItem) wet)
+                .getUpgrades(new net.minecraft.world.item.ItemStack(wet));
+        var leftover = upgrades.addItems(new net.minecraft.world.item.ItemStack(card));
+        helper.assertTrue(leftover.isEmpty() && upgrades.getInstalledUpgrades(card) == 1,
+                "the wireless encoding terminal's upgrade slots must take the card");
+        helper.succeed();
+    }
 }
