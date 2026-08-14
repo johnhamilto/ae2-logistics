@@ -161,22 +161,9 @@ public class AE2Logistics {
     public static final DeferredItem<Item> STACK_LIMITER_CARD = ITEMS.registerItem("stack_limiter_card",
             appeng.api.upgrades.Upgrades::createUpgradeCardItem);
 
-    /** Installed per terminal: see {@link io.github.johnhamilto.ae2logistics.item.PatternImportCard}. */
+    /** Installed in terminal upgrade slots: see {@link io.github.johnhamilto.ae2logistics.item.PatternImportCard}. */
     public static final DeferredItem<Item> PATTERN_IMPORT_CARD = ITEMS.registerItem("pattern_import_card",
             appeng.api.upgrades.Upgrades::createUpgradeCardItem);
-
-    /** Cable sides with a Pattern Import Card built into their encoding terminal. */
-    public static final Supplier<net.neoforged.neoforge.attachment.AttachmentType<java.util.HashSet<String>>> PATTERN_IMPORT_INSTALLS =
-            ATTACHMENTS.register("pattern_import_installs",
-                    () -> net.neoforged.neoforge.attachment.AttachmentType
-                            .<java.util.HashSet<String>>builder(() -> new java.util.HashSet<>())
-                            .serialize(
-                                    com.mojang.serialization.Codec.STRING.listOf()
-                                            .xmap(java.util.HashSet::new, java.util.ArrayList::new)
-                                            .fieldOf("sides"),
-                                    set -> !set.isEmpty())
-                            .build());
-
     public static final Supplier<DataComponentType<EncodedAdaptivePattern>> ENCODED_ADAPTIVE_PATTERN = DATA_COMPONENTS
             .register("encoded_adaptive_pattern", () -> DataComponentType.<EncodedAdaptivePattern>builder()
                     .persistent(EncodedAdaptivePattern.CODEC)
@@ -650,7 +637,6 @@ public class AE2Logistics {
                 io.github.johnhamilto.ae2logistics.query.QueryGridService.class);
 
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.item.PatternImportCard::onPlayerTick);
-        NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.item.PatternImportCard::onRightClickBlock);
         NeoForge.EVENT_BUS.addListener(SignalCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.MeshCommands::register);
         NeoForge.EVENT_BUS.addListener(io.github.johnhamilto.ae2logistics.command.QueryCommands::register);
