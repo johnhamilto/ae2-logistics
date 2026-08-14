@@ -31,6 +31,17 @@ ScrollingRowList where they fit), guide page accuracy, recipe sanity, tooltip.
 
 ## Features
 
+- **Variant-aware buses** ("NBT import/export/storage bus"): buses that filter on
+  item variants beyond exact keys - "any enchanted book", "this item whatever its
+  components", or specific component values. AE2's stock buses match exact keys
+  and the Fuzzy Card only widens damage. Needs a design pass before building:
+  the predicate model (ignore all components / match listed components / value
+  ranges?), GUI, composition with fuzzy/inverter/partition, and whether this is
+  three new bus parts or more cards for the Gated Storage Bus family (the F12
+  mount-wrap seam covers the storage flavor; import/export buses need their own
+  intercept). 1.21 renamed NBT to data components; pick an in-game name that
+  stays honest ("Variant" reads better than "NBT" anyway).
+
 - **Sticky Card** (from AE2UEL/GTNH): upgrade card for storage cells and storage buses
   (Subnet Link included - it IS a bus). Keys covered by a sticky device's partition are
   CLAIMED: they may only be stored on sticky-carded storages; when those are full the

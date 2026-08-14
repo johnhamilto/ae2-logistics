@@ -10,68 +10,104 @@ Game version: 1.21.1 - Loader: NeoForge
 
 ## Summary (one-liner)
 
-The missing control plane for Applied Energistics 2: signals, logic, queries,
-guarded crafting, job scheduling, and wireless machine coverage - in AE2's own idiom.
+The operations layer for Applied Energistics 2: signals and logic on your cables,
+crafting that follows policy, storage that keeps itself sorted, and wireless
+everything - in AE2's own idiom.
 
 ## Description (body)
 
-AE2 gives you a storage plane and an execution plane. **AE2 Logistics adds the
-control plane**: numbers your network can carry, logic that computes with them, and
-policy for what gets crafted where - all as parts on cables, terminals, and keys in
-storage. No foreign computer mod required.
+AE2 stores your items and crafts your things. AE2 Logistics is everything around
+that: seeing what your network is doing, deciding when it acts, and retiring the
+babysitting. No computer mod, no scripts. Every feature is a cable part, a
+terminal, or a card that works the way AE2 taught you things work.
 
-**Signals** - named numeric channels stored in your network. Write them from
-commands, Register Banks, or sensors; watch them in terminals; bind a Signal Card so
-AE2's own Level Emitters and Storage Monitors can use them.
+**Give your network a pulse.** Signals are named numbers that live on your
+network the way channels live on your cables. A Stock Sensor turns "how much
+iron do I actually have" into one. A Rate Meter tells you how fast it is
+changing. Ten logic parts compute with them: thresholds that will not flap,
+timers, counters, arithmetic, gates. Redstone Signal Ports cross into vanilla
+redstone in both directions, and the ME Logic Core packs eight rules into a
+single block when the cable clutter gets old. The ME Tracer Terminal draws live
+five-minute graphs of any of it. Your base has been running blind; this is the
+instrument panel.
 
-**Logic** - ten cable parts (threshold, hysteresis, arithmetic, gates, counters,
-timers, rate meters, stock sensors, redstone ports) evaluated deterministically each
-tick - or pack eight of them into one **ME Logic Core** (each entry costs a channel;
-that is the trade). The **ME Tracer Terminal** draws five-minute sparklines of any
-channel.
+**Crafting that answers to you.** "Why is my crafting stuck" should have an
+answer. The ME Job Monitor turns every crafting CPU's activity, stalls, and
+progress into signals you can watch and react to. The ME Job Scheduler keeps
+stock the way you actually want it kept: it only submits jobs that can finish,
+respects your named CPUs, rate-limits, and bumps low-priority work when
+something urgent lands. The Guarded Pattern Provider hides recipes from the
+planner while a condition holds, so the machine that is mid-cycle never gets
+handed a second job.
 
-**Adaptive patterns** - the Pattern Workbench converts processing patterns to match
-by tag, fuzzy identity, damage band, or alternative list, with catalyst inputs
-credited back. Stock AE2 planner, zero mixins.
+**Patterns that bend instead of break.** One recipe, any log. The Pattern
+Workbench upgrades processing patterns to accept whole tags, damage ranges, or
+a list of alternatives, and hands catalysts back when the job is done. The
+planner you already know does the rest. And with a Pattern Import Card in your
+wireless encoding terminal, blank patterns restock themselves from storage
+while you work.
 
-**Guarded crafting** - the Guarded Pattern Provider hides recipes and holds pushes
-until signal conditions pass; priority channels move production between recipes live.
+**Ask your storage real questions.** `tag:c:ores AND NOT craftable AND
+count<1k` is a sentence your network can now answer. Type queries in the ME
+Query Terminal and watch results update live, turn a query's match count into a
+signal with the Query Sensor, or export everything that matches with the Query
+Export Bus. It is the tag bus, the overflow finder, and the "what am I missing"
+tool in one grammar.
 
-**Job policy** - the ME Job Scheduler keeps stock with admission control (plans that
-would stall are never submitted), class pools on named CPUs, guards, rate limits,
-deadlines with eviction, and priority preemption. The **ME Job Monitor** turns CPU
-activity and stalls into signals.
+**Configure the fleet, not the device.** The ME Config Terminal lists every
+configurable device on your network in one window: read it, edit it, change
+priorities, and copy one device's settings to every device of the same kind.
+Snapshots record how the network was configured and diff it against now, so
+"what did I change last weekend" stops being archaeology. The Config Blueprint
+captures a whole build's configuration and stamps it onto the next copy.
 
-**Queries** - `tag:c:ores AND NOT craftable AND count<1k` in the ME Query Terminal;
-count matches into signals with the Query Sensor; export matches with the Query
-Export Bus.
+**Rewire space.** The P2P Frequency Terminal finally gives P2P frequencies
+names, live from one screen. Mesh Endpoints go further: name a mesh, drop typed
+endpoints anywhere on the network, and items, fluids, energy, redstone,
+signals, even whole grid bridges find their own way; no pairing ceremony, no
+memory-card roulette. The Provider P2P Tunnel puts a pattern provider's faces
+wherever your machines are. The ME Subnet Link is a storage bus whose target is
+an entire subnet. The ME Wireless Bridge joins machines to the network anywhere
+inside access point coverage, with the Dense Wireless Access Point as your
+32-channel cell tower, and the ME Wireless Connector is the colored wireless
+cable: dye-coded pairs that link like a cable you did not have to route.
 
-**Fleet config** - the ME Config Terminal audits and edits every configurable device
-on the grid, snapshots and diffs, copies settings across a device fleet; the Config
-Blueprint captures a region's configuration corner-to-corner and reapplies it.
+**Storage with standards.** The ME Gated Storage Bus takes input cards. With a
+Conform Card, the chest's own contents are the filter: seed a barrel wall once
+and every lane keeps its assortment forever, no partition screens. Flip it with
+an Inverter Card and you get a collection chest that accepts one of each new
+thing, ever. The Stack Limiter Card feeds machines one item at a time, which
+retires an entire genre of hopper-timing contraptions. Both cards also fit the
+Subnet Link.
 
-**Mesh + wireless** - Universal Mesh Endpoints carry items, fluids, energy,
-redstone, signals, and ME grid bridging over named frequencies; the **ME Wireless
-Bridge** joins machines to your network anywhere inside Wireless Access Point
-coverage - AE2's own WAPs count, and the Dense Wireless Access Point is the
-32-channel cell tower.
+**It plays well with others.** The test bench runs the standard AE2 suite:
+ExtendedAE, MEGA Cells, Applied Mekanistics (chemicals ride the mesh and the
+return paths), ME Requester, and AE2WTLib, where the wireless terminals take
+our cards in their upgrade slots.
 
-Everything is server-computed, deterministic, gametested (90+ in-game tests in CI),
-and documented in an in-game GuideME guide (craft the AE2 Logistics Guide tablet).
+**And it is honest.** Everything above is server-computed and covered by an
+in-game test suite north of 130 scenarios that runs on every change. The
+in-game guide documents every device; craft the guide tablet or press G over
+any of our items.
+
+In the workshop: the ME Storage Janitor (re-settles your whole store after you
+repartition) and in-world Trace Panel dashboards are built and tested, waiting
+on their looks. On the drawing board: variant-aware import, export, and storage
+buses for the "any enchanted book, I do not care which" problem.
 
 ## Gallery shot list (capture on playtest)
 
 1. Tracer Terminal sparkline over a busy factory (hero shot)
-2. Logic Core screen with a full entry list
-3. Job Scheduler rules with states visible (run / hold / late / bumped)
-4. Config Terminal diff view (gold/cyan/red)
-5. Query Terminal with a live preview
-6. A wireless outpost: Dense WAP tower + bridge + machines, no cables
-7. Guarded Pattern Provider GUI with PASS/HOLD
-8. The advancement tree
+2. A barrel wall on gated storage buses, Conform Cards keeping the lanes
+3. Wireless Connector pair bridging a ravine, dye-coded
+4. Job Scheduler rules with states visible (run / hold / late / bumped)
+5. Config Terminal diff view (gold/cyan/red)
+6. Query Terminal with a live preview
+7. A wireless outpost: Dense WAP tower + bridge + machines, no cables
+8. Mesh endpoint wall feeding a machine hall through a Provider P2P Tunnel
 
 ## Version metadata
 
-- Version naming: `<mod_version>` (e.g. 0.15.0), file `ae2logistics-1.21.1-<v>.jar`
+- Version naming: `<mod_version>` (e.g. 0.41.0), file `ae2logistics-1.21.1-<v>.jar`
 - Changelog: paste the GitHub release notes for the tag
 - Release channel: beta until Jack's playtest pass, then release
