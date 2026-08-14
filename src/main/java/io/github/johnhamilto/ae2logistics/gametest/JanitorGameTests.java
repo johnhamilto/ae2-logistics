@@ -77,6 +77,13 @@ public class JanitorGameTests {
         // must be up and see the misplaced stock (batch load order varies the timing).
         helper.startSequence()
                 .thenWaitUntil(() -> {
+                    // Batch chunk loading can catch the storage bus before its target
+                    // chunk ticks; a sleeping bus never rechecks on its own. Poke the
+                    // cable hosts so the buses re-run target discovery until mounted.
+                    for (var busPos : new BlockPos[] {new BlockPos(1, 1, 1), new BlockPos(2, 1, 1)}) {
+                        var abs = helper.absolutePos(busPos);
+                        helper.getLevel().updateNeighborsAt(abs, helper.getLevel().getBlockState(abs).getBlock());
+                    }
                     var janitor = (StorageJanitorBlockEntity) helper.getBlockEntity(new BlockPos(3, 1, 1));
                     var node = janitor.getGridNode(null);
                     if (node == null || node.getGrid() == null) {
